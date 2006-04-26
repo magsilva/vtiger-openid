@@ -1,0 +1,15 @@
+<?php
+/*
+ * Copyright 2001 by Gero Kohnert
+ *
+ *  CVS Info:  $Id: holiday_ru.pinc 263 2005-05-03 13:18:59Z saraj $
+ *  $Author: saraj $
+ *
+ * Type = 0   day is displayed but not marked
+ * Type = 1   marks the day red in the calendar
+ */
+
+     $tutos[cal][] = array(
+        array( Date => "12-06",          type => 1,    Desc => "National Holiday (RU)"),
+        );
+?>
