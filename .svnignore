@@ -2,8 +2,8 @@
 
 ./.svnignore
 ./config.php
-./cache/
-./test/wordtemplatedownload/
-./test/upload/
-./modules/Emails/templates/
-./cache/images/*
+./cache
+./test/wordtemplatedownload
+./test/upload
+./modules/Emails/templates
+./cache/images
