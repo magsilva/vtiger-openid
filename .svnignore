@@ -6,4 +6,4 @@
 ./test/wordtemplatedownload/
 ./test/upload/
 ./modules/Emails/templates/
-./cache/images/
+./cache/images/*
