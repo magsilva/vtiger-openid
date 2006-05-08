@@ -9,8 +9,8 @@
 *
  ********************************************************************************/
 $mysql_dir = 'MYSQLINSTALLDIR';
-$mysql_username = 'MYSQLUSERNAME';
-$mysql_password = 'MYSQLPASSWORD';
+$mysql_username = 'test';
+$mysql_password = 'test';
 $mysql_port = 'MYSQLPORT';
 $mysql_bundled = 'MYSQLBUNDLEDSTATUS';
 $apache_dir = 'APACHEINSTALLDIR';

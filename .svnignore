@@ -1,0 +1,9 @@
+# Files to ignore at dotProject's root.
+
+./.svnignore
+./config.php
+./cache/
+./test/wordtemplatedownload/
+./test/upload/
+./modules/Emails/templates/
+./cache/images/
