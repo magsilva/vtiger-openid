@@ -25,6 +25,7 @@ require_once('include/logging.php');
 require_once('data/Tracker.php');
 require_once('include/utils.php');
 require_once('modules/Users/UserInfoUtil.php');
+require_once('include/aspects/aspects.php');
 
 class CRMEntity extends SugarBean
 {
@@ -39,93 +40,90 @@ class CRMEntity extends SugarBean
    * Contributor(s): ______________________________________..
    */
 	
-  var $new_schema = false;
-  var $new_with_id = false;
+	var $new_schema = false;
+	var $new_with_id = false;
 
-  function saveentity($module,$migration='')
-  {
-    global $current_user;
-    $insertion_mode = $this->mode;
+	function saveentity($module, $migration='')
+	{
+		global $current_user;
+		
+		$insertion_mode = $this->mode;
+		
+		$this->db->println("TRANS saveentity starts");
+		$this->db->startTransaction();
 
-    $this->db->println("TRANS saveentity starts");
-    $this->db->startTransaction();
-	
-	// Code included by Jaguar - starts    
-    if(isset($_REQUEST['recurringtype']) && $_REQUEST['recurringtype']!='')
-	    $recur_type = trim($_REQUEST['recurringtype']);
-    else
-    	$recur_type='';	
-	// Code included by Jaguar - Ends
+		if (isset($_REQUEST['recurringtype']) && $_REQUEST['recurringtype']!='')
+			$recur_type = trim($_REQUEST['recurringtype']);
+		else
+			$recur_type = '';	
 
-    foreach($this->tab_name as $table_name)
-    {
-      if($table_name == "crmentity")
-      {
-        $this->insertIntoCrmEntity($module,$migration);
-      }
-      elseif($table_name == "salesmanactivityrel")
-      {
-        $this->insertIntoSmActivityRel($module);
-      }
-      elseif($table_name == "seticketsrel" || $table_name == "seactivityrel" || $table_name ==  "seproductsrel" || $table_name ==  "senotesrel" || $table_name == "sefaqrel")
-      {
-        if(isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')
-        {
-          $this->insertIntoEntityTable($table_name, $module);
-        }
-        elseif($this->column_fields['parent_id']=='' && $insertion_mode=="edit")
-        {
-                $this->deleteRelation($table_name);
-        }
+		foreach ($this->tab_name as $table_name)
+		{
+			if ($table_name == "crmentity")
+			{
+				$this->insertIntoCrmEntity($module, $migration);
+			}
+			elseif ($table_name == "salesmanactivityrel")
+			{
+				$this->insertIntoSmActivityRel($module);
+			}
+			elseif ($table_name == "seticketsrel" || $table_name == "seactivityrel" || $table_name ==  "seproductsrel" || $table_name ==  "senotesrel" || $table_name == "sefaqrel")
+			{
+				if (isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')
+				{
+					$this->insertIntoEntityTable($table_name, $module);
+				}
+				elseif($this->column_fields['parent_id']=='' && $insertion_mode=="edit")
+				{
+					$this->deleteRelation($table_name);
+				}
+			}
+			elseif ($table_name ==  "cntactivityrel")
+			{
+				if (isset($this->column_fields['contact_id']) && $this->column_fields['contact_id'] != '')
+				{
+					$this->insertIntoEntityTable($table_name, $module);
+				}
+				elseif ($this->column_fields['contact_id'] =='' && $insertion_mode=="edit")
+				{
+					$this->deleteRelation($table_name);
+				}
+			}
+			elseif ($table_name ==  "ticketcomments" && $_REQUEST['comments'] != '')
+			{
+				$this->insertIntoTicketCommentTable($table_name, $module);
+			}
+			elseif ($table_name ==  "faqcomments" && $_REQUEST['comments'] != '')
+			{
+				$this->insertIntoFAQCommentTable($table_name, $module);
+			}
+			elseif ($table_name == "activity_reminder")
+			{
+				if ($recur_type == "--None--")
+				{
+					$this->insertIntoReminderTable($table_name,$module,"");
+				}
+			}
+			elseif($table_name == "recurringevents")
+			{
+				$recur_type = trim($_REQUEST['recurringtype']);
+				if($recur_type != "--None--"  && $recur_type != '')
+				{		   
+					$this->insertIntoRecurringTable($table_name,$module);
+				}		
+			}
+			else
+			{
+				$this->insertIntoEntityTable($table_name, $module);			
+			}
+		}
+		if ($module == 'Emails' || $module == 'Notes')
+			if( isset($_FILES['filename']['name']) && $_FILES['filename']['name']!='')
+				$this->insertIntoAttachment($this->id,$module);
 
-      }
-      elseif($table_name ==  "cntactivityrel")
-      {
-        if(isset($this->column_fields['contact_id']) && $this->column_fields['contact_id'] != '')
-        {
-          $this->insertIntoEntityTable($table_name, $module);
-        }
-        elseif($this->column_fields['contact_id'] =='' && $insertion_mode=="edit")
-        {
-          $this->deleteRelation($table_name);
-        }
-
-      }
-      elseif($table_name ==  "ticketcomments" && $_REQUEST['comments'] != '')
-      {
-                $this->insertIntoTicketCommentTable($table_name, $module);
-      }
-      elseif($table_name ==  "faqcomments" && $_REQUEST['comments'] != '')
-      {
-                $this->insertIntoFAQCommentTable($table_name, $module);
-      }
-      elseif($table_name == "activity_reminder")
-      {
-	      if($recur_type == "--None--")
-	      {
-		      $this->insertIntoReminderTable($table_name,$module,"");
-	      }
-      }
-      elseif($table_name == "recurringevents") // Code included by Jaguar -  starts
-      {
-		$recur_type = trim($_REQUEST['recurringtype']);
-		if($recur_type != "--None--"  && $recur_type != '')
-	      	{		   
-	      		$this->insertIntoRecurringTable($table_name,$module);
-		}		
-      }// Code included by Jaguar - Ends
-      else
-      {
-        $this->insertIntoEntityTable($table_name, $module);			
-      }
-    }
-    if($module == 'Emails' || $module == 'Notes')
-      if(isset($_FILES['filename']['name']) && $_FILES['filename']['name']!='')
-        $this->insertIntoAttachment($this->id,$module);
-
-	$this->db->completeTransaction();
-        $this->db->println("TRANS saveentity ends");
-  }
+		$this->db->completeTransaction();
+		$this->db->println("TRANS saveentity ends");
+	}
 
 
   function insertIntoAttachment1($id,$module,$filedata,$filename,$filesize,$filetype,$user_id)
@@ -407,294 +405,225 @@ $vtlog->logthis("module is =".$module,'info');
     return $updatelog;
   }
   //code added by shankar ends
-  function insertIntoEntityTable($table_name, $module)
-  {
-	  global $vtlog;	
-	  $vtlog->logthis("function insertIntoCrmEntity ".$module.' table name ' .$table_name,'info');  
-	  global $adb;
-	  $insertion_mode = $this->mode;
-
-	  //Checkin whether an entry is already is present in the table to update
-	  if($insertion_mode == 'edit')
-	  {
-		  $check_query = "select * from ".$table_name." where ".$this->tab_name_index[$table_name]."=".$this->id;
-		  $check_result=$adb->query($check_query);
-
-		  $num_rows = $adb->num_rows($check_result);
-
-		  if($num_rows <= 0)
-		  {
-			  $insertion_mode = '';
-		  }	 
-	  }
-
-	  if($insertion_mode == 'edit')
-	  {
-		  $update = '';
-	  }
-	  else
-	  {
-		  $column = $this->tab_name_index[$table_name];
-		  $value = $this->id;
-	  }
-
-	  $tabid= getTabid($module);	
-	  $sql = "select * from field where tabid=".$tabid." and tablename='".$table_name."' and displaytype in (1,3)"; 
-	  $result = $adb->query($sql);
-	  $noofrows = $adb->num_rows($result);
-	  for($i=0; $i<$noofrows; $i++)
-	  {
-		  $fieldname=$adb->query_result($result,$i,"fieldname");
-		  $columname=$adb->query_result($result,$i,"columnname");
-		  $uitype=$adb->query_result($result,$i,"uitype");
-		  if(isset($this->column_fields[$fieldname]))
-		  {
-			  if($uitype == 56)
-			  {
-				  if($this->column_fields[$fieldname] == 'on' || $this->column_fields[$fieldname] == 1)
-				  {
-					  $fldvalue = 1;
-				  }
-				  else
-				  {
-					  $fldvalue = 0;
-				  }
-
-			  }
-			  elseif($uitype == 5 || $uitype == 6 || $uitype ==23)
-			  {
-				  if($_REQUEST['action'] == 'Import')
-				  {
-					  $fldvalue = $this->column_fields[$fieldname];
-				  }
-				  else
-				  {
-					  $fldvalue = getDBInsertDateValue($this->column_fields[$fieldname]);
-				  }
-			  }
-			  else
-			  {
-				  $fldvalue = $this->column_fields[$fieldname]; 
-				  $fldvalue = stripslashes($fldvalue);
-			  }
-			  $fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
 
 
+	function insertIntoEntityTable($table_name, $module)
+ 	{
+		global $vtlog, $current_user, $adb;
+					
+		$vtlog->logthis("function / ".$module.' table name ' .$table_name,'info');  
+	 	
+		$insertion_mode = $this->mode;
 
-		  }
-		  else
-		  {
-			  $fldvalue = '';
-		  }
-		  if($fldvalue=='') $fldvalue ="''";
-		  if($insertion_mode == 'edit')
-		  {
-			  //code by shankar starts
-			  if(($table_name == "troubletickets") && ($columname == "update_log"))
-			  {
-				  $fldvalue = $this->constructUpdateLog($this->id);
-				  $fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
-			  }
-			  //code by shankar ends
+		//Checkin whether an entry is already is present in the table to update
+	 	if ($insertion_mode == 'edit')
+		{
+			$check_query = "select * from ".$table_name." where ".$this->tab_name_index[$table_name]."=".$this->id;
+			$check_result=$adb->query($check_query);
+			$num_rows = $adb->num_rows($check_result);
+			if ($num_rows <= 0)
+			{
+				$insertion_mode = '';
+				$column = $this->tab_name_index[$table_name];
+				$value = $this->id;
+			}
+			else
+			{
+				$update = '';
+			}	 
+		}
 
-			  if($table_name == 'notes' && $columname == 'filename' && $_FILES['filename']['name'] == '')
-			  {
-				  $fldvalue = $this->getOldFileName($this->id);
-			  }
-			  if($table_name == 'products' && $columname == 'imagename')
-			  {
-			/*	  //Product Image Handling done
-				  if($_FILES['imagename']['name'] != '')
-				  {
+		$tabid= getTabid($module);
+		$sql = "select * from field where tabid=".$tabid." and tablename='".$table_name."' and displaytype in (1,3)"; 
+		$result = $adb->query($sql);
+		$noofrows = $adb->num_rows($result);
+		for ($i=0; $i<$noofrows; $i++)
+		{
+			$fieldname = $adb->query_result($result,$i,"fieldname");
+			$columname = $adb->query_result($result,$i,"columnname");
+			$uitype = $adb->query_result($result,$i,"uitype");
+			if (isset($this->column_fields[$fieldname]))
+			{
+				if ($uitype == 56)
+				{
+					if ($this->column_fields[$fieldname] == 'on' || $this->column_fields[$fieldname] == 1)
+					{
+						$fldvalue = 1;
+					}
+					else
+					{
+						$fldvalue = 0;
+					}
+				}
+				elseif ($uitype == 5 || $uitype == 6 || $uitype ==23)
+				{
+					if ($_REQUEST['action'] == 'Import')
+					{
+						$fldvalue = $this->column_fields[$fieldname];
+					}
+					else
+					{
+						$fldvalue = getDBInsertDateValue($this->column_fields[$fieldname]);
+					}
+				}
+				else
+				{
+					$fldvalue = $this->column_fields[$fieldname]; 
+					$fldvalue = stripslashes($fldvalue);
+				}
+				$fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
+			}
+			else
+			{
+				$fldvalue = '';
+			}
+			
+			if ($fldvalue=='')
+				$fldvalue ="''";
+				
+			if ($insertion_mode == 'edit')
+			{
+				if (($table_name == "troubletickets") && ($columname == "update_log"))
+				{
+					$fldvalue = $this->constructUpdateLog($this->id);
+					$fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
+				}
 
-					  $prd_img_arr = upload_product_image_file("edit",$this->id);
-					  //print_r($prd_img_arr);
-					  if($prd_img_arr["status"] == "yes")
-					  {
-						  $fldvalue ="'".$prd_img_arr["file_name"]."'";
-					  }
-					  else
-					  {
-						  $fldvalue ="'".getProductImageName($this->id)."'";
-					  }	 
+				if ($table_name == 'notes' && $columname == 'filename' && $_FILES['filename']['name'] == '')
+				{
+					$fldvalue = $this->getOldFileName($this->id);
+				}
+				if ($table_name != 'ticketcomments')
+				{
+					if ($i == 0)
+					{
+						$update = $columname."=".$fldvalue."";
+					}
+					else
+					{
+						$update .= ', '.$columname."=".$fldvalue."";
+					}
+				}
+			}
+			else
+			{
+				if (($table_name == "troubletickets") && ($columname == "update_log"))
+				{
+					$fldvalue = date("l dS F Y h:i:s A").' by '.$current_user->user_name;
+					if ($_REQUEST['assigned_group_name'] != '' && $_REQUEST['assigntype'] == 'T')
+					{
+						$group_name = $_REQUEST['assigned_group_name'];
+					}
+					elseif ($this->column_fields['assigned_user_id'] != '')
+					{
+						$tkt_ownerid = $this->column_fields['assigned_user_id'];
+					}
+					else
+					{
+						$tkt_ownerid = $current_user->id;
+					}
+					if ($group_name != '')
+						$tkt_ownername = $group_name;
+					else
+						$tkt_ownername = getUserName($tkt_ownerid);	
+					$fldvalue .= "--//--Ticket created. Assigned to ".$tkt_ownername."--//--";
+					$fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
+				}
 
+				$column .= ", ".$columname;
+				$value .= ", ".$fldvalue."";
+			}
+		}
 
-				  }
-				  else
-				  {
-					  $fldvalue ="'".getProductImageName($this->id)."'";
-				  }
-		      */		  
-
-			  }
-			  if($table_name != 'ticketcomments')
-			  {
-				  if($i == 0)
-				  {
-					  $update = $columname."=".$fldvalue."";
-				  }
-				  else
-				  {
-					  $update .= ', '.$columname."=".$fldvalue."";
-				  }
-			  }
-		  }
-		  else
-		  {
-			  //code by shankar starts
-			  if(($table_name == "troubletickets") && ($columname == "update_log"))
-			  {
-				  global $current_user;
-				  $fldvalue = date("l dS F Y h:i:s A").' by '.$current_user->user_name;
-				  if($_REQUEST['assigned_group_name'] != '' && $_REQUEST['assigntype'] == 'T')
-                                  {
-                                        $group_name = $_REQUEST['assigned_group_name'];
-                                  }
-				  elseif($this->column_fields['assigned_user_id'] != '')
-				  {
-					  $tkt_ownerid = $this->column_fields['assigned_user_id'];
-				  }
-				  else
-				  {
-					  $tkt_ownerid = $current_user->id;
-				  }
-				  if($group_name != '')
-					  $tkt_ownername = $group_name;
-				  else
-					  $tkt_ownername = getUserName($tkt_ownerid);	
-				  $fldvalue .= "--//--Ticket created. Assigned to ".$tkt_ownername."--//--";
-				  $fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
-				  //echo ' updatevalue is ............. ' .$fldvalue;
-			  }
-			  elseif($table_name == 'products' && $columname == 'imagename')
-			  {
-				  //Product Image Handling done
-			/*	  if($_FILES['imagename']['name'] != '')
-				  {
-
-					  $prd_img_arr = upload_product_image_file("create",$this->id);
-					  //print_r($prd_img_arr);
-					  if($prd_img_arr["status"] == "yes")
-					  {
-						  $fldvalue ="'".$prd_img_arr["file_name"]."'";
-					  }
-					  else
-					  {
-						  $fldvalue ="''";
-					  }	 
-
-
-				  }
-				  else
-				  {
-					  $fldvalue ="''";
-				  }
-			*/	  
-
-			  }
-			  //code by shankar ends
-			  $column .= ", ".$columname;
-			  $value .= ", ".$fldvalue."";
-		  }
-
-	  }
-
-
-
-
-
-	  if($insertion_mode == 'edit')
-	  {
-		  if($_REQUEST['module'] == 'Potentials')
-		  {
-			  $dbquery = 'select sales_stage from potential where potentialid = '.$this->id;
-			  $sales_stage = $adb->query_result($adb->query($dbquery),0,'sales_stage');
-			  if($sales_stage != $_REQUEST['sales_stage'])
-			  {
-				  $date_var = date('YmdHis');
-				  //$sql = "insert into potstagehistory values('',".$this->id.",".$_REQUEST['amount'].",'".$_REQUEST['sales_stage']."',".$_REQUEST['probability'].",".$_REQUEST['expectedrevenue'].",".$adb->formatString("potstagehistory","closedate",$_REQUEST['closingdate']).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
-				  $sql = "insert into potstagehistory values('',".$this->id.",'".$_REQUEST['amount']."','".$sales_stage."','".$_REQUEST['probability']."',0,".$adb->formatString("potstagehistory","closedate",$_REQUEST['closingdate']).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
-				  $adb->query($sql);
-			  }
-		  }
+		if ($insertion_mode == 'edit')
+		{
+			if ($_REQUEST['module'] == 'Potentials')
+			{
+				$dbquery = 'select sales_stage from potential where potentialid = '.$this->id;
+				$sales_stage = $adb->query_result($adb->query($dbquery),0,'sales_stage');
+				if ($sales_stage != $_REQUEST['sales_stage'])
+				{
+					$date_var = date('YmdHis');
+					$sql = "insert into potstagehistory values('',".$this->id.",'".$_REQUEST['amount']."','".$sales_stage."','".$_REQUEST['probability']."',0,".$adb->formatString("potstagehistory","closedate",$_REQUEST['closingdate']).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
+					$adb->query($sql);
+				}
+			}
 		
-		  //Check done by Don. If update is empty the the query fails
-		  if(trim($update) != '')
-        	  {
-		  	$sql1 = "update ".$table_name." set ".$update." where ".$this->tab_name_index[$table_name]."=".$this->id;
+		  	// Check done by Don. If update is empty the the query fails
+			if (trim($update) != '')
+			{
+				$sql1 = "update ".$table_name." set ".$update." where ".$this->tab_name_index[$table_name]."=".$this->id;
+				$adb->query($sql1); 
+			}
 
-		  	$adb->query($sql1); 
-		  }
-
-		  if($_REQUEST['assigntype'] == 'T')
-		  {
-			  $groupname = $_REQUEST['assigned_group_name'];
-			  //echo 'about to update lead group relation';
-			  if($module == 'Leads' && $table_name == 'leaddetails')
-			  {
-				  updateLeadGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'HelpDesk' && $table_name == 'troubletickets')
-			  {
-				  updateTicketGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module =='Activities' || $module =='Events'  )
-			  {
-				 if($table_name == 'activity')
-				 {
-				   updateActivityGroupRelation($this->id,$groupname);
-				 }
-			  }
-			   	
-
-		  }
-		  else
-		  {
-			  //echo 'about to update lead group relation again!';
-			  if($module == 'Leads' && $table_name == 'leaddetails')
-			  {
-				  updateLeadGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'HelpDesk' && $table_name == 'troubletickets')
-			  {
-				  updateTicketGroupRelation($this->id,'');
-			  }
-			  elseif($module =='Activities' || $module =='Events')
-			  {
-				  if($table_name == 'activity')
-                                  {
-			             updateActivityGroupRelation($this->id,'');
-				  }
-			  }
-			  	
-
-		  }
-
-	  }
-	  else
-	  {	
-		  $sql1 = "insert into ".$table_name." (".$column.") values(".$value.")";
-		  $adb->query($sql1); 
-		  $groupname = $_REQUEST['assigned_group_name'];
-		  if($_REQUEST['assigntype'] == 'T' && $table_name == 'leaddetails')
-		  {
-			  if($table_name == 'leaddetails')
-			  {
-				  insert2LeadGroupRelation($this->id,$groupname);
-			  }
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'activity') 
-		  {
-			  insert2ActivityGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'troubletickets') 
-		  {
-			  insert2TicketGroupRelation($this->id,$groupname);
-		  }
-
-	  }
-
-  }
+			if ($_REQUEST['assigntype'] == 'T')
+			{
+				$groupname = $_REQUEST['assigned_group_name'];
+				if ($module == 'Leads' && $table_name == 'leaddetails')
+				{
+					updateLeadGroupRelation($this->id, $groupname);
+				}
+				elseif ($module == 'HelpDesk' && $table_name == 'troubletickets')
+				{
+					updateTicketGroupRelation($this->id,$groupname);
+				}
+				elseif ($module =='Activities' || $module =='Events'  )
+				{
+					if ($table_name == 'activity')
+					{
+						updateActivityGroupRelation($this->id, $groupname);
+					}
+				}
+			}
+			else
+			{
+				if ($module == 'Leads' && $table_name == 'leaddetails')
+				{
+					updateLeadGroupRelation($this->id, '');
+				}
+				elseif ($module == 'HelpDesk' && $table_name == 'troubletickets')
+				{
+					updateTicketGroupRelation($this->id, '');
+				}
+				elseif ($module =='Activities' || $module =='Events')
+				{
+					if ($table_name == 'activity')
+					{
+						updateActivityGroupRelation($this->id, '');
+					}
+				}
+			}
+		}
+		else
+		{
+			$sql1 = "insert into ".$table_name." (".$column.") values(".$value.")";
+			$adb->query($sql1);
+			
+			// TODO: Enviar o record id 
+			// create_new_entity( $id, $table_name ou $column, $value );
+			var_dump( $table_name );
+			die( "Hasta la vista, baby");
+			
+			$groupname = $_REQUEST['assigned_group_name'];
+			
+			if ($_REQUEST['assigntype'] == 'T' && $table_name == 'leaddetails')
+			{
+				if ($table_name == 'leaddetails')
+				{
+					insert2LeadGroupRelation($this->id, $groupname);
+				}
+			}
+			elseif ($_REQUEST['assigntype'] == 'T' && $table_name == 'activity')
+			{
+				insert2ActivityGroupRelation($this->id, $groupname);
+			}
+			elseif ($_REQUEST['assigntype'] == 'T' && $table_name == 'troubletickets')
+			{
+				insert2TicketGroupRelation($this->id,$groupname);
+			}
+		}
+	}
+				
 function deleteRelation($table_name)
 {
          global $adb;
@@ -936,13 +865,14 @@ $vtlog->logthis("type is ".$type,'debug');
 		
   }
 
-  function save($module_name) 
-  {
-	global $vtlog;
-	$vtlog->logthis("module name is ".$module_name,'debug');  
-    //GS Save entity being called with the modulename as parameter
-      $this->saveentity($module_name,$migration);
-  }
+	function save($module_name) 
+	{
+		global $vtlog;
+		
+		$vtlog->logthis("module name is ".$module_name, 'debug');
+		//GS Save entity being called with the modulename as parameter
+		$this->saveentity($module_name, $migration);
+	}
   
 	function create_list_query($order_by, $where)
 	{
@@ -1302,77 +1232,5 @@ $vtlog->logthis("type is ".$type,'debug');
 		$where_clause .= " AND deleted=0";
 		return $where_clause;
 	}
-
-/*	
-	function get_msgboard_data($orderby = "" , $where = "" ,$row_offset = 0)
- 	{
- 	         $response = $this->get_messageboard_list($order_by, $where , $row_offset,$limit= -1,$max_per_page = -1);
- 	         return $response;
- 	}
- 	
-  function get_messageboard_list($orderby, $where, $row_offset,$limit= -1, $max_per_page = -1)
-  {
-    global $list_max_entries_per_page;
-
-		if(isset($_REQUEST['query']))
-			{
-$sql='select distinct(t.topic_id), t.topic_title, c.cat_title, first.username as author, t.topic_replies,FROM_UNIXTIME(p.post_time) as post_time from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_categories c, phpbb_users first where t.topic_id = p.topic_id and p.post_id=t.topic_last_post_id and t.topic_poster=first.user_id and t.forum_id=f.forum_id and f.cat_id=c.cat_id and ' .$where;
-	
-//				$sql='select distinct(t.topic_title),c.cat_title,t.topic_poster, t.topic_replies,FROM_UNIXTIME(p.post_time) as post_time, t.topic_replies from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_categories c,phpbb_users u where t.forum_id=f.forum_id and f.cat_id=c.cat_id and ' .$where ;
-			}
-			else
-			{
-				$sql='select t.topic_id,p.post_id,t.topic_title,FROM_UNIXTIME(p.post_time) as post_time, f.forum_name , u.username , t.topic_replies from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_users u where p.topic_id=t.topic_id and t.forum_id=f.forum_id and u.user_id=t.topic_poster ORDER BY p.post_time ';
- 	 		}
- 	                 $result = mysql_query($sql);
- 	                 $list = Array();
-                        
-                         if($max_per_page == -1)
-                         {
-                           $max_per_page 	= $list_max_entries_per_page;
-                         }
-	
- 	                 $rows_found =  $this->db->getRowCount($result);
- 	                 $previous_offset = $row_offset - $max_per_page;
- 	                 $next_offset = $row_offset + $max_per_page;
- 	                 if($rows_found != 0)
- 	                 {
-                           //$max_per_page=15;
- 	                    for($index = $row_offset , $row = $this->db->fetchByAssoc($result, $index); $row && ($index < $row_offset + $max_per_page ||  $max_per_page == -99) ;$index++, $row = $this->db->fetchByAssoc($result, $index))
- 	                         {
- 	                                 foreach($this->list_fields as $field)
- 	                                 {
- 	                                         //print_r($this->list_fields);
- 	                                         if (isset($row[$field]))
- 	                                         {
- 	                                                 $this->$field = $row[$field];
- 	                                         }
- 	                                         else
- 	                                         {
- 	                                                 $this->$field = "";
- 	                                         }
- 	                                 }
- 	 
- 	                    $list[] = $this;
- 	                         }
- 	                 }
- 	 
- 	           $response = Array();
- 	                 $response['list'] = $list;
- 	                 $response['row_count'] = $rows_found;
- 	                 $response['next_offset'] = $next_offset;
- 	                 $response['previous_offset'] = $previous_offset;
-                         /*
- 	                 foreach($this->list_fields as $field)
- 	                                {
- 	                                        if (isset($row[$field]))
- 	                                         {
- 	                                                $this->$field = $row[$field];
- 	                                                $this->log->debug("process_full_list: $this->object_name({$row['id']}): ".$field." = ".$this->$field);
- 	                                        }
- 	                                }
- 	                 return $response;
-  }
-	*/
 }
 ?>
