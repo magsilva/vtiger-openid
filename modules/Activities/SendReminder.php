@@ -57,7 +57,7 @@ if($adb->num_rows($result) >= 1)
 			//echo "<h1>if $recur_id</h1>";
 			$date_start = $result_set['date_start'];
 		}
-		elseif( ($recur_id !=0) 
+		elseif( ($recur_id !=0) )
 		{
 			//echo "<h1>else $recur_id</h1>";
 			$date_start = $result_set['recurringdate'];

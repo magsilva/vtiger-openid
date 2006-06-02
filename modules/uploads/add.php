@@ -9,7 +9,7 @@
 * 
  ********************************************************************************/
 
-echo $action
+echo $action;
 if ($action == "upload") 
 {
   // ok, let's get the uploaded data and insert it into the db now
