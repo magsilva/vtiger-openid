@@ -99,7 +99,7 @@ if (is_file("config.php")) {
 		$db_name = $dbconfig['db_name'];
 	}
 	else {
-		$db_name = 'vtiger_trunk';
+		$db_name = 'vtiger';
 	}
 	!isset($_REQUEST['db_drop_tables']) ? $db_drop_tables = "0" : $db_drop_tables = $_REQUEST['db_drop_tables'];
 
