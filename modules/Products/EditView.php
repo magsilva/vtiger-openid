@@ -94,8 +94,8 @@ if(trim($block_5) != '')
 //needed when creating a new product with a default vendor name to passed 
 if (isset($_REQUEST['name']) && is_null($focus->name)) {
 	$focus->name = $_REQUEST['name'];
-	
 }
+
 if (isset($_REQUEST['vendorid']) && is_null($focus->vendorid)) {
 	$focus->vendorid = $_REQUEST['vendorid'];
 }

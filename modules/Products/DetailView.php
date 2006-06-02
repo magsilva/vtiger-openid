@@ -9,7 +9,6 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-//require_once('HelpDeskUtil.php');
 require_once('XTemplate/xtpl.php');
 require_once('include/utils.php');
 require_once('modules/Products/Product.php');
@@ -17,13 +16,13 @@ require_once('include/uifromdbutil.php');
 
 $focus = new Product();
 
-if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) {
-  $focus->retrieve_entity_info($_REQUEST['record'],"Products");
+if (isset($_REQUEST['record'])) {
+  $focus->retrieve_entity_info($_REQUEST['record'], "Products");
   $focus->id = $_REQUEST['record'];
   $focus->name=$focus->column_fields['productname'];		
 }
 
-if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
+if (isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
         $focus->id = "";
 }
 
@@ -68,7 +67,7 @@ if(trim($block_5) != '')
 {
         $cust_fld = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="formOuterBorder">';
         $cust_fld .=  '<tr><td>';
-	$block_5_header = getBlockTableHeader("LBL_CUSTOM_INFORMATION");
+        $block_5_header = getBlockTableHeader("LBL_CUSTOM_INFORMATION");
         $cust_fld .= $block_5_header;
         $cust_fld .= '<table width="100%" border="0" cellspacing="1" cellpadding="0">';
         $cust_fld .= $block_5;
@@ -96,81 +95,16 @@ if(isPermitted("Products",2,$_REQUEST['record']) == 'yes')
 	$xtpl->assign("DELETEBUTTON","<td><input title=\"$app_strings[LBL_DELETE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_DELETE_BUTTON_KEY]\" class=\"button\" onclick=\"this.form.return_module.value='Products'; this.form.return_action.value='index'; this.form.action.value='Delete'; return confirm('$app_strings[NTC_DELETE_CONFIRMATION]')\" type=\"submit\" name=\"Delete\" value=\"$app_strings[LBL_DELETE_BUTTON_LABEL]\"></td>");
 }
 
-
-
 $xtpl->assign("IMAGE_PATH", $image_path);
 $xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $xtpl->assign("ID", $_REQUEST['record']);
 $xtpl->parse("main");
 $xtpl->out("main");
 
-/*
-require_once('modules/Products/binaryfilelist.php');
-echo '<br><br>';
-echo '<table width="50%" cellpadding="0" cellspacing="0" border="0"><tbody><tr>';
-echo '<form border="0" action="index.php" method="post" name="form" id="form">';
-
-echo '<input type="hidden" name="module">';
-echo '<input type="hidden" name="mode">';
-echo '<input type="hidden" name="return_module" value="'.$currentModule.'">';
-echo '<input type="hidden" name="return_id" value="'.$productid.'">';
-echo '<input type="hidden" name="action">';
-
-
-echo '<td>';
-echo '<table cellpadding="0" cellspacing="0" border="0"><tbody><tr>
-                <td class="formHeader" vAlign="top" align="left" height="20">
-         <img src="' .$image_path. '/left_arc.gif" border="0"></td>
-   <td class="formHeader" vAlign="middle" background="' . $image_path. '/header_tile.gif" align="left" noWrap width="100%" height="20">'.$mod_strings['LBL_ATTACHMENTS'].'</td>
-        <td  class="formHeader" vAlign="top" align="right" height="20">
-                  <img src="' .$image_path. '/right_arc.gif" border="0"></td>
-                </tr></tbody></table>
-      </td>';
-echo '<td>&nbsp;</td>';
-echo '<td>&nbsp;</td>';
-echo '<td valign="bottom"><input title="Attach File" accessyKey="F" class="button" onclick="this.form.action.value=\'upload\';this.form.module.value=\'Products\'" type="submit" name="button" value="'.$mod_strings['LBL_NEW_ATTACHMENT'].'"></td>';
-echo '<td width="50%"></td>';
-
-echo '</td></tr></form></tbody></table>';
-*/
-
-// $focus->get_attachments($focus->id);
-
-
 //Security check for related list
 global $profile_id;
 $tab_per_Data = getAllTabsPermission($profile_id);
 $permissionData = $_SESSION['action_permission_set'];
-getRelatedLists("Products",$focus);
-
-
-/*
-//Constructing the Related Lists from here
-include('modules/Products/RenderRelatedListUI.php');
-if($tab_per_Data[13] == 0)
-{
-        if($permissionData[13][3] == 0)
-        {
-		 $focus->get_tickets($focus->id);
-	}
-}
-// $focus->get_meetings($focus->id);
-if($tab_per_Data[9] == 0)
-{
-        if($permissionData[9][3] == 0)
-        {
-		 $focus->get_activities($focus->id);
-	}
-}
-if($tab_per_Data[8] == 0)
-{
-        if($permissionData[8][3] == 0)
-        {
-		 $focus->get_attachments($focus->id);
-	}
-}
-
-
-*/
+getRelatedLists("Products", $focus);
 
 ?>
