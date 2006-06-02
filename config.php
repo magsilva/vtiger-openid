@@ -33,10 +33,10 @@ $HELPDESK_SUPPORT_NAME = 'your-domain Name';
       db_password:     	MySQL Password
       db_name:     		MySQL Database Name
 */
-$dbconfig['db_host_name'] = 	'192.168.1.68';
+$dbconfig['db_host_name'] = 	'localhost';
 $dbconfig['db_user_name'] = 	'test';
 $dbconfig['db_password'] = 		'test';
-$dbconfig['db_name'] = 			'vtiger_trunk';
+$dbconfig['db_name'] = 			'vtiger';
 $dbconfig['db_type'] = 'mysql';
 
 $dbconfig['log_sql'] = false;
@@ -47,11 +47,11 @@ $dbconfigoption['seqname_format'] = '%s_seq';
 $dbconfigoption['portability'] = 0;
 $dbconfigoption['ssl'] = false;
 
-$host_name = '192.168.1.68';
+$host_name = 'localhost';
 
-$site_URL = 'http://localhost:80/~msilva/Projects/ideais/vtiger';
+$site_URL = 'http://localhost:80/~magsilva/Projects/ideais/vtiger';
 
-$root_directory = '/home/msilva/Projects/ideais/vtiger/';
+$root_directory = '/home/magsilva/public_html/Projects/ideais/vtiger/';
 
 $cache_dir = 'cache/';
 $mail_server = '';
