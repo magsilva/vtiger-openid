@@ -21,7 +21,6 @@ require_once('modules/Products/Product.php');
 require_once('modules/HelpDesk/HelpDesk.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
-//require_once('SOAP/lib/nusoap.php');
 require_once('include/nusoap/nusoap.php');
 // create object
 //$serializer = new XML_Serializer();

@@ -600,10 +600,15 @@ $vtlog->logthis("module is =".$module,'info');
 			$adb->query($sql1);
 			
 			// TODO: Enviar o record id 
-			// create_new_entity( $id, $table_name ou $column, $value );
-			var_dump( $table_name );
-			die( "Hasta la vista, baby");
-			
+			// create_new_entity( $adb->Insert_ID(), $table_name );
+		 	$product = new Product();
+			$product->retrieve_entity_info( $adb->getInsertedID(), "Products");
+			$product->id = $adb->getInsertedID();
+			$product->name = $product->column_fields['productname'];
+			var_dump($product->id);
+			var_dump($product);
+			die();
+							
 			$groupname = $_REQUEST['assigned_group_name'];
 			
 			if ($_REQUEST['assigntype'] == 'T' && $table_name == 'leaddetails')
