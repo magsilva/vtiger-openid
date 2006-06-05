@@ -629,26 +629,7 @@ global $vtlog;
 	
 	function connect($dieOnError = false)
 	{
-		//$this->println("ADODB connect");
 		global $dbconfigoption,$dbconfig;
-		//$this->println("ADODB type=".$this->dbType." host=".$this->dbHostName." dbname=".$this->dbName." user=".$this->userName." password=".$this->userPassword);
-
-		/*$driver='mysql';
-		$server='srinivasan';
-		$user='root';
-		$password='';
-		$database='vtigercrm3_2';
-
-		$this->database = ADONewConnection($driver);
-
-		#$this->database->debug = true;
-		$this->println("ADODB status=".$this->database->PConnect($server, $user, $password, $database));*/
-
-		/*$this->dbHostName="srinivasan:1521";
-		$this->userName="vt4";
-		$this->userPassword="vt4";
-		$this->dbName="srini";
-		$this->dbType="oci8";*/
 		
 		if(!isset($this->dbType))
 		{
@@ -657,48 +638,15 @@ global $vtlog;
 		}
 		
 		$this->database = ADONewConnection($this->dbType);
-		//$this->database->debug = true;
-		
 		$this->database->PConnect($this->dbHostName, $this->userName, $this->userPassword, $this->dbName);
 		$this->database->LogSQL($this->enableSQLlog);
-		//$this->database->SetFetchMode(ADODB_FETCH_ASSOC); 
-		//$this->println("ADODB type=".$this->dbType." host=".$this->dbHostName." dbname=".$this->dbName." user=".$this->userName." password=".$this->userPassword);		
-
 	}
-/*
-	function PearDatabase(){			
-			//$this->println("PearDatabase");
-			global $currentModule;
-			$this->log =& LoggerManager::getLogger('PearDatabase_'. $currentModule);
-			$this->resetSettings();
 			
-			
-	}
-	function resetSettings(){
-		global $dbconfig, $dbconfigoption;
-		$this->disconnect();
-		$this->setDatabaseType($dbconfig['db_type']);
-		$this->setUserName($dbconfig['db_user_name']);
-		$this->setUserPassword($dbconfig['db_password']);
-		$this->setDatabaseHost( $dbconfig['db_host_name']);
-		$this->setDatabaseName($dbconfig['db_name']);
-		$this->dbOptions = $dbconfigoption;
-		$this->enableSQLlog = ($dbconfig['log_sql'] == true);
-		//$this->println("resetSettings log=".$this->enableSQLlog);
-		//$this->println($dbconfig);
-		/*if($this->dbType != "mysql"){
-			require_once( 'DB.php' );	
-		}*/
-			
-		
-
-	function PearDatabase($dbtype='',$host='',$dbname='',$username='',$passwd=''){			
-        //$this->println("PearDatabase");
+	function PearDatabase($dbtype='',$host='',$dbname='',$username='',$passwd='')
+	{			
 			global $currentModule;
 			$this->log =& LoggerManager::getLogger('PearDatabase_'. $currentModule);
 			$this->resetSettings($dbtype,$host,$dbname,$username,$passwd);
-			
-			
 	}
     
    
@@ -935,6 +883,12 @@ function get_tables()
     return $result;		
 }
 
+	function getInsertedID()
+	{
+		$this->checkConnection();
+		$result = $this->database->Insert_ID();
+		return $result;
+	}
 	
 }
 
