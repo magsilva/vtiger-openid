@@ -25,7 +25,7 @@ require_once('include/logging.php');
 require_once('data/Tracker.php');
 require_once('include/utils.php');
 require_once('modules/Users/UserInfoUtil.php');
-require_once('include/aspects/aspects.php');
+# require_once('include/aspects/aspects.php');
 
 class CRMEntity extends SugarBean
 {
@@ -410,9 +410,9 @@ $vtlog->logthis("module is =".$module,'info');
 	function insertIntoEntityTable($table_name, $module)
  	{
 		global $vtlog, $current_user, $adb;
-					
-		$vtlog->logthis("function / ".$module.' table name ' .$table_name,'info');  
-	 	
+		
+		$vtlog->logthis("function insertIntoCrmEntity ".$module.' table name ' .$table_name,'info');
+
 		$insertion_mode = $this->mode;
 
 		//Checkin whether an entry is already is present in the table to update
@@ -599,7 +599,8 @@ $vtlog->logthis("module is =".$module,'info');
 			$sql1 = "insert into ".$table_name." (".$column.") values(".$value.")";
 			$adb->query($sql1);
 			
-			// TODO: Enviar o record id 
+			// TODO: Enviar o record id
+			/* 
 			// create_new_entity( $adb->Insert_ID(), $table_name );
 		 	$product = new Product();
 			$product->retrieve_entity_info( $adb->getInsertedID(), "Products");
@@ -608,7 +609,8 @@ $vtlog->logthis("module is =".$module,'info');
 			var_dump($product->id);
 			var_dump($product);
 			die();
-							
+			*/
+						
 			$groupname = $_REQUEST['assigned_group_name'];
 			
 			if ($_REQUEST['assigntype'] == 'T' && $table_name == 'leaddetails')
