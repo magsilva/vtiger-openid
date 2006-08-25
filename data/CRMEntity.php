@@ -424,14 +424,12 @@ $vtlog->logthis("module is =".$module,'info');
 			if ($num_rows <= 0)
 			{
 				$insertion_mode = '';
+			}
+			$update = '';
+		} else { 
 				$column = $this->tab_name_index[$table_name];
 				$value = $this->id;
-			}
-			else
-			{
-				$update = '';
-			}	 
-		}
+ 		}
 
 		$tabid= getTabid($module);
 		$sql = "select * from field where tabid=".$tabid." and tablename='".$table_name."' and displaytype in (1,3)"; 
