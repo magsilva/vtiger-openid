@@ -1,5 +1,4 @@
 {*<!--
-
 /*********************************************************************************
 ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
  * ("License"); You may not use this file except in compliance with the License
@@ -9,43 +8,116 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-
 -->*}
-<form action="index.php">
-<input type="hidden" name="module" value="Settings">
-<input type="hidden" name="action" value="CurrencyEditView">
-<input type="hidden" name="parenttab" value="Settings">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-	<tr>
-		<td class="showPanelBg" valign="top" width="90%"  style="padding-left:20px; "><br />
-			<span class="lvtHeaderText">{$MOD.LBL_MODULE_NAME} &gt;{$MOD.LBL_CONFIGURATION} &gt; {$MOD.LBL_CURRENCY_CONFIG}</span>
-			<hr noshade="noshade" size="1" />
-		</td>
-		<td width="10%" class="showPanelBg">&nbsp;</td>
-	</tr>
-	<tr>
-		<td width="90%" style="padding-left:20px;" valign="top">
-			<input type="submit" name="new" value="{$MOD.LBL_NEW_CURRENCY}" class="classBtn" /><br /><br />
-			<table style="background-color: rgb(204, 204, 204);" class="small" border="0" cellpadding="5" cellspacing="1" width="100%">
-			<tbody>
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+<br>
+	<div align=center>
+	
+			{include file='SetMenu.tpl'}
+
+			<!-- DISPLAY -->
+			<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+			<form action="index.php">
+			<input type="hidden" name="module" value="Settings">
+			<input type="hidden" name="action" value="CurrencyEditView">
+			<input type="hidden" name="parenttab" value="{$PARENTTAB}">
+			<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}currency.gif" alt="Users" width="48" height="48" border=0 title="Users"></td>
+				<td class="heading2" valign="bottom" ><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > {$MOD.LBL_CURRENCY_SETTINGS} </b></td>
+			</tr>
+			<tr>
+				<td valign=top class="small">{$MOD.LBL_CURRENCY_DESCRIPTION}</td>
+			</tr>
+			</table>
+			<br>
+			<table border=0 cellspacing=0 cellpadding=10 width=100% >
+			<tr>
+			<td>
+
+			<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
 				<tr>
-					<td class="lvtCol" width="25%">{$MOD.LBL_CURRENCY_NAME}</td>
-			                <td class="lvtCol" width="20%">{$MOD.LBL_CURRENCY_CODE}</td>
-				        <td class="lvtCol" width="5%">{$MOD.LBL_CURRENCY_SYMBOL}</td>
-			                <td class="lvtCol" width="20%">{$MOD.LBL_CURRENCY_CRATE}</td>
-					<td class="lvtCol" width="15%">{$MOD.LBL_CURRENCY_STATUS}</td>
-					<td class="lvtCol" width="15%">{$MOD.LBL_CURRENCY_TOOL}</td>			                      </tr>
-				{foreach item=currency_array key=id from=$CURRENCY_LIST}
-					<tr class="lvtColData" onmouseover="this.className='lvtColDataHover'" onmouseout="this.className='lvtColData'" bgcolor="white">
-					{foreach item=currencyvalues from=$currency_array}
-						<td nowrap>{$currencyvalues}</td>
-					{/foreach}
-					</tr>
-				{/foreach}
-			</tbody>
-		        </table>
-		</td>
-		<td>&nbsp;</td>
+					<td class="big"><strong>{$MOD.LBL_CURRENCY_LIST}</strong></td>
+                	       		<td class="small" align="right">&nbsp;</td>
+				</tr>
+			</table>
+
+			<table width="100%" border="0" cellpadding="5" cellspacing="0" class="listTableTopButtons">
+	                <tr>
+				<td class=small align=right>
+					<input type="submit" value="{$MOD.LBL_NEW_CURRENCY}" class="crmButton create small">
+				</td>
+	                </tr>
+	                </table>
+
+			<div id="CurrencyListViewContents">
+				{include file="CurrencyListViewEntries.tpl"}
+			</div>
+
+	<table border=0 cellspacing=0 cellpadding=5 width=100% >
+	<tr><td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+	</table>
+	</td>
 	</tr>
+	</table>
+	</td>
+	</tr>
+	</table>
+	</td>
+	</tr>
+	</form>
+	</table>
+		
+	</div>
+
+</td>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
-</form>
+
+<div id="currencydiv" style="display:block;position:absolute;width:250px;"></div>
+
+{literal}
+<script>
+	function deleteCurrency(currid)
+	{
+		$("status").style.display="inline";
+		new Ajax.Request(
+			'index.php',
+			{queue: {position: 'end', scope: 'command'},
+				method: 'post',
+				postBody: 'action=SettingsAjax&file=CurrencyDeleteStep1&return_action=CurrencyListView&return_module=Settings&module=Settings&parenttab=Settings&id='+currid,
+				onComplete: function(response) {
+					$("status").style.display="none";
+                                        $("currencydiv").innerHTML= response.responseText;
+                                }
+                        }
+		);
+	}
+
+	function transferCurrency(del_currencyid)
+	{
+		$("status").style.display="inline";
+		$("CurrencyDeleteLay").style.display = "none";
+		var trans_currencyid=$("transfer_currency_id").options[$("transfer_currency_id").options.selectedIndex].value;
+		new Ajax.Request(
+			'index.php',
+			{queue: {position: 'end', scope: 'command'},
+				method: 'post',
+				postBody: 'module=Settings&action=SettingsAjax&file=CurrencyDelete&ajax=true&delete_currency_id='+del_currencyid+'&transfer_currency_id='+trans_currencyid,
+				onComplete: function(response) {
+					$("status").style.display="none";
+					$("CurrencyListViewContents").innerHTML= response.responseText;
+				}
+			}
+		);
+	}
+</script>
+
+{/literal}

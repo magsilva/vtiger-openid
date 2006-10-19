@@ -9,10 +9,11 @@
 *
  ********************************************************************************/
 
+require_once('user_privileges/enable_backup.php');
 require_once('Smarty_setup.php');
 
 global $mod_strings;
-global $app_strings;
+global $app_strings, $enable_backup;
 global $app_list_strings;
 global $adb;
 global $theme;
@@ -20,13 +21,18 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
+if(isset($_REQUEST['opmode']) && $_REQUEST['opmode'] != '')
+{
+	$sql_del = "delete from vtiger_systems where server_type='backup'";
+	$adb->query($sql_del);
+}
 
 $smarty = new vtigerCRM_Smarty;
 if($_REQUEST['error'] != '')
 {
-		$smarty->assign("ERROR_MSG",'<b><font color="purple">'.$_REQUEST["error"].'</font></b>');
+		$smarty->assign("ERROR_MSG",'<b><font color="red">'.$_REQUEST["error"].'</font></b>');
 }
-$sql="select * from systems where server_type = 'backup'";
+$sql="select * from vtiger_systems where server_type = 'backup'";
 $result = $adb->query($sql);
 $server = $adb->query_result($result,0,'server');
 $server_username = $adb->query_result($result,0,'server_username');
@@ -49,5 +55,16 @@ $smarty->assign("MOD", return_module_language($current_language,'Settings'));
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("CMOD", $mod_strings);
-$smarty->display("Settings/BackupServer.tpl");
+
+if($enable_backup == 'true')	
+	$backup_status = 'enabled';
+else
+	$backup_status = 'disabled';
+
+$smarty->assign("BACKUP_STATUS", $backup_status);
+
+if($_REQUEST['ajax'] == 'true')
+	$smarty->display("Settings/BackupServerContents.tpl");
+else
+	$smarty->display("Settings/BackupServer.tpl");
 ?>

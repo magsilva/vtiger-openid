@@ -16,7 +16,7 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 
 $smarty = new vtigerCRM_Smarty;
-$query = "SELECT * FROM notificationscheduler";
+$query = "SELECT * FROM vtiger_notificationscheduler";
 $result = $adb->query($query);
 if($adb->num_rows($result) >=1)
 {
@@ -29,9 +29,9 @@ if($adb->num_rows($result) >=1)
 		$result_data['id'] = $result_row['schedulednotificationid'];
 	
 		if($result_data['active'] != 1)	
-			$result_data['active'] = '<img src="'.$image_path.'no.gif">';
+			$result_data['active'] = $mod_strings['LBL_INACTIVE'];
 		else
-			$result_data['active'] = '<img src="'.$image_path.'yes.gif">';
+			$result_data['active'] = $mod_strings['LBL_ACTIVE'];
 			
 		$result_data['label'] = $mod_strings[$result_row['label']];
 		$notifiy_array []= $result_data;

@@ -20,12 +20,23 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
+ //check for mail server configuration thro ajax
+if(isset($_REQUEST['server_check']) && $_REQUEST['server_check'] == 'true')
+{
+	$sql="select * from vtiger_systems where server_type = 'email'";
+	$records=$adb->num_rows($adb->query($sql),0,"id");
+	if($records != '')
+		echo 'SUCESS';
+	else
+		echo 'FAILURE';	
+	die;	
+}
 
-//Added on 09-11-2005 to avoid loading the webmail files in Email process
+//Added on 09-11-2005 to avoid loading the webmail vtiger_files in Email process
 if($_REQUEST['smodule'] != '')
 {
 	define('SM_PATH','modules/squirrelmail-1.4.4/');
-	/* SquirrelMail required files. */
+	/* SquirrelMail required vtiger_files. */
 	require_once(SM_PATH . 'functions/strings.php');
 	require_once(SM_PATH . 'functions/imap_general.php');
 	require_once(SM_PATH . 'functions/imap_messages.php');
@@ -48,15 +59,14 @@ $local_log =& LoggerManager::getLogger('index');
 
 $focus = new Email();
 
+global $current_user;
 setObjectValuesFromRequest(&$focus);
-
 //Check if the file is exist or not.
 if($_FILES["filename"]["size"] == 0 && $_FILES["filename"]["name"] != '')
 {
         $file_upload_error = true;
         $_FILES = '';
 }
-
 if((isset($_REQUEST['deletebox']) && $_REQUEST['deletebox'] != null) && $_REQUEST['addbox'] == null)
 {
 	imap_delete($mbox,$_REQUEST['deletebox']);
@@ -64,7 +74,7 @@ if((isset($_REQUEST['deletebox']) && $_REQUEST['deletebox'] != null) && $_REQUES
 	header("Location: index.php?module=Emails&action=index");
 	exit();
 }
-if(isset($_REQUEST['fromemail']) && $_REQUEST['fromemail'] != null)
+/*if(isset($_REQUEST['fromemail']) && $_REQUEST['fromemail'] != null)
 {
 	//get the list of data from the comma separated array
 	$emailids = explode(",",$_REQUEST['fromemail']);
@@ -120,7 +130,7 @@ if(isset($_REQUEST['fromemail']) && $_REQUEST['fromemail'] != null)
 	}
 	header("Location: index.php?action=$return_action&module=$return_module&parent_id=$parent_id&record=$return_id&filename=$filename");
 	return;
-}
+}*/
 
 /**	Function to check whether the contact is exist of not
  *	input  : contact id
@@ -128,28 +138,53 @@ if(isset($_REQUEST['fromemail']) && $_REQUEST['fromemail'] != null)
  */
 function checkIfContactExists($mailid)
 {
+	global $log;
+	$log->debug("Entering checkIfContactExists(".$mailid.") method ...");
 	global $adb;
-	$sql = "select contactid from contactdetails inner join crmentity on crmentity.crmid=contactdetails.contactid where crmentity.deleted=0 and email= ".PearDatabase::quote($mailid);
+	$sql = "select contactid from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_contactdetails.contactid where vtiger_crmentity.deleted=0 and email= ".$adb->quote($mailid);
 	$result = $adb->query($sql);
 	$numRows = $adb->num_rows($result);
 	if($numRows > 0)
 	{
+		$log->debug("Exiting checkIfContactExists method ...");
 		return $adb->query_result($result,0,"contactid");
 	}
 	else
 	{
+		$log->debug("Exiting checkIfContactExists method ...");
 		return -1;
 	}
 }
-
+//assign the focus values
 $focus->filename = $_REQUEST['file_name'];
 $focus->parent_id = $_REQUEST['parent_id'];
 $focus->parent_type = $_REQUEST['parent_type'];
+$focus->column_fields["assigned_user_id"]=$current_user->id;
 $focus->column_fields["activitytype"]="Emails";
+$focus->column_fields["date_start"]= date('Y-m-d');
 $focus->save("Emails");
 
+//saving the email details in vtiger_emaildetails vtiger_table
 $return_id = $focus->id;
 $email_id = $return_id;
+$query = 'select emailid from vtiger_emaildetails where emailid ='.$email_id;
+$result = $adb->query($query);
+if(isset($_REQUEST["hidden_toid"]) && $_REQUEST["hidden_toid"]!='')
+	$all_to_ids = ereg_replace(",","###",$_REQUEST["hidden_toid"]);
+if(isset($_REQUEST["saved_toid"]) && $_REQUEST["saved_toid"]!='')
+	$all_to_ids .= ereg_replace(",","###",$_REQUEST["saved_toid"]);
+	
+$all_cc_ids = ereg_replace(",","###",$_REQUEST["ccmail"]);
+$all_bcc_ids = ereg_replace(",","###",$_REQUEST["bccmail"]);
+if($adb->num_rows($result) > 0)
+{
+	$query = 'update vtiger_emaildetails set to_email="'.$all_to_ids.'",cc_email="'.$all_cc_ids.'",bcc_email="'.$all_bcc_ids.'",idlists="'.$_REQUEST["parent_id"].'",email_flag="SAVED" where emailid = '.$email_id;
+}else
+{
+	$query = 'insert into vtiger_emaildetails values ('.$email_id.',"","'.$all_to_ids.'","'.$all_cc_ids.'","'.$all_bcc_ids.'","","'.$_REQUEST["parent_id"].'","SAVED")';
+}
+$adb->query($query);
+
 
 $focus->retrieve_entity_info($return_id,"Emails");
 
@@ -173,26 +208,20 @@ if(isset($_REQUEST['filename']) && $_REQUEST['filename'] != "") $filename = $_RE
 
 $local_log->debug("Saved record with id of ".$return_id);
 
-if($file_upload_error)
-{
-        $return_module = 'Emails';
-        $return_action = 'EditView';
-        $return_id = $email_id.'&upload_error=true&return_module='.$_REQUEST['return_module'].'&return_action='.$_REQUEST['return_action'].'&return_id='.$_REQUEST['return_id'];
-	header("Location: index.php?action=$return_action&module=$return_module&parent_id=$parent_id&record=$return_id&filename=$filename");
-}
-elseif( isset($_REQUEST['send_mail']) && $_REQUEST['send_mail'])
-{
+if($_REQUEST["parent_name"] != '' && isset($_REQUEST["parent_name"])) {
+	include("modules/Emails/webmailsend.php");
+
+} elseif( isset($_REQUEST['send_mail']) && $_REQUEST['send_mail'])
 	include("modules/Emails/mailsend.php");
-}
-elseif(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] == 'mailbox')
-{
+
+
+
+if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] == 'mailbox')
 	header("Location: index.php?module=$return_module&action=index");
-}
-else
-{
-	//code added for returning back to the current view after edit from list view
+else {
 	if($_REQUEST['return_viewname'] == '') $return_viewname='0';
 	if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-	header("Location: index.php?action=$return_action&module=$return_module&parent_id=$parent_id&record=$return_id&filename=$filename&viewname=$return_viewname");
+	$inputs="<script>window.opener.location.href=window.opener.location.href;window.self.close();</script>";
+	echo $inputs;
 }
 ?>

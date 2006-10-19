@@ -9,35 +9,84 @@
  ********************************************************************************/
 
 
-/***********************************************
-* Tabbed Document Viewer script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
-* This notice MUST stay intact for legal use
-* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
-***********************************************/
-
-var selectedtablink=""
-var tcischecked=false
-
-function handlelink(aobject){
-	selectedtablink=aobject.href
-	tcischecked=(document.tabcontrol && document.tabcontrol.tabcheck.checked)? true : false
-	if (document.getElementById && !tcischecked){
-		var tabobj=document.getElementById("tablist")
-		var tabobjlinks=tabobj.getElementsByTagName("A")
-		for (i=0; i<tabobjlinks.length; i++)
-			tabobjlinks[i].className=""
-			aobject.className="current"
-			document.getElementById("tabiframe").src=selectedtablink
-			return false
-	}
-	else
-		return true
+function fetchAddSite(id)
+{
+	$("status").style.display="inline";
+	new Ajax.Request(
+		'index.php',
+		{queue: {position: 'end', scope: 'command'},
+			method: 'post',
+			postBody:'module=Portal&action=PortalAjax&file=Popup&record='+id,
+			onComplete: function(response) {
+				$("status").style.display="none";
+				$('editportal_cont').innerHTML = response.responseText;
+			}
+		}
+	);
 }
 
-function handleview(){
-	tcischecked=document.tabcontrol.tabcheck.checked
-	if (document.getElementById && tcischecked){
-		if (selectedtablink!="")
-			window.location=selectedtablink
+function fetchContents(mode)
+{
+	$("status").style.display="inline";
+	new Ajax.Request(
+                'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                        method: 'post',
+                        postBody:'action=PortalAjax&mode=ajax&module=Portal&file=ListView&datamode='+mode,
+                        onComplete: function(response) {
+                                $("status").style.display="none";
+                                $('portalcont').innerHTML = response.responseText;
+                        }
+                }
+        );
+}
+function DeleteSite(id)
+{
+	if(confirm("Are you sure you want to delete ?"))
+	{
+		$("status").style.display="inline";
+		new Ajax.Request(
+          	      'index.php',
+                	{queue: {position: 'end', scope: 'command'},
+                        	method: 'post',
+	                        postBody:'action=PortalAjax&mode=ajax&file=Delete&module=Portal&record='+id,
+        	                onComplete: function(response) {
+                	                $("status").style.display="none";
+                        	        $('portalcont').innerHTML = response.responseText;
+                        	}
+                	}
+        	);
 	}
 }
+function SaveSite(id)
+{
+	if ($('portalurl').value.replace(/^\s+/g, '').replace(/\s+$/g, '').length==0) {
+		alert('Site Url cannot be empty')
+		return false;
+	}
+	if ($('portalname').value.replace(/^\s+/g, '').replace(/\s+$/g, '').length==0) {
+		alert('Site Name cannot be empty')
+		return false;
+	}
+	Effect.Puff('orgLay');	
+	$("status").style.display="inline";
+	var portalurl = document.getElementById('portalurl').value;
+	var portalname = document.getElementById('portalname').value;
+        new Ajax.Request(
+        	'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                	method: 'post',
+                        postBody:'action=PortalAjax&mode=ajax&file=Save&module=Portal&portalname='+portalname+'&portalurl='+portalurl+'&record='+id,
+                        onComplete: function(response) {
+                        		$("status").style.display="none";
+                                        $('portalcont').innerHTML = response.responseText;
+                        }
+                }
+	);
+}
+function setSite(oUrllist)
+{
+	var url = oUrllist.options[oUrllist.options.selectedIndex].value;
+	document.getElementById('locatesite').src = url;
+}
+

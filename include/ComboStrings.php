@@ -122,11 +122,11 @@ $combo_strings = Array(
                 , 'Not Held'=>'Not Held'
                 ),
 'taskstatus_dom' => Array('Not Started'=>'Not Started'
-                , 'In Progress'=>'In Progress'
-                , 'Completed'=>'Completed'
-                , 'Pending Input'=>'Pending Input'
+		, 'In Progress'=>'In Progress'
+		, 'Completed'=>'Completed'
+		, 'Pending Input'=>'Pending Input'
                 , 'Deferred'=>'Deferred'
-                , 'Planned'=>'Planned'
+		, 'Planned'=>'Planned'
                 ),
 'taskpriority_dom' => Array('High'=>'High'
                 ,'Medium'=>'Medium'
@@ -191,14 +191,9 @@ $combo_strings = Array(
                           'Public'=>'Public'
 			 ),
 				     
-'rsscategory_dom' => Array('vtiger Discussions'=>'vtiger Discussions',
-                       'vtiger Wiki'=>'vtiger Wiki'
-                      ),
-
 'usageunit_dom' => Array('Box'=>'Box',
                         'Carton'=>'Carton',
-                        'Caton'=>'Caton',
-                        'Dozen'=>'Dazon',
+                        'Dozen'=>'Dozen',
                         'Each'=>'Each',
                         'Hours'=>'Hours',
                         'Impressions'=>'Impressions',
@@ -260,14 +255,14 @@ $combo_strings = Array(
 'postatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled',
+			'Cancelled'=>'Cancelled',
 			'Received Shipment'=>'Received Shipment'
 			),
 
 'sostatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled'
+			'Cancelled'=>'Cancelled'
 			),
 
 'campaignstatus_dom' => Array(''=>'',
@@ -289,41 +284,31 @@ $combo_strings = Array(
 			    'Others'=>'Others'
 			    ),
 
-'expectedrevenue_dom' => Array(''=>'',
-			    	   '$80,000'=>'$80,000',
-				   '$90,000'=>'$90,000',
-				   '$1,00,000'=>'$1,00,000',
-				   '$1,10,000'=>'$1,10,000',
-				   '$1,20,000'=>'$1,20,000',
-				   '$1,30,000'=>'$1,30,000',
-				   '$1,40,000'=>'$1,40,000',
-				   '$1,50,000'=>'$1,50,000'
-
-			   ),
-
-'actualcost_dom' => Array(''=>'',
-			      '$60,000'=>'$60,000',
-   			      '$65,000'=>'$65,000',
-			      '$70,000'=>'$70,000',
-                              '$80,000'=>'$80,000',
-			      '$85,000'=>'$85,000',
-                              '$95,000'=>'$95,000',
-			      '$1,05,000'=>'$1,05,000',
-                              '$1,10,000'=>'$1,10,000',
-			      '$1,20,000'=>'$1,20,000'
-			      ),
-
-
 'expectedresponse_dom' => Array(''=>'',
 			      'Excellent'=>'Excellent',
 			      'Good'=>'Good',
 			      'Average'=>'Average',
                               'Poor'=>'Poor'
 			      ),			      
-
-			    
+'status_dom' => Array('Active'=>'Active',
+			      'Inactive'=>'Inactive'
+			      ),
+'activity_view_dom' => Array('Today'=>'Today',
+			      'This Week'=>'This Week',
+			      'This Month'=>'This Month',
+			      'This Year'=>'This Year'
+		      ),
+'lead_view_dom' => Array('Today'=>'Today',
+			      'Last 2 Days'=>'Last 2 Days',
+                              'Last Week'=>'Last Week'
+		      ),
+'date_format_dom' => Array('dd-mm-yyyy'=>'dd-mm-yyyy',
+			      'mm-dd-yyyy'=>'mm-dd-yyyy',
+                              'yyyy-mm-dd'=>'yyyy-mm-dd'
+			      ),		      
 		
 );
+
 
 ?>
 

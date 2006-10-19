@@ -24,41 +24,55 @@ DEFINE("FF_SIMSUN",'Simsun');
 DEFINE("FF_CHINESE",'Chinese');
 DEFINE("FF_BIG5",'Big5');
 
-DEFINE("FF_FONT1",'Verdana');
+DEFINE("FF_FONT1",'Vera');
 
 /**This function is used to get the font name when a language code is given
 * Param $locale - language code
-* Return type string
+* Return type string - font name
 */
 function calculate_font_name($locale)
 
 {
+	global $log;
+	$log->debug("Entering calculate_font_name(".$locale.") method ...");
 
 	switch($locale)
 	{
 		case 'cn_zh':
+			$log->debug("Exiting calculate_font_name method ...");
 			return FF_SIMSUN;
 		case 'tw_zh':
 			if(!function_exists('iconv')){
 				echo " Unable to display traditional Chinese on the graphs.<BR>The function iconv does not exists please read more about <a href='http://us4.php.net/iconv'>iconv here</a><BR>";
+				$log->debug("Exiting calculate_font_name method ...");
 				return FF_FONT1;
 
 			}
-			else return FF_CHINESE;
+			else
+			{
+				$log->debug("Exiting calculate_font_name method ...");
+				 return FF_CHINESE;
+			}
 		default:
+			$log->debug("Exiting calculate_font_name method ...");
 			return FF_FONT1;
 	}
 
+	$log->debug("Exiting calculate_font_name method ...");
 	return FF_FONT1;
 }
 
-/**This function is used to generate the color format.
-* Param $count - language code
-* Return type string
+/**This function is used to generate the n colors.
+* Param $count - number of colors to generate
+* Param $start - value of first color
+* Param $step - color increment to apply
+* Return type array - array of n colors values
 */
 
 function color_generator($count = 1, $start = '33CCFF', $step = '221133')
 {
+	global $log;
+	$log->debug("Entering color_generator(".$count.",".$start.",".$step.") method ...");
 	// explode color strings to RGB array
 	if($start{0} == "#") $start = substr($start,1);
 	if($step{0} == "#") $step = substr($step,1);
@@ -76,6 +90,47 @@ function color_generator($count = 1, $start = '33CCFF', $step = '221133')
 			if($colors[$j] > 0xFF) $colors[$j] -= 0xFF;
 		}
 	}
+	$log->debug("Exiting color_generator method ...");
+	return $result;
+}
+
+/**This function is used to define the optimum spacin for tick marks on an axis
+* Param $max - maximum value of axis
+* Return type array - array of 2 values major and minor spacing
+*/
+
+function get_tickspacing($max = 10)
+{
+	global $log;
+	$log->debug("Entering get_tickspacing(".$max.") method ...");
+	$result = array(1,1);
+	
+	// normalize $max to get value between 1 and 10
+	$coef = pow(10,floor(log10($max)));
+	if($coef == 0)
+	{
+		$data=0;
+		echo "<h3> No data available with the specified time period</h3>";
+		$log->debug("Exiting get_tickspacing method ...");
+		return $data;
+	}
+	$normalized = $max / $coef;
+	
+	if($normalized < 1.5){
+		$result[0] = 0.2;
+		$result[1] = 0.1;
+	}
+	elseif($normalized < 5){
+		$result[0] = 0.5;
+		$result[1] = 0.1;
+	}
+	elseif($normalized < 10){
+		$result[0] = 1.0;
+		$result[1] = 0.5;
+	}
+	$result[0] *= $coef;
+	$result[1] *= $coef;
+	$log->debug("Exiting get_tickspacing method ...");
 	return $result;
 }
 ?>

@@ -65,53 +65,17 @@ function togglePotFields(form)
 
 }
 
-function changeStatus(obj,divid)
-{
-	x = document.massdelete.selected_id.length;
-	var viewid = document.massdelete.viewname.value;
-
-	idstring = "";
-	if ( x == undefined)
-	{
-	
-		if (document.massdelete.selected_id.checked)
-		{
-			document.massdelete.idlist.value=document.massdelete.selected_id.value;
-		}
-		else 
-		{
-			alert("Please select atleast one entity ");
-			return false;
-		}
-	}
-	else
-	{
-		xx = 0;
-		for(i = 0; i < x ; i++)
-		{
-			if(document.massdelete.selected_id[i].checked)
-			{
-				idstring = document.massdelete.selected_id[i].value +";"+idstring
-			xx++	
-			}
-		}
-		if (xx != 0)
-		{
-			document.massdelete.idlist.value=idstring;
-		}
-		else
-		{
-			alert("Please select atleast one entity");
-			return false;
-		}
-	}
-	fnvshobj(obj,divid);
-}
 
 function set_return(product_id, product_name) {
         window.opener.document.EditView.parent_name.value = product_name;
         window.opener.document.EditView.parent_id.value = product_id;
 }
+
+function set_return_todo(product_id, product_name) {
+        window.opener.document.createTodo.task_parent_name.value = product_name;
+        window.opener.document.createTodo.task_parent_id.value = product_id;
+}
+
 function set_return_specific(product_id, product_name) {
         //Used for DetailView, Removed 'EditView' formname hardcoding
         var fldName = getOpenerObj("lead_name");
@@ -134,12 +98,18 @@ function searchMapLocation(addressType)
         var mapParameter = '';
         if (addressType == 'Main')
         {
-                mapParameter = document.getElementById("dtlview_Street").innerHTML+' '
-                           +document.getElementById("dtlview_Po Box").innerHTML+' '
-                           +document.getElementById("dtlview_City").innerHTML+' '
-                           +document.getElementById("dtlview_State").innerHTML+' '
-                           +document.getElementById("dtlview_Country").innerHTML+' '
-                           +document.getElementById("dtlview_Postal Code").innerHTML
+		if(fieldname.indexOf('lane') > -1)
+                        mapParameter = document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('lane')]).innerHTML+' ';
+		if(fieldname.indexOf('pobox') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('pobox')]).innerHTML+' ';
+		if(fieldname.indexOf('city') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('city')]).innerHTML+' ';
+		if(fieldname.indexOf('state') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('state')]).innerHTML+' ';
+		if(fieldname.indexOf('country') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('country')]).innerHTML+' ';
+		if(fieldname.indexOf('code') > -1)
+                        mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('code')]).innerHTML+' ';
         }
         window.open('http://maps.google.com/maps?q='+mapParameter,'goolemap','height=450,width=700,resizable=no,titlebar,location,top=200,left=250');
 }

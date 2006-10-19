@@ -14,23 +14,11 @@ require_once('include/utils/utils.php');
 global $current_user;
 $vtigerpath = $_SERVER['REQUEST_URI'];
 $vtigerpath = str_replace("/index.php?module=uploads&action=add2db", "", $vtigerpath);
-$directory = $root_directory."/storage/user_".getUserName($current_user->id)."/attachments/";
 
-if(!is_dir($directory))
-{
-	if(!mkdirs($directory, 0777))	
-	{
-		echo "Access denined to create folder";
-		die;
-	}
-}
-$uploaddir = $directory;
 $crmid = $_REQUEST['return_id'];
 
-for ($filecount=0;$filecount<count($_FILES) && $_FILES['file_'.$filecount]!='';$filecount++)
-{
 	// Arbitrary File Upload Vulnerability fix - Philip
-	$binFile = $_FILES['file_'.$filecount]['name'];
+	$binFile = $_FILES['filename']['name'];
 
 	$ext_pos = strrpos($binFile, ".");
 
@@ -41,40 +29,43 @@ for ($filecount=0;$filecount<count($_FILES) && $_FILES['file_'.$filecount]!='';$
 		$binFile .= ".txt";
 	}
 
-	$_FILES["file_".$filecount]["name"] = $binFile;
+	$_FILES["filename"]["name"] = $binFile;
 	// Vulnerability fix ends
 
-	if(move_uploaded_file($_FILES["file_".$filecount]["tmp_name"],$uploaddir.$crmid."_".$_FILES["file_".$filecount]["name"])) 
+	//decide the file path where we should upload the file in the server
+	$upload_filepath = decideFilePath();
+
+	$current_id = $adb->getUniqueID("vtiger_crmentity");
+	
+	if(move_uploaded_file($_FILES["filename"]["tmp_name"],$upload_filepath.$current_id."_".$_FILES["filename"]["name"])) 
 	{
-		$filename = $crmid.'_'.basename($binFile);
-		$filetype= $_FILES['file_'.$filecount]['type'];
-		$filesize = $_FILES['file_'.$filecount]['size'];
+		$filename = basename($binFile);
+		$filetype= $_FILES['filename']['type'];
+		$filesize = $_FILES['filename']['size'];
 
 		if($filesize != 0)	
 		{
-			$current_id = $adb->getUniqueID("crmentity");
 			$desc = $_REQUEST['txtDescription'];
 			$description = addslashes($desc);
-			$date_var = date('YmdHis');
+			$date_var = $adb->formatDate(date('YmdHis'));	
 
-			$query = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime) values('";
-			$query .= $current_id."','".$current_user->id."','".$current_user->id."','".$_REQUEST['return_module'].' Attachment'."','".$description."','".$date_var."')";
+			$query = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime) values('";
+			$query .= $current_id."','".$current_user->id."','".$current_user->id."','".$_REQUEST['return_module'].' Attachment'."','".$description."',".$date_var.")";	
 			$result = $adb->query($query);
 
-			$sql = "insert into attachments values(";
-			$sql .= $current_id.",'".$filename."','".$description."','".$filetype."')";
+			$sql = "insert into vtiger_attachments values(";
+			$sql .= $current_id.",'".$filename."','".$description."','".$filetype."','".$upload_filepath."')";
 			$result = $adb->query($sql);
 
 
-			$sql1 = "insert into seattachmentsrel values('";
+			$sql1 = "insert into vtiger_seattachmentsrel values('";
 			$sql1 .= $crmid."','".$current_id."')";
 			$result = $adb->query($sql1);
 
-			header("Location: index.php?action=".$_REQUEST['return_action']."&module=".$_REQUEST['return_module']."&record=".$_REQUEST['return_id']."&filename=".$filename."");
+			echo '<script>window.opener.location.href = window.opener.location.href;self.close();</script>';
 		}
 		else
 		{
-			include('themes/'.$theme.'/header.php');
 			$errormessage = "<font color='red'><B>Error Message<ul>
 				<li><font color='red'>Invalid file OR</font>
 				<li><font color='red'>File has no data</font>
@@ -89,7 +80,6 @@ for ($filecount=0;$filecount<count($_FILES) && $_FILES['file_'.$filecount]!='';$
 
 		if($errorCode == 4)
 		{
-			include('themes/'.$theme.'/header.php');
 			$errormessage = "<B><font color='red'>Kindly give a valid file for upload!</font></B> <br>" ;
 			echo $errormessage;
 			include "upload.php";
@@ -97,19 +87,16 @@ for ($filecount=0;$filecount<count($_FILES) && $_FILES['file_'.$filecount]!='';$
 		else if($errorCode == 2)
 		{
 			$errormessage = "<B><font color='red'>Sorry, the uploaded file exceeds the maximum filesize limit. Please try a file smaller than 1000000 bytes</font></B> <br>";
-			include('themes/'.$theme.'/header.php');
 			echo $errormessage;
 			include "upload.php";
 			//echo $errorCode;
 		}
 		else if($errorCode == 3 || $errorcode == '')
 		{
-			include('themes/'.$theme.'/header.php');
 			echo "<b><font color='red'>Problems in file upload. Please try again!</font></b><br>";
 			include "upload.php";
 		}
 
 	}
 
-}
 ?>

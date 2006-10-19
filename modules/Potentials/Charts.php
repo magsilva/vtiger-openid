@@ -29,21 +29,19 @@ require_once('include/utils/GraphUtils.php');
 
 class jpgraph {
 	/**
-	 * Creates opportunity pipeline image as a horizontal accumlated bar graph for multiple users.
+	 * Creates opportunity pipeline image as a horizontal accumlated bar graph for multiple vtiger_users.
 	 * param $datax- the month data to display in the x-axis
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	 */
-	function outcome_by_month($date_start='1971-10-15', $date_end='2071-10-15', $user_id=array('1'), $cache_file_name='a_file', $refresh=false) {
+	function outcome_by_month($date_start='1971-10-15', $date_end='2071-10-15', $user_id=array('1'), $cache_file_name='a_file', $refresh=false,$width=900,$height=500){
+		global $log;
+		$log->debug("Entering outcome_by_month(".$date_start.",". $date_end.",". $user_id.") method ...");
 		global $app_strings,$lang_crm, $app_list_strings, $current_module_strings,$current_user, $log, $charset, $tmp_dir;
 		global $theme;
 		include_once ('Image/Graph.php');
 		include_once ('Image/Canvas.php');
-
-		// Size of graph
-		$width=600;
-		$height=400;
 
 		$log =& LoggerManager::getLogger('outcome_by_month chart');
 		// Set the basic parameters of the graph
@@ -61,7 +59,7 @@ class jpgraph {
 		// create the plotarea layout
         $title =& Image_Graph::factory('title', array('Title',10));
     	$plotarea =& Image_Graph::factory('plotarea',array(
-                    'category',
+                    'axis',
                     'axis'
                 ));
         $footer =& Image_Graph::factory('title', array('Footer',8));
@@ -94,7 +92,7 @@ class jpgraph {
 			foreach ($user_id as $the_id) {
 				if (!$first) $where .= "OR ";
 				$first = false;
-				$where .= "crmentity.smcreatorid='$the_id' ";
+				$where .= "vtiger_crmentity.smcreatorid='$the_id' ";
 			}
 			$where .= ") ";
 
@@ -129,7 +127,7 @@ class jpgraph {
 					}
 					if (isset($record->column_fields['amount']))	{
 						// Strip all non numbers from this string.
-						$amount = ereg_replace('[^0-9]', '', $record->column_fields['amount']);
+						$amount = convertFromMasterCurrency(ereg_replace('[^0-9]', '', floor($record->column_fields['amount'])),$current_user->conv_rate);
 						$sum[$month][$sales_stage] = $sum[$month][$sales_stage] + $amount;
 						if (isset($count[$month][$sales_stage])) {
 							$count[$month][$sales_stage]++;
@@ -175,7 +173,7 @@ class jpgraph {
 					array_push($datax[$stage], 0);
 					array_push($aAlts[$stage], "");
 				}
-				array_push($aTargets[$stage], "index.php?module=Potentials&action=ListView&date_closed=$month&sales_stage=".urlencode($stage)."&query=true");
+				array_push($aTargets[$stage], "index.php?module=Potentials&action=ListView&date_closed=$month&sales_stage=".urlencode($stage)."&query=true&type=dbrd");
 			  }
 		  	  array_push($legend,$month);
 			}
@@ -195,17 +193,19 @@ class jpgraph {
 			$color = array('Closed Lost'=>'#FF9900','Closed Won'=>'#009933', $other=>'#0066CC');
 			$index = 0;
 			$datasets = array();
+			$xlabels = array();
 			$fills =& Image_Graph::factory('Image_Graph_Fill_Array');
 			foreach($stages as $stage) {
 				// Now create a bar plot
 				$datasets[$index] = & Image_Graph::factory('dataset');
-				foreach($datax[$stage] as $x => $y) {
+				foreach($datax[$stage] as $i => $y) {
+				  	$x = 1+2*$i;
 				    $datasets[$index]->addPoint(
-				        $months[$x],
+				        $x,
 				        $y,
 				        array(
-				            'url' => $aTargets[$stage][$x],
-				            'alt' => $aAlts[$stage][$x]
+				            'url' => $aTargets[$stage][$i],
+				            'alt' => $aAlts[$stage][$i]
 				        )
 				    );
 				}
@@ -214,6 +214,12 @@ class jpgraph {
 				$fills->addColor($color[$stage]);
 
 				$index++;
+			}
+			for($i=0;$i<count($months); $i++)
+			{
+			  $x = 1+2*$i;
+			  $xlabels[$x] = $months[$i];
+			  $xlabels[$x+1] = '';
 			}
 			
 			// compute maximum value because of grace jpGraph parameter not supported
@@ -255,14 +261,25 @@ class jpgraph {
 			$gbplot->setBackground(Image_Graph::factory('gradient', array(IMAGE_GRAPH_GRAD_VERTICAL, 'white', '#E5E5E5')));
 
 			// Setup title
-			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
-			$title->setText($titleStr);
+			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+				//$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total;
+			
+			$title->setText($titlestr);
 
-			$xaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_X);
-			$yaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_Y);
+			// Create the xaxis labels
+			$array_data =& Image_Graph::factory('Image_Graph_DataPreprocessor_Array', 
+			    array($xlabels) 
+			); 
 
 			// Setup X-axis
-			$yaxis->setFontSize(8);
+			$xaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_X);
+			$xaxis->setDataPreprocessor($array_data);
+			$xaxis->forceMinimum(0);
+			$xaxis->forceMaximum(2*count($months));
+			$xaxis->setLabelInterval(1);
+			$xaxis->setTickOptions(0,0);
+			$xaxis->setLabelInterval(2,2);
+			$xaxis->setTickOptions(5,0,2);
 
 			// set grid
 			$gridY =& $plotarea->addNew('line_grid', IMAGE_GRAPH_AXIS_Y);
@@ -271,7 +288,9 @@ class jpgraph {
 
 			// Add some grace to y-axis so the bars doesn't go
 			// all the way to the end of the plot area
+			$yaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_Y);
 			$yaxis->forceMaximum($maximum * 1.1);
+			$ticks = get_tickspacing($maximum);
 
 			// Setup the Y-axis to be displayed in the bottom of the
 			// graph. We also finetune the exact layout of the title,
@@ -279,14 +298,13 @@ class jpgraph {
 			$yaxis->setAxisIntersection('max');
 
 			// Then fix the tick marks
-			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $curr_symbol."%d");
+			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $current_user->currency_symbol."%d");
+			$yaxis->setFontSize(8);
 			$yaxis->setDataPreprocessor($valueproc);
-			// Fix X-Axis tick marks inside
-			$xaxis->setTickOptions(0,5);
 			// Arrange Y-Axis tick marks inside
-			$yaxis->setLabelInterval(1000);
+			$yaxis->setLabelInterval($ticks[0]);
 			$yaxis->setTickOptions(-5,0);
-			$yaxis->setLabelInterval(500,2);
+			$yaxis->setLabelInterval($ticks[1],2);
 			$yaxis->setTickOptions(-2,0,2);
 			$yaxis->setLabelOption('position','inside');
 
@@ -305,7 +323,7 @@ class jpgraph {
 			$marker->setFontSize(8);
 			$gbplot->setMarker($marker);
 
-			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
+			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$current_user->currency_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
 			$footer->setText($subtitle);
 			$footer->setAlignment(IMAGE_GRAPH_ALIGN_TOP_RIGHT);
 
@@ -328,31 +346,30 @@ class jpgraph {
 		}
 		$fileModTime = filemtime($cache_file_name.'.map');
 		$return = "\n$imgMap";
+		$log->debug("Exiting outcome_by_month method ...");
 		return $return;
 	}
 
 	/**
-	 * Creates lead_source_by_outcome pipeline image as a horizontal accumlated bar graph for multiple users.
+	 * Creates lead_source_by_outcome pipeline image as a horizontal accumlated bar graph for multiple vtiger_users.
 	 * param $datay- the lead source data to display in the x-axis
 	 * param $date_start- the begin date of opps to find
 	 * param $date_end- the end date of opps to find
-	 * param $ids - list of assigned users of opps to find
+	 * param $ids - list of assigned vtiger_users of opps to find
 	 * param $cache_file_name - file name to write image to
 	 * param $refresh - boolean whether to rebuild image if exists
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	 */
-	function lead_source_by_outcome($datay=array('foo','bar'), $user_id=array('1'), $cache_file_name='a_file', $refresh=false) {
-		global $app_strings,$lang_crm, $current_module_strings, $log, $charset, $tmp_dir;
+	function lead_source_by_outcome($datay=array('foo','bar'), $user_id=array('1'), $cache_file_name='a_file', $refresh=false,$width=900,$height=500){
+		global $log,$current_user;
+		$log->debug("Entering lead_source_by_outcome(".$datay.",".$user_id.",".$cache_file_name.",".$refresh.") method ...");
+		global $app_strings,$lang_crm, $current_module_strings,$charset, $tmp_dir;
 		global $theme;
 
 		include_once ('Image/Graph.php');
 		include_once ('Image/Canvas.php');
-
-		// Size of graph
-		$width=600;
-		$height=400;
 
 		$log =& LoggerManager::getLogger('lead_source_by_outcome chart');
 		// Set the basic parameters of the graph
@@ -369,7 +386,7 @@ class jpgraph {
 		// create the plotarea layout
         $title =& Image_Graph::factory('title', array('Test',10));
     	$plotarea =& Image_Graph::factory('plotarea',array(
-                    'category',
+                    'axis',
                     'axis',
                     'horizontal'
                 ));
@@ -403,7 +420,7 @@ class jpgraph {
 				foreach ($user_id as $the_id) {
 					if (!$first) $where .= "OR ";
 					$first = false;
-					$where .= "crmentity.smcreatorid='$the_id' ";
+					$where .= "vtiger_crmentity.smcreatorid='$the_id' ";
 				}
 				$where .= ") ";
 			}
@@ -454,7 +471,7 @@ class jpgraph {
 					}
 					if (isset($record->column_fields['amount']))	{
 						// Strip all non numbers from this string.
-						$amount = ereg_replace('[^0-9]', '', $record->column_fields['amount']);
+						$amount = convertFromMasterCurrency(ereg_replace('[^0-9]', '', floor($record->column_fields['amount'])),$current_user->conv_rate);
 						$sum[$lead_source][$sales_stage] = $sum[$lead_source][$sales_stage] + $amount;
 						if (isset($count[$lead_source][$sales_stage])) {
 							$count[$lead_source][$sales_stage]++;
@@ -497,7 +514,7 @@ class jpgraph {
 					array_push($datax[$stage], 0);
 					array_push($aAlts[$stage], "");
 				}
-				array_push($aTargets[$stage], "index.php?module=Potentials&action=ListView&leadsource=".urlencode($lead)."&sales_stage=".urlencode($stage)."&query=true");
+				array_push($aTargets[$stage], "index.php?module=Potentials&action=ListView&leadsource=".urlencode($lead)."&sales_stage=".urlencode($stage)."&query=true&type=dbrd");
 			  }
 			  array_push($legend,$translation);
 			}
@@ -516,22 +533,31 @@ class jpgraph {
 			//now build the bar plots for each user across the sales stages
 			$color = array('Closed Lost'=>'FF9900','Closed Won'=>'009933', $other=>'0066CC');
 			$index = 0;
+			$xlabels = array();
 			$datasets = array();
 			$fills =& Image_Graph::factory('Image_Graph_Fill_Array');
 			foreach($stages as $stage) {
 				// Now create a bar pot
 				$datasets[$index] = & Image_Graph::factory('dataset');
-				foreach($datax[$stage] as $x => $y) {
+				foreach($datax[$stage] as $i => $y) {
+				  	$x = 1+2*$i;
 				    $datasets[$index]->addPoint(
-				        $datay[$legend[$x]],
+				        //$datay[$legend[$x]],
+				        $x,
 				        $y,
 				        array(
-				            'url' => $aTargets[$stage][$x],
-				            'alt' => $aAlts[$stage][$x],
-				            'target' => '_blank'
+				            'url' => $aTargets[$stage][$i],
+				            'alt' => $aAlts[$stage][$i],
+				            'target' => ''
 				        )
 				    );
 				}
+			for($i=0;$i<count($legend); $i++)
+			{
+			  $x = 1+2*$i;
+			  $xlabels[$x] = $legend[$i];
+			  $xlabels[$x+1] = '';
+			}
 
 				// Set fill colors for bars
 				$fills->addColor("#".$color[$stage]);
@@ -576,31 +602,45 @@ class jpgraph {
 			$gbplot->setBackground(Image_Graph::factory('gradient', array(IMAGE_GRAPH_GRAD_HORIZONTAL, 'white', '#E5E5E5')));
 
 			// Setup title
-			$titlestr = $current_module_strings['LBL_ALL_OPPORTUNITIES'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$titlestr = $current_module_strings['LBL_ALL_OPPORTUNITIES'].$current_user->currency_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			//$titlestr = $current_module_strings['LBL_ALL_OPPORTUNITIES'].$current_user->currency_symbol.$total;
 			$title->setText($titlestr);
+
+			// Create the xaxis labels
+			$array_data =& Image_Graph::factory('Image_Graph_DataPreprocessor_Array', 
+			    array($xlabels) 
+			); 
 
 			// Setup X-axis
 			$xaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_X);
-			$yaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_Y);
-			$yaxis->setFontSize(8);
+			$xaxis->setDataPreprocessor($array_data);
+			$xaxis->forceMinimum(0);
+			$xaxis->forceMaximum(2*count($legend));
+			$xaxis->setLabelInterval(1);
+			$xaxis->setTickOptions(0,0);
+			$xaxis->setLabelInterval(2,2);
+			$xaxis->setTickOptions(5,0,2);
 			$xaxis->setInverted(true);
-			$yaxis->setAxisIntersection('max');
 			
 			// set grid
 			$gridY =& $plotarea->addNew('line_grid', IMAGE_GRAPH_AXIS_Y);
 			$gridY->setLineColor('#E5E5E5@0.5');
 
-			// Then fix the tick marks
-			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $curr_symbol."%d");
-			$yaxis->setDataPreprocessor($valueproc);
-			$yaxis->setLabelInterval(1000);
-			$yaxis->setTickOptions(-5,0);
-			$yaxis->setLabelInterval(500,2);
-			$yaxis->setTickOptions(-2,0,2);
-
 			// Add some grace to y-axis so the bars doesn't go
 			// all the way to the end of the plot area
+			$yaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_Y);
 			$yaxis->forceMaximum($maximum * 1.1);
+			$ticks = get_tickspacing($maximum);
+
+			// Then fix the tick marks
+			$yaxis->setFontSize(8);
+			$yaxis->setAxisIntersection('max');
+			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $current_user->currency_symbol."%d");
+			$yaxis->setDataPreprocessor($valueproc);
+			$yaxis->setLabelInterval($ticks[0]);
+			$yaxis->setTickOptions(-5,0);
+			$yaxis->setLabelInterval($ticks[1],2);
+			$yaxis->setTickOptions(-2,0,2);
 			
 			// eliminate zero values
 			$gbplot->setDataSelector(Image_Graph::factory('Image_Graph_DataSelector_NoZeros'));
@@ -614,12 +654,8 @@ class jpgraph {
 			$marker->setFontSize(8);
 			$gbplot->setMarker($marker);
 
-
-			// The fix the tick marks
-			$xaxis->setTickOptions(0,5);
-
 			// Finally setup the title
-			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
+			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$current_user->currency_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
 			$footer->setText($subtitle);
 			$footer->setAlignment(IMAGE_GRAPH_ALIGN_TOP_RIGHT);
 
@@ -642,25 +678,24 @@ class jpgraph {
 		}
 		$fileModTime = filemtime($cache_file_name.'.map');
 		$return = "\n$imgMap";
+		$log->debug("Exiting lead_source_by_outcome method ...");
 		return $return;
 	}
 
 	/**
-	 * Creates opportunity pipeline image as a horizontal accumlated bar graph for multiple users.
+	 * Creates opportunity pipeline image as a horizontal accumlated bar graph for multiple vtiger_users.
 	 * param $datax- the sales stage data to display in the x-axis
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	 */
-	function pipeline_by_sales_stage($datax=array('foo','bar'), $date_start='2071-10-15', $date_end='2071-10-15', $user_id=array('1'), $cache_file_name='a_file', $refresh=false) {
-		global $app_strings,$lang_crm, $current_module_strings, $log, $charset, $tmp_dir;
+	function pipeline_by_sales_stage($datax=array('foo','bar'), $date_start='2071-10-15', $date_end='2071-10-15', $user_id=array('1'), $cache_file_name='a_file', $refresh=false,$width=900,$height=500){
+		global $log,$current_user;
+		$log->debug("Entering pipeline_by_sales_stage(".$datax.",".$date_start.",".$date_end.",".$user_id.",".$cache_file_name.",".$refresh.") method ...");
+		global $app_strings,$lang_crm, $current_module_strings, $charset, $tmp_dir;
 		global $theme;
 		include_once ('Image/Graph.php');
 		include_once ('Image/Canvas.php');
-
-		// Size of graph
-		$width=600;
-		$height=400;
 
 		$log =& LoggerManager::getLogger('opportunity charts');
 		// Set the basic parameters of the graph
@@ -679,7 +714,7 @@ class jpgraph {
 		$graph->setFont($font);
         $title =& Image_Graph::factory('title', array('Test',10));
     	$plotarea =& Image_Graph::factory('plotarea',array(
-                    'category',
+                    'axis',
                     'axis',
                     'horizontal'
                 ));
@@ -719,7 +754,7 @@ class jpgraph {
 					//reference post
 					//if I change the owner of a opportunity, the graph shown on Home does not update correctly, this is because the graph is looking for the creatorid and not for the ownerid
 					//fix incorporated based on /sak's feedback
-					$where .= "crmentity.smownerid='$the_id' ";
+					$where .= "vtiger_crmentity.smownerid='$the_id' ";
 				}
 				$where .= ") ";
 			}
@@ -758,7 +793,7 @@ class jpgraph {
 					}
 					if (isset($record->column_fields['amount']))	{
 						// Strip all non numbers from this string.
-						$amount = ereg_replace('[^0-9]', '', $record->column_fields['amount']);
+						$amount = convertFromMasterCurrency(ereg_replace('[^0-9]', '', floor($record->column_fields['amount'])),$current_user->conv_rate);
 						$sum[$record->column_fields['sales_stage']][$record->column_fields['assigned_user_id']] = $sum[$record->column_fields['sales_stage']][$record->column_fields['assigned_user_id']] + $amount;
 						if (isset($count[$record->column_fields['sales_stage']][$record->column_fields['assigned_user_id']])) {
 							$count[$record->column_fields['sales_stage']][$record->column_fields['assigned_user_id']]++;
@@ -796,7 +831,7 @@ class jpgraph {
 					array_push($datay[$the_id], 0);
 					array_push($aAlts[$the_id], "");
 				}
-				array_push($aTargets[$the_id], "index.php?module=Potentials&action=ListView&assigned_user_id[]=$the_id&sales_stage=".urlencode($stage_key)."&closingdate_start=".urlencode($date_start)."&closingdate_end=".urlencode($date_end)."&query=true");
+				array_push($aTargets[$the_id], "index.php?module=Potentials&action=ListView&assigned_user_id=$the_id&sales_stage=".urlencode($stage_key)."&closingdate_start=".urlencode($date_start)."&closingdate_end=".urlencode($date_end)."&query=true&type=dbrd");
 			  }
 			  array_push($legend,$stage_translation);
 			}
@@ -816,17 +851,19 @@ class jpgraph {
 			$colors = color_generator(count($user_id),'#D50100','#002222');
 			$index = 0;
 			$datasets = array();
+			$xlabels = array();
 			$fills =& Image_Graph::factory('Image_Graph_Fill_Array');
 			foreach($user_id as $the_id) {
 				// Now create a bar pot
 				$datasets[$index] = & Image_Graph::factory('dataset');
-				foreach($datay[$the_id] as $x => $y) {
+				foreach($datay[$the_id] as $i => $y) {
+				    $x = 1+2*$i;
 				    $datasets[$index]->addPoint(
-				        $legend[$x],
+				        $x,
 				        $y,
 				        array(
-				            'url' => $aTargets[$the_id][$x],
-				            'alt' => $aAlts[$the_id][$x]
+				            'url' => $aTargets[$the_id][$i],
+				            'alt' => $aAlts[$the_id][$i]
 				        )
 				    );
 				}
@@ -835,6 +872,12 @@ class jpgraph {
 				$fills->addColor($colors[$index]);
 
 				$index++;
+			}
+			for($i=0;$i<count($legend); $i++)
+			{
+			  $x = 1+2*$i;
+			  $xlabels[$x] = $legend[$i];
+			  $xlabels[$x+1] = '';
 			}
 			
 			// compute maximum value because of grace jpGraph parameter not supported
@@ -872,36 +915,48 @@ class jpgraph {
 			$font->setColor($font_color);
 
 			// Setup title
-			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			//$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total;
 			$title->setText($titlestr);
 
+			// Create the xaxis labels
+			$array_data =& Image_Graph::factory('Image_Graph_DataPreprocessor_Array', 
+			    array($xlabels) 
+			); 
+
+		
 			// Setup X-axis
 			$xaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_X);
+			$xaxis->setDataPreprocessor($array_data);
+			$xaxis->forceMinimum(0);
+			$xaxis->forceMaximum(2*count($legend));
+			$xaxis->setLabelInterval(1);
+			$xaxis->setTickOptions(0,0);
+			$xaxis->setLabelInterval(2,2);
+			$xaxis->setTickOptions(5,0,2);
+			$xaxis->setInverted(true);
+
+			// Setup Y-axis
 			$yaxis =& $plotarea->getAxis(IMAGE_GRAPH_AXIS_Y);
 			$yaxis->setFontSize(8);
-			// Invert X-axis and put Y-axis at bottom
-			$xaxis->setInverted(true);
 			$yaxis->setAxisIntersection('max');
+
+			// Add some grace to y-axis so the bars doesn't go
+			// all the way to the end of the plot area
+			$yaxis->forceMaximum($maximum * 1.1);
+			$ticks = get_tickspacing($maximum);
 			
 			// set grid
 			$gridY =& $plotarea->addNew('line_grid', IMAGE_GRAPH_AXIS_Y);
 			$gridY->setLineColor('#E5E5E5@0.5');
 
-
-			// Add some grace to y-axis so the bars doesn't go
-			// all the way to the end of the plot area
-			$yaxis->forceMaximum($maximum * 1.1);
-
 			// First make the labels look right
-			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $curr_symbol."%d");
+			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $current_user->currency_symbol."%d");
 			$yaxis->setDataPreprocessor($valueproc);
-			$yaxis->setLabelInterval(1000);
+			$yaxis->setLabelInterval($ticks[0]);
 			$yaxis->setTickOptions(-5,0);
-			$yaxis->setLabelInterval(500,2);
+			$yaxis->setLabelInterval($ticks[1],2);
 			$yaxis->setTickOptions(-2,0,2);
-
-			// The fix the tick marks
-			$xaxis->setTickOptions(0,5);
 			
 			// eliminate zero values
 			$gbplot->setDataSelector(Image_Graph::factory('Image_Graph_DataSelector_NoZeros'));
@@ -917,7 +972,7 @@ class jpgraph {
 
 			// Finally setup the title
 
-			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
+			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$current_user->currency_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
 			$footer->setText($subtitle);
 			$footer->setAlignment(IMAGE_GRAPH_ALIGN_TOP_RIGHT);
 
@@ -940,6 +995,7 @@ class jpgraph {
 		}
 		$fileModTime = filemtime($cache_file_name.'.map');
 		$return = "\n$imgMap";
+		$log->debug("Exiting pipeline_by_sales_stage method ...");
 		return $return;
 	}
 
@@ -952,7 +1008,9 @@ class jpgraph {
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	 */
-	function pipeline_by_lead_source($legends=array('foo','bar'), $user_id=array('1'), $cache_file_name='a_file', $refresh=true) {
+	function pipeline_by_lead_source($legends=array('foo','bar'), $user_id=array('1'), $cache_file_name='a_file', $refresh=true,$width=900,$height=500){
+		global $log,$current_user;
+		$log->debug("Entering pipeline_by_lead_source(".$legends.") method ...");
 		global $app_strings,$lang_crm, $current_module_strings, $log, $charset, $tmp_dir;
 		global $theme;
 
@@ -981,7 +1039,7 @@ class jpgraph {
 				foreach ($user_id as $the_id) {
 					if (!$first) $where .= "OR ";
 					$first = false;
-					$where .= "crmentity.smcreatorid='$the_id' ";
+					$where .= "vtiger_crmentity.smcreatorid='$the_id' ";
 				}
 				$where .= ") ";
 			}
@@ -1011,7 +1069,7 @@ class jpgraph {
 					if (!isset($sum[$record->column_fields['leadsource']])) $sum[$record->column_fields['leadsource']] = 0;
 					if (isset($record->column_fields['amount']) && isset($record->column_fields['leadsource']))	{
 						// Strip all non numbers from this string.
-						$amount = ereg_replace('[^0-9]', '', $record->column_fields['amount']);
+						$amount = convertFromMasterCurrency(ereg_replace('[^0-9]', '', floor($record->column_fields['amount'])),$current_user->conv_rate);
 						$sum[$record->column_fields['leadsource']] = $sum[$record->column_fields['leadsource']] + ($amount/1000);
 						if (isset($count[$record->column_fields['leadsource']])) $count[$record->column_fields['leadsource']]++;
 						else $count[$record->column_fields['leadsource']] = 1;
@@ -1034,10 +1092,10 @@ class jpgraph {
 					}
 					else
 					{
-						// put none in if the field is blank.
+						// put none in if the vtiger_field is blank.
 						array_push($visible_legends, $current_module_strings['NTC_NO_LEGENDS']);
 					}
-					array_push($aTargets, "index.php?module=Potentials&action=ListView&leadsource=".urlencode($lead_source_key)."&query=true");
+					array_push($aTargets, "index.php?module=Potentials&action=ListView&leadsource=".urlencode($lead_source_key)."&query=true&type=dbrd");
 					array_push($aAlts, $count[$lead_source_key]." ".$current_module_strings['LBL_OPPS_IN_LEAD_SOURCE']." $lead_source_translation	");
 				}
 			}
@@ -1048,6 +1106,7 @@ class jpgraph {
 			$log->debug($count);
 			$log->debug("total is: $total");
 			if ($total == 0) {
+$log->debug("Exiting pipeline_by_lead_source method ...");
 				return ($current_module_strings['ERR_NO_OPPS']);
 			}
 
@@ -1060,9 +1119,6 @@ class jpgraph {
 				$font_color = "#000000";
 			}
 
-			// Create the Pie Graph.
-			$width = 600;
-			$height = 400;
 	
 			$canvas =& Image_Canvas::factory('png', array('width' => $width, 'height' => $height, 'usemap' => true));
 			$imagemap = $canvas->getImageMap();
@@ -1118,11 +1174,13 @@ class jpgraph {
 			$gbplot->setFillStyle($fills);
 
 			// Setup title
-			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			//$titlestr = $current_module_strings['LBL_TOTAL_PIPELINE'].$current_user->currency_symbol.$total;
+
 			$title->setText($titlestr);
 
 			// format the data values
-			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $curr_symbol."%d");
+			$valueproc =& Image_Graph::factory('Image_Graph_DataPreprocessor_Formatted', $current_user->currency_symbol."%d");
 
 			// set markers
 			$marker =& $graph->addNew('value_marker', IMAGE_GRAPH_VALUE_Y);
@@ -1140,7 +1198,7 @@ class jpgraph {
 			$legend_box->setFillColor('#F5F5F5');
 			$legend_box->showShadow();
 
-			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
+			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$current_user->currency_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
 			$footer->setText($subtitle);
 			$footer->setAlignment(IMAGE_GRAPH_ALIGN_TOP_LEFT);
 
@@ -1162,6 +1220,7 @@ class jpgraph {
 		}
 		$fileModTime = filemtime($cache_file_name.'.map');
 		$return = "\n$imgMap";
+		$log->debug("Exiting pipeline_by_lead_source method ...");
 		return $return;
 
 	}
@@ -1177,24 +1236,30 @@ class jpgraph {
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  */
-function save_image_map($filename,$image_map) {
+function save_image_map($filename,$image_map)
+{
+	global $log;
+	$log->debug("Entering save_image_map(".$filename.",".$image_map.") method ...");
 	// save the image map to file
 	$log =& LoggerManager::getLogger('save_image_file');
 
 	if (!$handle = fopen($filename, 'w')) {
 		$log->debug("Cannot open file ($filename)");
+		$log->debug("Exiting save_image_map method ...");
 		return;
 	}
 
 	// Write $somecontent to our opened file.
 	if (fwrite($handle, $image_map) === FALSE) {
 	   $log->debug("Cannot write to file ($filename)");
+	   $log->debug("Exiting save_image_map method ...");
 	   return false;
 	}
 
 	$log->debug("Success, wrote ($image_map) to file ($filename)");
 
 	fclose($handle);
+	$log->debug("Exiting save_image_map method ...");
 	return true;
 
 }

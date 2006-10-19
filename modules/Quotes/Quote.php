@@ -28,25 +28,20 @@ require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
 require_once('include/utils/utils.php');
 require_once('include/RelatedListView.php');
-// Account is used to store account information.
+require_once('user_privileges/default_module_view.php');
+
+// Account is used to store vtiger_account information.
 class Quote extends CRMEntity {
 	var $log;
 	var $db;
-
-
-	// Stored fields
-	var $id;
-	var $mode;
-	
 		
-	var $table_name = "quotes";
-	var $tab_name = Array('crmentity','quotes','quotesbillads','quotesshipads','quotescf');
-	var $tab_name_index = Array('crmentity'=>'crmid','quotes'=>'quoteid','quotesbillads'=>'quotebilladdressid','quotesshipads'=>'quoteshipaddressid','quotescf'=>'quoteid');
-				
+	var $table_name = "vtiger_quotes";
+	var $tab_name = Array('vtiger_crmentity','vtiger_quotes','vtiger_quotesbillads','vtiger_quotesshipads','vtiger_quotescf');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_quotes'=>'quoteid','vtiger_quotesbillads'=>'quotebilladdressid','vtiger_quotesshipads'=>'quoteshipaddressid','vtiger_quotescf'=>'quoteid');
 	
-	var $entity_table = "crmentity";
+	var $entity_table = "vtiger_crmentity";
 	
-	var $billadr_table = "quotesbillads";
+	var $billadr_table = "vtiger_quotesbillads";
 
 	var $object_name = "Quote";
 
@@ -58,10 +53,10 @@ class Quote extends CRMEntity {
 
 	var $sortby_fields = Array('subject','crmid','smownerid');		
 
-	// This is used to retrieve related fields from form posts.
+	// This is used to retrieve related vtiger_fields from form posts.
 	var $additional_column_fields = Array('assigned_user_name', 'smownerid', 'opportunity_id', 'case_id', 'contact_id', 'task_id', 'note_id', 'meeting_id', 'call_id', 'email_id', 'parent_name', 'member_id' );
 
-	// This is the list of fields that are in the lists.
+	// This is the list of vtiger_fields that are in the lists.
 	var $list_fields = Array(
 				'Quote Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('quotes'=>'subject'),
@@ -83,10 +78,6 @@ class Quote extends CRMEntity {
 				      );
 	var $list_link_field= 'subject';
 
-	var $record_id;
-	var $list_mode;
-        var $popup_type;
-
 	var $search_fields = Array(
 				'Quote Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('quotes'=>'subject'),
@@ -101,66 +92,171 @@ class Quote extends CRMEntity {
 				        'Quote Stage'=>'quotestage',
 				      );
 
-	// This is the list of fields that are required.
+	// This is the list of vtiger_fields that are required.
 	var $required_fields =  array("accountname"=>1);
 
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'crmid';
 	var $default_sort_order = 'ASC';
 
+	/**	Constructor which will set the column_fields in this object
+	 */
 	function Quote() {
 		$this->log =LoggerManager::getLogger('quote');
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Quotes');
 	}
+	
+	/**	Function used to get the sort order for Quote listview
+	 *	@return string	$sorder	- first check the $_REQUEST['sorder'] if request value is empty then check in the $_SESSION['QUOTES_SORT_ORDER'] if this session value is empty then default sort order will be returned. 
+	 */
+	function getSortOrder()
+	{
+		global $log;
+                $log->debug("Entering getSortOrder() method ...");	
+		if(isset($_REQUEST['sorder'])) 
+			$sorder = $_REQUEST['sorder'];
+		else
+			$sorder = (($_SESSION['QUOTES_SORT_ORDER'] != '')?($_SESSION['QUOTES_SORT_ORDER']):($this->default_sort_order));
+		$log->debug("Exiting getSortOrder() method ...");
+		return $sorder;
+	}
 
+	/**	Function used to get the order by value for Quotes listview
+	 *	@return string	$order_by  - first check the $_REQUEST['order_by'] if request value is empty then check in the $_SESSION['QUOTES_ORDER_BY'] if this session value is empty then default order by will be returned. 
+	 */
+	function getOrderBy()
+	{
+		global $log;
+                $log->debug("Entering getOrderBy() method ...");
+		if (isset($_REQUEST['order_by'])) 
+			$order_by = $_REQUEST['order_by'];
+		else
+			$order_by = (($_SESSION['QUOTES_ORDER_BY'] != '')?($_SESSION['QUOTES_ORDER_BY']):($this->default_order_by));
+		$log->debug("Exiting getOrderBy method ...");
+		return $order_by;
+	}	
+
+	/**	function used to get the list of sales orders which are related to the Quotes
+	 *	@param int $id - quote id
+	 *	@return array - return an array which will be returned from the function GetRelatedList
+	 */
 	function get_salesorder($id)
 	{
+		global $log,$singlepane_view;
+		$log->debug("Entering get_salesorder(".$id.") method ...");
 		require_once('modules/SalesOrder/SalesOrder.php');
-        $focus = new SalesOrder();
+	        $focus = new SalesOrder();
  
 		$button = '';
 
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
+		if($singlepane_view == 'true')
+			$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
+		else
+			$returnset = '&return_module=Quotes&return_action=CallRelatedList&return_id='.$id;
 
-		$query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid left join sogrouprelation on salesorder.salesorderid=sogrouprelation.salesorderid left join groups on groups.groupname=sogrouprelation.groupname where crmentity.deleted=0 and salesorder.quoteid = ".$id;
+		$query = "select vtiger_crmentity.*, vtiger_salesorder.*, vtiger_quotes.subject as quotename, vtiger_account.accountname from vtiger_salesorder inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_salesorder.salesorderid left outer join vtiger_quotes on vtiger_quotes.quoteid=vtiger_salesorder.quoteid left outer join vtiger_account on vtiger_account.accountid=vtiger_salesorder.accountid left join vtiger_sogrouprelation on vtiger_salesorder.salesorderid=vtiger_sogrouprelation.salesorderid left join vtiger_groups on vtiger_groups.groupname=vtiger_sogrouprelation.groupname where vtiger_crmentity.deleted=0 and vtiger_salesorder.quoteid = ".$id;
+		$log->debug("Exiting get_salesorder method ...");
 		return GetRelatedList('Quotes','SalesOrder',$focus,$query,$button,$returnset);
 	}
-	
+
+	/**	function used to get the list of activities which are related to the Quotes
+	 *	@param int $id - quote id
+	 *	@return array - return an array which will be returned from the function GetRelatedList
+	 */
 	function get_activities($id)
 	{	
+		global $log,$singlepane_view;
+		$log->debug("Entering get_activities(".$id.") method ...");
 		global $app_strings;
-		require_once('modules/Activities/Activity.php');
-        $focus = new Activity();
+		require_once('modules/Calendar/Activity.php');
+	        $focus = new Activity();
 
 		$button = '';
 
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
+		if($singlepane_view == 'true')
+			$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
+		else
+			$returnset = '&return_module=Quotes&return_action=CallRelatedList&return_id='.$id;
 
-		$query = "SELECT contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid left join activitygrouprelation on activitygrouprelation.activityid=crmentity.crmid left join groups on groups.groupname=activitygrouprelation.groupname where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and (activity.status is not NULL && activity.status != 'Completed') and (activity.status is not NULL && activity.status != 'Deferred') or (activity.eventstatus !='' && activity.eventstatus = 'Planned')";
-		return GetRelatedList('Quotes','Activities',$focus,$query,$button,$returnset);
+		$query = "SELECT vtiger_contactdetails.contactid, vtiger_contactdetails.lastname, vtiger_contactdetails.firstname, vtiger_activity.*,vtiger_seactivityrel.*,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime, vtiger_users.user_name,vtiger_recurringevents.recurringtype from vtiger_activity inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid left outer join vtiger_recurringevents on vtiger_recurringevents.activityid=vtiger_activity.activityid left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_crmentity.crmid left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname where vtiger_seactivityrel.crmid=".$id." and activitytype='Task' and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Completed') and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Deferred')";
+		$log->debug("Exiting get_activities method ...");
+		return GetRelatedList('Quotes','Calendar',$focus,$query,$button,$returnset);
 	}
+
+	/**	function used to get the the activity history related to the quote
+	 *	@param int $id - quote id
+	 *	@return array - return an array which will be returned from the function GetHistory
+	 */
 	function get_history($id)
 	{
-		$query = "SELECT activity.activityid, activity.subject, activity.status,
-				activity.eventstatus, activity.activitytype, contactdetails.contactid,
-				contactdetails.firstname,	contactdetails.lastname, crmentity.modifiedtime,
-				crmentity.createdtime, crmentity.description, users.user_name
-			from activity
-				inner join seactivityrel on seactivityrel.activityid=activity.activityid
-				inner join crmentity on crmentity.crmid=activity.activityid
-				left join cntactivityrel on cntactivityrel.activityid= activity.activityid
-				left join contactdetails on contactdetails.contactid= cntactivityrel.contactid
-				inner join users on crmentity.smcreatorid= users.id
-				left join activitygrouprelation on activitygrouprelation.activityid=activity.activityid
-                                left join groups on groups.groupname=activitygrouprelation.groupname
-			where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task')
-  				and (activity.status = 'Completed' or activity.status = 'Deferred' or (activity.eventstatus !='Planned' and activity.eventstatus != ''))
-	 	        	and seactivityrel.crmid=".$id;
+		global $log;
+		$log->debug("Entering get_history(".$id.") method ...");
+		$query = "SELECT vtiger_activity.activityid, vtiger_activity.subject, vtiger_activity.status,
+			vtiger_activity.eventstatus, vtiger_activity.activitytype, vtiger_contactdetails.contactid,
+			vtiger_contactdetails.firstname,vtiger_contactdetails.lastname, vtiger_crmentity.modifiedtime,
+			vtiger_crmentity.createdtime, vtiger_crmentity.description, vtiger_users.user_name
+			from vtiger_activity
+				inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid
+				inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid
+				left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid
+				left join vtiger_contactdetails on vtiger_contactdetails.contactid= vtiger_cntactivityrel.contactid
+				inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
+				left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid
+                                left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname
+			where vtiger_activity.activitytype='Task'
+  				and (vtiger_activity.status = 'Completed' or vtiger_activity.status = 'Deferred')
+	 	        	and vtiger_seactivityrel.crmid=".$id;
 		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
 
+		$log->debug("Exiting get_history method ...");
 		return getHistory('Quotes',$query,$id);	
 	}
+
+
+	/**	Function used to get the Quote Stage history of the Quotes
+	 *	@param $id - quote id
+	 *	@return $return_data - array with header and the entries in format Array('header'=>$header,'entries'=>$entries_list) where as $header and $entries_list are arrays which contains header values and all column values of all entries
+	 */
+	function get_quotestagehistory($id)
+	{	
+		global $log;
+		$log->debug("Entering get_quotestagehistory(".$id.") method ...");
+
+		global $adb;
+		global $mod_strings;
+		global $app_strings;
+
+		$query = 'select vtiger_quotestagehistory.*, vtiger_quotes.subject from vtiger_quotestagehistory inner join vtiger_quotes on vtiger_quotes.quoteid = vtiger_quotestagehistory.quoteid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_quotes.quoteid where vtiger_crmentity.deleted = 0 and vtiger_quotes.quoteid = '.$id;
+		$result=$adb->query($query);
+		$noofrows = $adb->num_rows($result);
+
+		$header[] = $app_strings['Quote Id'];
+		$header[] = $app_strings['LBL_ACCOUNT_NAME'];
+		$header[] = $app_strings['LBL_AMOUNT'];
+		$header[] = $app_strings['Quote Stage'];
+		$header[] = $app_strings['LBL_LAST_MODIFIED'];
+
+		while($row = $adb->fetch_array($result))
+		{
+			$entries = Array();
+
+			$entries[] = $row['quoteid'];
+			$entries[] = $row['accountname'];
+			$entries[] = $row['total'];
+			$entries[] = $row['quotestage'];
+			$entries[] = getDisplayDate($row['lastmodified']);
+
+			$entries_list[] = $entries;
+		}
+
+		$return_data = Array('header'=>$header,'entries'=>$entries_list);
+
+	 	$log->debug("Exiting get_quotestagehistory method ...");
+
+		return $return_data;
+	}
+
 }
 
 ?>

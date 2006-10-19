@@ -11,7 +11,16 @@
 
 require_once('Smarty_setup.php');
 require_once('modules/Vendors/Vendor.php');
-
+//Redirecting Header for single page layout
+require_once('user_privileges/default_module_view.php');
+global $singlepane_view;
+if($singlepane_view == 'true' && $_REQUEST['action'] == 'CallRelatedList' )
+{
+	header("Location:index.php?action=DetailView&module=".$_REQUEST['module']."&record=".$_REQUEST['record']."&parenttab=".$_REQUEST['parenttab']);
+}
+else
+{
+global $currentModule;
 $focus = new Vendor();
 
 $currentmodule = $_REQUEST['module'];
@@ -30,21 +39,37 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
         $focus->id = "";
 }
 
-$related_array=getRelatedLists("Vendors",$focus);
+$related_array=getRelatedLists($currentModule,$focus);
+
+global $mod_strings;
+global $app_strings;
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
+if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
+        $smarty->assign("OP_MODE",$_REQUEST['mode']);
+}
 if(isset($focus->name))
-
+$smarty->assign("UPDATEINFO",updateInfo($focus->id));
 $smarty->assign("NAME", $focus->name);
-$smarty->assign("id",$focus->id);
-$smarty->assign("ID",$RECORD );
+$smarty->assign("ID",$focus->id);
 $smarty->assign("MODULE",$currentmodule);
-$smarty->assign("SINGLE_MOD","Vendor");
+$smarty->assign("SINGLE_MOD",$app_strings['Vendor']);
 $smarty->assign("RELATEDLISTS", $related_array);
-$smarty->display("RelatedLists.tpl");
+$smarty->assign("MOD",$mod_strings);
+$smarty->assign("APP",$app_strings);
+$smarty->assign("THEME", $theme);
+$smarty->assign("IMAGE_PATH", $image_path);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+$smarty->display("RelatedLists.tpl");
+}
 ?>

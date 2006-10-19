@@ -12,6 +12,7 @@ require_once('include/database/PearDatabase.php');
 require_once('Smarty_setup.php');
 require_once('modules/PriceBooks/PriceBook.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 
 $focus = new PriceBook();
 
@@ -27,7 +28,7 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
         $focus->id = "";
 }
 
-global $app_strings,$mod_strings,$theme;
+global $app_strings,$mod_strings,$theme,$currentModule,$singlepane_view;
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -37,7 +38,7 @@ $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
-$smarty->assign("BLOCKS", getBlocks("PriceBooks","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 $category = getParentTab();
@@ -45,10 +46,10 @@ $smarty->assign("CATEGORY",$category);
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 
-if(isPermitted("PriceBooks",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("PriceBooks","PriceBookEditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("PriceBooks",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("PriceBooks","DeletePriceBook",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
 $smarty->assign("IMAGE_PATH", $image_path);
@@ -56,7 +57,31 @@ $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_st
 $smarty->assign("ID", $_REQUEST['record']);
 $smarty->assign("NAME", $focus->name);
 
-$smarty->assign("MODULE", $module);
-$smarty->assign("SINGLE_MOD","PriceBook");
-$smarty->display("DetailView.tpl");
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+$tabid = getTabid("PriceBooks");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+$category = getParentTab();
+$smarty->assign("CATEGORY",$category);
+
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$smarty->assign("MODULE", $currentModule);
+$smarty->assign("SINGLE_MOD", 'PriceBook');
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
+$smarty->display("Inventory/InventoryDetailView.tpl");
 ?>

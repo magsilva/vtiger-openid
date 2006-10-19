@@ -38,23 +38,21 @@
 {elseif $MODULE eq 'Campaigns'}
         <form name="EditView" method="POST" action="index.php">
 
-{elseif $MODULE eq 'Activities'}
-	<form name="EditView" method="POST" action="index.php">
+{elseif $MODULE eq 'Calendar'}
 	<input type="hidden" name="activity_mode" value="{$ACTIVITY_MODE}">
-	<input type="hidden" name="ticket_id" value="{$TICKETID}">
 	<input type="hidden" name="product_id" value="{$PRODUCTID}">
 
 {elseif $MODULE eq 'PurchaseOrder' || $MODULE eq 'SalesOrder' || $MODULE eq 'Invoice' || $MODULE eq 'Quotes'}
 	<form name="EditView" method="POST" action="index.php">
-	<input type="hidden" name="totalProductCount">
 	{if $MODULE eq 'Invoice' || $MODULE eq 'PurchaseOrder' ||  $MODULE eq 'SalesOrder'}
        		 <input type="hidden" name="convertmode">
 	{/if}
 
 {elseif $MODULE eq 'HelpDesk'}
 	<script type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
-	<form name="EditView" method="POST" action="index.php">
+	<form name="EditView" method="POST" action="index.php" ENCTYPE="multipart/form-data">
 	<input type="hidden" name="old_smownerid" value="{$OLDSMOWNERID}">
+        <input type="hidden" name="old_id" value="{$OLD_ID}">
 
 {elseif $MODULE eq 'Leads'}
         <form name="EditView" method="POST" action="index.php">

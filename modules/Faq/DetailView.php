@@ -28,6 +28,7 @@ require_once('include/utils/utils.php');
 
 global $mod_strings;
 global $app_strings;
+global $currentModule;
 
 $focus = new Faq();
 
@@ -55,29 +56,36 @@ $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
 if(isset($focus->column_fields[question]))
 	$smarty->assign("FAQ_TITLE", $focus->column_fields[question]);
-if(isset($_REQUEST['category']) && $_REQUEST['category'] !='')
-{
-            $category = $_REQUEST['category'];
-}
-else
-{
-            $category = getParentTabFromModule($currentModule);
-}
+
+$category = getParenttab();
 $smarty->assign("CATEGORY",$category);
 
 $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
-$smarty->assign("BLOCKS", getBlocks("Faq","detail_view",'',$focus->column_fields));
-$smarty->assign("SINGLE_MOD","Faq");
-$smarty->assign("MODULE","Faq");
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
+$smarty->assign("SINGLE_MOD",$currentModule);
+$smarty->assign("MODULE",$currentModule);
 
 $smarty->assign("ID", $_REQUEST['record']);
-if(isPermitted("Faq",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Faq","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("Faq",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Faq","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");	
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+$tabid = getTabid("Faq");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+//Added to display the Faq comments information
+$smarty->assign("COMMENT_BLOCK",$focus->getFAQComments($_REQUEST['record']));
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
 $smarty->display("DetailView.tpl");
 ?>

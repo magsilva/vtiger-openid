@@ -25,20 +25,22 @@ require_once('modules/Contacts/Contact.php');
 require_once('modules/Leads/Lead.php');
 require_once('modules/Contacts/Contact.php');
 require_once('modules/Emails/Email.php');
-require_once('modules/Activities/Activity.php');
+require_once('modules/Calendar/Activity.php');
 require_once('modules/Notes/Note.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once('modules/Users/User.php');
 require_once('modules/Products/Product.php');
+require_once('include/utils/UserInfoUtil.php');
 
 global $allow_exports;
+
 session_start();
 
 $current_user = new User();
 
 if(isset($_SESSION['authenticated_user_id']))
 {
-        $result = $current_user->retrieve($_SESSION['authenticated_user_id']);
+        $result = $current_user->retrieve_entity_info($_SESSION['authenticated_user_id'],"users");
         if($result == null)
         {
 		session_destroy();
@@ -46,9 +48,22 @@ if(isset($_SESSION['authenticated_user_id']))
         }
 
 }
+
+//Security Check
+if(isPermitted($_REQUEST['module'],"Export") == "no")
+{
+	$allow_exports="none";
+}
+
 if ($allow_exports=='none' || ( $allow_exports=='admin' && ! is_admin($current_user) ) )
 {
-	die("you can't export!");
+
+?>
+	<script language=javascript>
+		alert("you are not permitted to export!");
+		window.location="index.php?module=<?php echo $_REQUEST['module'] ?>&action=index";
+	</script>
+<?php
 }
 
 /**Function convert line breaks to space in description during export 
@@ -57,7 +72,10 @@ if ($allow_exports=='none' || ( $allow_exports=='admin' && ! is_admin($current_u
 */
 function br2nl_vt($str) 
 {
+	global $log;
+	$log->debug("Entering br2nl_vt(".$str.") method ...");
 	$str = preg_replace("/(\r\n)/", " ", $str);
+	$log->debug("Exiting br2nl_vt method ...");
 	return $str;
 }
 
@@ -67,6 +85,8 @@ function br2nl_vt($str)
 */
 function export_all($type)
 {
+	global $log;
+	$log->debug("Entering export_all(".$type.") method ...");
 	$contact_fields = Array();
 	$account_fields = Array();
 	global $adb;
@@ -80,7 +100,7 @@ function export_all($type)
 	else if ($type == "Accounts")
 	{
 		$focus = new Account;
-		$exp_query="SELECT columnname, fieldlabel FROM field where tabid=6";
+		$exp_query="SELECT columnname, fieldlabel FROM vtiger_field where tabid=6";
 		$account_result=$adb->query($exp_query);
 		if($adb->num_rows($account_result)!=0)
 		{
@@ -158,13 +178,14 @@ function export_all($type)
 		$line .= "\"\r\n";
 		$content .= $line;
 	}
+	$log->debug("Exiting export_all method ...");
 	return $content;
 	
 }
 
 $content = export_all($_REQUEST['module']);
 
-header("Content-Disposition: inline; filename={$_REQUEST['module']}.csv");
+header("Content-Disposition: attachment; filename={$_REQUEST['module']}.csv");
 header("Content-Type: text/csv; charset=UTF-8");
 header( "Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
 header( "Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT" );

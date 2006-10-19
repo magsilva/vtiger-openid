@@ -16,8 +16,8 @@ global $mod_strings,$adb,$theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 $smarty=new vtigerCRM_Smarty;
-
-   $sql = "select * from currency_info";
+   $parenttab = $_REQUEST['parenttab'];
+   $sql = "select * from vtiger_currency_info";
    $result = $adb->query($sql);
    $temprow = $adb->fetch_array($result);
    $cnt=1;
@@ -32,16 +32,21 @@ do
 	$currency_element['status'] = $temprow["currency_status"];
 	if($temprow["defaultid"] != '-11')
 	{
-		$currency_element['name'] = '<a href=index.php?module=Settings&action=CurrencyDetailView&record='.$temprow["id"].'>'.$temprow["currency_name"].'</a>';
-		$currency_element['tool']= '<a href=index.php?module=Settings&action=CurrencyDetailView&record='.$temprow["id"].'><img src="'.$image_path.'editfield.gif" border="0" alt="Edit" title="Edit"/></a>&nbsp;|&nbsp;<a href=index.php?module=Settings&action=CurrencyDelete&record='.$temprow["id"].' onClick=DeleteCurrency("'.$temprow["id"].'");><img src="'.$image_path.'currencydelete.gif" border="0"  alt="Delete" title="Delete"/></a>';
+		$currency_element['name'] = '<a href=index.php?module=Settings&action=CurrencyEditView&parenttab='.$parenttab.'&record='.$temprow["id"].'&detailview=detail_view>'.$temprow["currency_name"].'</a>';
+		$currency_element['tool']= '<a href=index.php?module=Settings&action=CurrencyEditView&parenttab='.$parenttab.'&record='.$temprow["id"].'><img src="'.$image_path.'editfield.gif" border="0" alt="Edit" title="Edit"/></a>&nbsp;|&nbsp;<img style="cursor:pointer;" onClick="fnvshobj(this,\'currencydiv\');deleteCurrency(\''.$temprow['id'].'\');" src="'.$image_path.'currencydelete.gif" border="0"  alt="Delete" title="Delete"/>';
 	}
 	else
 		$currency_element['tool']= '';
  	$currency[] = $currency_element; 
 	$cnt++;
 }while($temprow = $adb->fetch_array($result));
+$smarty->assign("PARENTTAB",$parenttab);
+$smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MOD",$mod_strings);
 $smarty->assign("CURRENCY_LIST",$currency);
-$smarty->display('CurrencyListView.tpl');
+if($_REQUEST['ajax'] !='')
+        $smarty->display("CurrencyListViewEntries.tpl");
+else
+        $smarty->display("CurrencyListView.tpl");
 ?>
 

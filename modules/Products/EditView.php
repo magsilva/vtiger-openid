@@ -16,6 +16,7 @@ require_once('include/FormValidationUtil.php');
 
 global $app_strings;
 global $mod_strings;
+global $currentModule;
 
 $encode_val=$_REQUEST['encode_val'];
 $decode_val=base64_decode($encode_val);
@@ -62,7 +63,7 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
     	$focus->mode = ''; 	
 } 
 
-//needed when creating a new product with a default vendor name to passed 
+//needed when creating a new product with a default vtiger_vendor name to passed 
 if (isset($_REQUEST['name']) && is_null($focus->name)) {
 	$focus->name = $_REQUEST['name'];
 	
@@ -78,16 +79,23 @@ require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Products",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else	
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Products",$disp_view,$mode,$focus->column_fields,'BAS'));
-	$smarty->assign("ADVBLOCKS",getBlocks("Products",$disp_view,$mode,$focus->column_fields,'ADV'));
+	$bas_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS');
+	$adv_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV');
+
+	$blocks['basicTab'] = $bas_block;
+	if(is_array($adv_block))
+		$blocks['moreTab'] = $adv_block;
+
+	$smarty->assign("BLOCKS",$blocks);
+	$smarty->assign("BLOCKS_COUNT",count($blocks));
 }
 $smarty->assign("OP_MODE",$disp_view);
 
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Product");
+$smarty->assign("SINGLE_MOD",$app_strings['Product']);
 
 
 $smarty->assign("MOD", $mod_strings);
@@ -110,8 +118,40 @@ $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE
 if($focus->mode == 'edit')
 {
 	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
-    $smarty->assign("MODE", $focus->mode);
+	$smarty->assign("MODE", $focus->mode);
 }
+
+//Tax handling (get the available taxes only) - starts
+if($focus->mode == 'edit')
+	$tax_details = getTaxDetailsForProduct($focus->id,'available_associated');
+else
+	$tax_details = getAllTaxes('available');
+
+for($i=0;$i<count($tax_details);$i++)
+{
+	$tax_details[$i]['check_name'] = $tax_details[$i]['taxname'].'_check';
+	$tax_details[$i]['check_value'] = 0;
+}
+
+if($focus->mode == 'edit')
+{
+	for($i=0;$i<count($tax_details);$i++)
+	{
+		$tax_value = getProductTaxPercentage($tax_details[$i]['taxname'],$focus->id);
+		$tax_details[$i]['percentage'] = $tax_value;
+		$tax_details[$i]['check_value'] = 1;
+		//if the tax is not associated with the product then we should get the default value and unchecked
+		if($tax_value == '')
+		{
+			$tax_details[$i]['check_value'] = 0;
+			$tax_details[$i]['percentage'] = getTaxPercentage($tax_details[$i]['taxname']);
+		}
+	}
+}
+
+$smarty->assign("TAX_DETAILS", $tax_details);
+//Tax handling - ends
+
 
 if(isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
 if(isset($_REQUEST['return_action'])) $smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
@@ -124,9 +164,8 @@ $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint
 
 
 
-$product_tables = Array('products','productcf','productcollaterals'); 
-
- $validationData = getDBValidationData($product_tables);
+ $tabid = getTabid("Products");
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);
 if($errormessage==2)
 {
@@ -161,8 +200,12 @@ if($errormessage!="")
 $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
 $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
 $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if($focus->mode == 'edit')
-$smarty->display('salesEditView.tpl');
+	$smarty->display('Inventory/InventoryEditView.tpl');
 else
-$smarty->display('CreateView.tpl');
+	$smarty->display('Inventory/InventoryCreateView.tpl');
 ?>

@@ -1,4 +1,4 @@
-<?
+<?php
 /*********************************************************************************
 ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
  * ("License"); You may not use this file except in compliance with the License
@@ -84,7 +84,7 @@ $customviews = Array(Array('viewname'=>'All',
 
 		    Array('viewname'=>'All',
                           'setdefault'=>'1','setmetrics'=>'0',
-                          'cvmodule'=>'Activities','stdfilterid'=>'','advfilterid'=>''),
+                          'cvmodule'=>'Calendar','stdfilterid'=>'','advfilterid'=>''),
 		    
 		    Array('viewname'=>'All',
                           'setdefault'=>'1','setmetrics'=>'0',
@@ -126,218 +126,301 @@ $customviews = Array(Array('viewname'=>'All',
                           'setdefault'=>'1','setmetrics'=>'0',
                           'cvmodule'=>'Campaigns','stdfilterid'=>'','advfilterid'=>''),
 
+		    Array('viewname'=>'All',
+                          'setdefault'=>'1','setmetrics'=>'0',
+			  'cvmodule'=>'Webmails','stdfilterid'=>'','advfilterid'=>''),
+
+		    Array('viewname'=>'Drafted FAQ',
+                          'setdefault'=>'0','setmetrics'=>'0',
+                          'cvmodule'=>'Faq','stdfilterid'=>'','advfilterid'=>'8'),	
+		    
+		    Array('viewname'=>'Published FAQ',
+                          'setdefault'=>'0','setmetrics'=>'0',
+			  'cvmodule'=>'Faq','stdfilterid'=>'','advfilterid'=>'9'),
+
+	            Array('viewname'=>'Open Purchase Orders',
+                          'setdefault'=>'0','setmetrics'=>'0',
+                          'cvmodule'=>'PurchaseOrder','stdfilterid'=>'','advfilterid'=>'10'),
+				    
+	            Array('viewname'=>'Received Purchase Orders',
+                          'setdefault'=>'0','setmetrics'=>'0',
+                          'cvmodule'=>'PurchaseOrder','stdfilterid'=>'','advfilterid'=>'11'),
+
+		    Array('viewname'=>'Open Invoices',
+                          'setdefault'=>'0','setmetrics'=>'0',
+			  'cvmodule'=>'Invoice','stdfilterid'=>'','advfilterid'=>'12'),
+
+		    Array('viewname'=>'Paid Invoices',
+                          'setdefault'=>'0','setmetrics'=>'0',
+			  'cvmodule'=>'Invoice','stdfilterid'=>'','advfilterid'=>'13'),
+
+	            Array('viewname'=>'Pending Sales Orders',
+                          'setdefault'=>'0','setmetrics'=>'0',
+                          'cvmodule'=>'SalesOrder','stdfilterid'=>'','advfilterid'=>'14'),
 		    );
 
 
-$cvcolumns = Array(Array('leaddetails:lastname:lastname:Leads_Last_Name:V',
-                         'leaddetails:firstname:firstname:Leads_First_Name:V',
-                         'leaddetails:company:company:Leads_Company:V',
-			 'leadaddress:phone:phone:Leads_Phone:V',
-                         'leadsubdetails:website:website:Leads_Website:V',
-                         'leaddetails:email:email:Leads_Email:E',
-			 'crmentity:smownerid:assigned_user_id:Leads_Assigned_To:V'),
+$cvcolumns = Array(Array('vtiger_leaddetails:lastname:lastname:Leads_Last_Name:V',
+                         'vtiger_leaddetails:firstname:firstname:Leads_First_Name:V',
+                         'vtiger_leaddetails:company:company:Leads_Company:V',
+			 'vtiger_leadaddress:phone:phone:Leads_Phone:V',
+                         'vtiger_leadsubdetails:website:website:Leads_Website:V',
+                         'vtiger_leaddetails:email:email:Leads_Email:E',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Leads_Assigned_To:V'),
 
-	           Array('leaddetails:firstname:firstname:Leads_First_Name:V',
-                         'leaddetails:lastname:lastname:Leads_Last_Name:V',
-                         'leaddetails:company:company:Leads_Company:V',
-                         'leaddetails:leadsource:leadsource:Leads_Lead_Source:V',
-                         'leadsubdetails:website:website:Leads_Website:V',
-                         'leaddetails:email:email:Leads_Email:E'),
+	           Array('vtiger_leaddetails:firstname:firstname:Leads_First_Name:V',
+                         'vtiger_leaddetails:lastname:lastname:Leads_Last_Name:V',
+                         'vtiger_leaddetails:company:company:Leads_Company:V',
+                         'vtiger_leaddetails:leadsource:leadsource:Leads_Lead_Source:V',
+                         'vtiger_leadsubdetails:website:website:Leads_Website:V',
+                         'vtiger_leaddetails:email:email:Leads_Email:E'),
 
-		   Array('leaddetails:firstname:firstname:Leads_First_Name:V',
-                         'leaddetails:lastname:lastname:Leads_Last_Name:V',
-                         'leaddetails:company:company:Leads_Company:V',
-                         'leaddetails:leadsource:leadsource:Leads_Lead_Source:V',
-                         'leadsubdetails:website:website:Leads_Website:V',
-                         'leaddetails:email:email:Leads_Email:E'),
+		   Array('vtiger_leaddetails:firstname:firstname:Leads_First_Name:V',
+                         'vtiger_leaddetails:lastname:lastname:Leads_Last_Name:V',
+                         'vtiger_leaddetails:company:company:Leads_Company:V',
+                         'vtiger_leaddetails:leadsource:leadsource:Leads_Lead_Source:V',
+                         'vtiger_leadsubdetails:website:website:Leads_Website:V',
+                         'vtiger_leaddetails:email:email:Leads_Email:E'),
 	
-		   Array('account:accountname:accountname:Accounts_Account_Name:V',
-                         'accountbillads:city:bill_city:Accounts_City:V',
-                         'account:website:website:Accounts_Website:V',
-                         'account:phone:phone:Accounts_Phone:V',
-                         'crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
+		   Array('vtiger_account:accountname:accountname:Accounts_Account_Name:V',
+                         'vtiger_accountbillads:city:bill_city:Accounts_City:V',
+                         'vtiger_account:website:website:Accounts_Website:V',
+                         'vtiger_account:phone:phone:Accounts_Phone:V',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
 
-		   Array('account:accountname:accountname:Accounts_Account_Name:V',
-			 'account:phone:phone:Accounts_Phone:V',
-			 'account:website:website:Accounts_Website:V',
-			 'account:rating:rating:Accounts_Rating:V',
-			 'crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
+		   Array('vtiger_account:accountname:accountname:Accounts_Account_Name:V',
+			 'vtiger_account:phone:phone:Accounts_Phone:V',
+			 'vtiger_account:website:website:Accounts_Website:V',
+			 'vtiger_account:rating:rating:Accounts_Rating:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
 
-		   Array('account:accountname:accountname:Accounts_Account_Name:V',
-                         'account:phone:phone:Accounts_Phone:V',
-                         'account:website:website:Accounts_Website:V',
-                         'accountbillads:city:bill_city:Accounts_City:V',
-                         'crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
+		   Array('vtiger_account:accountname:accountname:Accounts_Account_Name:V',
+                         'vtiger_account:phone:phone:Accounts_Phone:V',
+                         'vtiger_account:website:website:Accounts_Website:V',
+                         'vtiger_accountbillads:city:bill_city:Accounts_City:V',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Accounts_Assigned_To:V'),
 
-		   Array('contactdetails:firstname:firstname:Contacts_First_Name:V',
-                         'contactdetails:lastname:lastname:Contacts_Last_Name:V',
-                         'contactdetails:title:title:Contacts_Title:V',
-                         'contactdetails:accountid:account_id:Contacts_Account_Name:I',
-                         'contactdetails:email:email:Contacts_Email:E',
-                         'contactdetails:phone:phone:Contacts_Office_Phone:V',
-			 'crmentity:smownerid:assigned_user_id:Contacts_Assigned_To:V'),
+		   Array('vtiger_contactdetails:firstname:firstname:Contacts_First_Name:V',
+                         'vtiger_contactdetails:lastname:lastname:Contacts_Last_Name:V',
+                         'vtiger_contactdetails:title:title:Contacts_Title:V',
+                         'vtiger_contactdetails:accountid:account_id:Contacts_Account_Name:I',
+                         'vtiger_contactdetails:email:email:Contacts_Email:E',
+                         'vtiger_contactdetails:phone:phone:Contacts_Office_Phone:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Contacts_Assigned_To:V'),
 
-		   Array('contactdetails:firstname:firstname:Contacts_First_Name:V',
-                         'contactdetails:lastname:lastname:Contacts_Last_Name:V',
-                         'contactaddress:mailingstreet:mailingstreet:Contacts_Mailing_Street:V',
-                         'contactaddress:mailingcity:mailingcity:Contacts_City:V',
-                         'contactaddress:mailingstate:mailingstate:Contacts_State:V',
-			 'contactaddress:mailingzip:mailingzip:Contacts_Zip:V',
-			 'contactaddress:mailingcountry:mailingcountry:Contacts_Country:V'),
+		   Array('vtiger_contactdetails:firstname:firstname:Contacts_First_Name:V',
+                         'vtiger_contactdetails:lastname:lastname:Contacts_Last_Name:V',
+                         'vtiger_contactaddress:mailingstreet:mailingstreet:Contacts_Mailing_Street:V',
+                         'vtiger_contactaddress:mailingcity:mailingcity:Contacts_City:V',
+                         'vtiger_contactaddress:mailingstate:mailingstate:Contacts_State:V',
+			 'vtiger_contactaddress:mailingzip:mailingzip:Contacts_Zip:V',
+			 'vtiger_contactaddress:mailingcountry:mailingcountry:Contacts_Country:V'),
 		   
-		   Array('contactdetails:firstname:firstname:Contacts_First_Name:V',
-                         'contactdetails:lastname:lastname:Contacts_Last_Name:V',
-                         'contactdetails:title:title:Contacts_Title:V',
-                         'contactdetails:accountid:account_id:Contacts_Account_Name:I',
-                         'contactdetails:email:email:Contacts_Email:E',
-			 'contactsubdetails:otherphone:otherphone:Contacts_Phone:V',
-			 'crmentity:smownerid:assigned_user_id:Contacts_Assigned_To:V'),
+		   Array('vtiger_contactdetails:firstname:firstname:Contacts_First_Name:V',
+                         'vtiger_contactdetails:lastname:lastname:Contacts_Last_Name:V',
+                         'vtiger_contactdetails:title:title:Contacts_Title:V',
+                         'vtiger_contactdetails:accountid:account_id:Contacts_Account_Name:I',
+                         'vtiger_contactdetails:email:email:Contacts_Email:E',
+			 'vtiger_contactsubdetails:otherphone:otherphone:Contacts_Phone:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Contacts_Assigned_To:V'),
 		  
-		   Array('potential:potentialname:potentialname:Potentials_Potential_Name:V',
-                         'potential:accountid:account_id:Potentials_Account_Name:V',
-                         'potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
-                         'potential:leadsource:leadsource:Potentials_Lead_Source:V',
-                         'potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
-                         'crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
+		   Array('vtiger_potential:potentialname:potentialname:Potentials_Potential_Name:V',
+                         'vtiger_potential:accountid:account_id:Potentials_Account_Name:V',
+                         'vtiger_potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
+                         'vtiger_potential:leadsource:leadsource:Potentials_Lead_Source:V',
+                         'vtiger_potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
 
-                   Array('potential:potentialname:potentialname:Potentials_Potential_Name:V',
-                         'potential:accountid:account_id:Potentials_Account_Name:V',
-                         'potential:amount:amount:Potentials_Amount:N',
-                         'potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
-                         'crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
+                   Array('vtiger_potential:potentialname:potentialname:Potentials_Potential_Name:V',
+                         'vtiger_potential:accountid:account_id:Potentials_Account_Name:V',
+                         'vtiger_potential:amount:amount:Potentials_Amount:N',
+                         'vtiger_potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
 
-		   Array('potential:potentialname:potentialname:Potentials_Potential_Name:V',
-                         'potential:accountid:account_id:Potentials_Account_Name:V',
-                         'potential:amount:amount:Potentials_Amount:N',
-                         'potential:leadsource:leadsource:Potentials_Lead_Source:V',
-                         'potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
-                         'crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
+		   Array('vtiger_potential:potentialname:potentialname:Potentials_Potential_Name:V',
+                         'vtiger_potential:accountid:account_id:Potentials_Account_Name:V',
+                         'vtiger_potential:amount:amount:Potentials_Amount:N',
+                         'vtiger_potential:leadsource:leadsource:Potentials_Lead_Source:V',
+                         'vtiger_potential:closingdate:closingdate:Potentials_Expected_Close_Date:D',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Potentials_Assigned_To:V'),
 
-		   Array('crmentity:crmid::HelpDesk_Ticket_ID:I',
-			 'troubletickets:title:ticket_title:HelpDesk_Title:V',
-                         'troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
-                         'troubletickets:status:ticketstatus:HelpDesk_Status:V',
-                         'troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
-                         'crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
+		   Array('vtiger_crmentity:crmid::HelpDesk_Ticket_ID:I',
+			 'vtiger_troubletickets:title:ticket_title:HelpDesk_Title:V',
+                         'vtiger_troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
+                         'vtiger_troubletickets:status:ticketstatus:HelpDesk_Status:V',
+                         'vtiger_troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
+                         'vtiger_crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
 
-		   Array('troubletickets:title:ticket_title:HelpDesk_Title:V',
-                         'troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
-                         'troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
-                         'troubletickets:product_id:product_id:HelpDesk_Product_Name:I',
-                         'crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
+		   Array('vtiger_troubletickets:title:ticket_title:HelpDesk_Title:V',
+                         'vtiger_troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
+                         'vtiger_troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
+                         'vtiger_troubletickets:product_id:product_id:HelpDesk_Product_Name:I',
+                         'vtiger_crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
 
-		   Array('troubletickets:title:ticket_title:HelpDesk_Title:V',
-                         'troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
-                         'troubletickets:status:ticketstatus:HelpDesk_Status:V',
-                         'troubletickets:product_id:product_id:HelpDesk_Product_Name:I',
-                         'crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
+		   Array('vtiger_troubletickets:title:ticket_title:HelpDesk_Title:V',
+                         'vtiger_troubletickets:parent_id:parent_id:HelpDesk_Related_to:I',
+                         'vtiger_troubletickets:status:ticketstatus:HelpDesk_Status:V',
+                         'vtiger_troubletickets:product_id:product_id:HelpDesk_Product_Name:I',
+                         'vtiger_crmentity:smownerid:assigned_user_id:HelpDesk_Assigned_To:V'),
 
-		   Array('crmentity:crmid::Quotes_Quote_ID:I',
-			 'quotes:subject:subject:Quotes_Subject:V',
-                         'quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
-                         'quotes:potentialid:potential_id:Quotes_Potential_Name:I',
-                         'quotes:accountid:account_id:Quotes_Account_Name:I',
-                         'quotes:total:hdnGrandTotal:Quotes_Total:I',
-			 'crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
+		   Array('vtiger_crmentity:crmid::Quotes_Quote_ID:I',
+			 'vtiger_quotes:subject:subject:Quotes_Subject:V',
+                         'vtiger_quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
+                         'vtiger_quotes:potentialid:potential_id:Quotes_Potential_Name:I',
+                         'vtiger_quotes:accountid:account_id:Quotes_Account_Name:I',
+                         'vtiger_quotes:total:hdnGrandTotal:Quotes_Total:I',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
 
-		   Array('quotes:subject:subject:Quotes_Subject:V',
-                         'quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
-                         'quotes:potentialid:potential_id:Quotes_Potential_Name:I',
-                         'quotes:accountid:account_id:Quotes_Account_Name:I',
-                         'quotes:validtill:validtill:Quotes_Valid_Till:D',
-			 'crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
+		   Array('vtiger_quotes:subject:subject:Quotes_Subject:V',
+                         'vtiger_quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
+                         'vtiger_quotes:potentialid:potential_id:Quotes_Potential_Name:I',
+                         'vtiger_quotes:accountid:account_id:Quotes_Account_Name:I',
+                         'vtiger_quotes:validtill:validtill:Quotes_Valid_Till:D',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
 
-		   Array('quotes:subject:subject:Quotes_Subject:V',
-                         'quotes:potentialid:potential_id:Quotes_Potential_Name:I',
-                         'quotes:accountid:account_id:Quotes_Account_Name:I',
-                         'quotes:validtill:validtill:Quotes_Valid_Till:D',
-                         'crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
+		   Array('vtiger_quotes:subject:subject:Quotes_Subject:V',
+                         'vtiger_quotes:potentialid:potential_id:Quotes_Potential_Name:I',
+                         'vtiger_quotes:accountid:account_id:Quotes_Account_Name:I',
+                         'vtiger_quotes:validtill:validtill:Quotes_Valid_Till:D',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Quotes_Assigned_To:V'),
 			
-		   Array('activity:status:taskstatus:Activities_Status:V',
-                         'activity:activitytype::Activities_Type:V',
-                         'activity:subject:subject:Activities_Subject:V',
-                         'cntactivityrel:contactid:contact_id:Activities_Contact_Name:I',
-                         'seactivityrel:crmid:parent_id:Activities_Related_To:V',
-                         'activity:date_start:date_start:Activities_Start_Date:D',
-                         'activity:due_date:due_date:Activities_End_Date:D',
-                         'crmentity:smownerid:assigned_user_id:Activities_Assigned_To:V'),
+		   Array('vtiger_activity:status:taskstatus:Calendar_Status:V',
+                         'vtiger_activity:activitytype:activitytype:Calendar_Type:V',
+                         'vtiger_activity:subject:subject:Calendar_Subject:V',
+                         'vtiger_seactivityrel:crmid:parent_id:Calendar_Related_to:V',
+                         'vtiger_activity:date_start:date_start:Calendar_Start_Date:D',
+                         'vtiger_activity:due_date:due_date:Calendar_End_Date:D',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Calendar_Assigned_To:V'),
 
-		   Array('activity:subject:subject:Emails_Subject:V',
-                         'seactivityrel:crmid:parent_id:Emails_Related_To:I',
-                         'activity:date_start:date_start:Emails_Date_Sent:D',
-                         'crmentity:smownerid:assigned_user_id:Emails_Assigned_To:V'),
+		   Array('vtiger_activity:subject:subject:Emails_Subject:V',
+				'vtiger_crmentity:smownerid:assigned_user_id:Emails_Sender:V',
+                 'vtiger_activity:date_start:date_start:Emails_Date_Sent:D'),
 		
-		   Array('crmentity:crmid::Invoice_Invoice_Id:I',
-                         'invoice:subject:subject:Invoice_Subject:V',
-                         'invoice:salesorderid:salesorder_id:Invoice_Sales_Order:I',
-                         'invoice:invoicestatus:invoicestatus:Invoice_Status:V',
-                         'invoice:total:hdnGrandTotal:Invoice_Total:I',
-                         'crmentity:smownerid:assigned_user_id:Invoice_Assigned_To:V'),
+		   Array('vtiger_crmentity:crmid::Invoice_Invoice_Id:I',
+                         'vtiger_invoice:subject:subject:Invoice_Subject:V',
+                         'vtiger_invoice:salesorderid:salesorder_id:Invoice_Sales_Order:I',
+                         'vtiger_invoice:invoicestatus:invoicestatus:Invoice_Status:V',
+                         'vtiger_invoice:total:hdnGrandTotal:Invoice_Total:I',
+                         'vtiger_crmentity:smownerid:assigned_user_id:Invoice_Assigned_To:V'),
 		
-		  Array('notes:title:title:Notes_Title:V',
-                        'notes:contact_id:contact_id:Notes_Contact_Name:I',
-                        'senotesrel:crmid:parent_id:Notes_Related_To:I',
-                        'notes:filename:filename:Notes_File:V',
-                        'crmentity:modifiedtime:modifiedtime:Notes_Modified_Time:V'),
+		  Array('vtiger_notes:title:notes_title:Notes_Title:V',
+                        'vtiger_notes:contact_id:contact_id:Notes_Contact_Name:I',
+                        'vtiger_senotesrel:crmid:parent_id:Notes_Related_to:I',
+                        'vtiger_notes:filename:filename:Notes_File:V',
+                        'vtiger_crmentity:modifiedtime:modifiedtime:Notes_Modified_Time:V'),
 		
-		  Array('pricebook:bookname:bookname:PriceBooks_Price_Book_Name:V',
-                        'pricebook:active:active:PriceBooks_Active:V'),
+		  Array('vtiger_pricebook:bookname:bookname:PriceBooks_Price_Book_Name:V',
+                        'vtiger_pricebook:active:active:PriceBooks_Active:V'),
 		  
-		  Array('products:productname:productname:Products_Product_Name:V',
-                        'products:productcode:productcode:Products_Product_Code:V',
-                        'products:commissionrate:commissionrate:Products_Commission_Rate:V',
-                        'products:qty_per_unit:qty_per_unit:Products_Qty/Unit:V',
-                        'products:unit_price:unit_price:Products_Unit_Price:V'),
+		  Array('vtiger_products:productname:productname:Products_Product_Name:V',
+                        'vtiger_products:productcode:productcode:Products_Product_Code:V',
+                        'vtiger_products:commissionrate:commissionrate:Products_Commission_Rate:V',
+                        'vtiger_products:qty_per_unit:qty_per_unit:Products_Qty/Unit:V',
+                        'vtiger_products:unit_price:unit_price:Products_Unit_Price:V'),
 		  
-		  Array('crmentity:crmid::PurchaseOrder_Order_Id:I',
-                        'purchaseorder:subject:subject:PurchaseOrder_Subject:V',
-                        'purchaseorder:vendorid:vendor_id:PurchaseOrder_Vendor_Name:I',
-                        'purchaseorder:tracking_no:tracking_no:PurchaseOrder_Tracking_Number:V',
-                        'crmentity:smownerid:assigned_user_id:PurchaseOrder_Assigned_To:V'),
+		  Array('vtiger_crmentity:crmid::PurchaseOrder_Order_Id:I',
+                        'vtiger_purchaseorder:subject:subject:PurchaseOrder_Subject:V',
+                        'vtiger_purchaseorder:vendorid:vendor_id:PurchaseOrder_Vendor_Name:I',
+                        'vtiger_purchaseorder:tracking_no:tracking_no:PurchaseOrder_Tracking_Number:V',
+                        'vtiger_crmentity:smownerid:assigned_user_id:PurchaseOrder_Assigned_To:V'),
 		  
-	          Array('crmentity:crmid::SalesOrder_Order_Id:I',
-                        'salesorder:subject:subject:SalesOrder_Subject:V',
-                        'account:accountid:account_id:SalesOrder_Account_Name:V',
-                        'quotes:quoteid:quote_id:SalesOrder_Quote_Name:I',
-                        'salesorder:total:hdnGrandTotal:SalesOrder_Total:V',
-                        'crmentity:smownerid:assigned_user_id:SalesOrder_Assigned_To:V'),
+	          Array('vtiger_crmentity:crmid::SalesOrder_Order_Id:I',
+                        'vtiger_salesorder:subject:subject:SalesOrder_Subject:V',
+                        'vtiger_account:accountid:account_id:SalesOrder_Account_Name:V',
+                        'vtiger_quotes:quoteid:quote_id:SalesOrder_Quote_Name:I',
+                        'vtiger_salesorder:total:hdnGrandTotal:SalesOrder_Total:V',
+                        'vtiger_crmentity:smownerid:assigned_user_id:SalesOrder_Assigned_To:V'),
 
-	          Array('vendor:vendorname:vendorname:Vendors_Vendor_Name:V',
-			'vendor:phone:phone:Vendors_Phone:V',
-			'vendor:email:email:Vendors_Email:E',
-                        'vendor:category:category:Vendors_Category:V'),
-
-
+	          Array('vtiger_vendor:vendorname:vendorname:Vendors_Vendor_Name:V',
+			'vtiger_vendor:phone:phone:Vendors_Phone:V',
+			'vtiger_vendor:email:email:Vendors_Email:E',
+                        'vtiger_vendor:category:category:Vendors_Category:V'),
 
 
-		 Array('faq:id::Faq_FAQ_Id:I',
-		       'faq:question:question:Faq_Question:V',
-		       'faq:category:faqcategories:Faq_Category:V',
-		       'faq:product_id:product_id:Faq_Product_Name:I',
-		       'crmentity:createdtime:createdtime:Faq_Created_Time:D',
-                       'crmentity:modifiedtime:modifiedtime:Faq_Modified_Time:D'),
+
+
+		 Array('vtiger_faq:id::Faq_FAQ_Id:I',
+		       'vtiger_faq:question:question:Faq_Question:V',
+		       'vtiger_faq:category:faqcategories:Faq_Category:V',
+		       'vtiger_faq:product_id:product_id:Faq_Product_Name:I',
+		       'vtiger_crmentity:createdtime:createdtime:Faq_Created_Time:D',
+                       'vtiger_crmentity:modifiedtime:modifiedtime:Faq_Modified_Time:D'),
 		      //this sequence has to be maintained 
-		 Array('campaign:campaignname:campaignname:Campaigns_Campaign_Name:V',
-		       'campaign:campaigntype:campaigntype:Campaigns_Campaign_Type:N',
-		       'campaign:campaignstatus:campaignstatus:Campaigns_Campaign_Status:N',
-		       'campaign:expectedrevenue:expectedrevenue:Campaigns_Expected_Revenue:V',
-		       'campaign:closingdate:closingdate:Campaigns_Expected_Close_Date:D',
-		       'crmentity:smownerid:assigned_user_id:Campaigns_Assigned_To:V'),
+		 Array('vtiger_campaign:campaignname:campaignname:Campaigns_Campaign_Name:V',
+		       'vtiger_campaign:campaigntype:campaigntype:Campaigns_Campaign_Type:N',
+		       'vtiger_campaign:campaignstatus:campaignstatus:Campaigns_Campaign_Status:N',
+		       'vtiger_campaign:expectedrevenue:expectedrevenue:Campaigns_Expected_Revenue:V',
+		       'vtiger_campaign:closingdate:closingdate:Campaigns_Expected_Close_Date:D',
+		       'vtiger_crmentity:smownerid:assigned_user_id:Campaigns_Assigned_To:V'),
+
+
+		 Array('subject:subject:subject:Subject:V',
+		       'from:fromname:fromname:From:N',
+		       'to:tpname:toname:To:N',
+		       'body:body:body:Body:V'),
+
+		 Array ('vtiger_faq:question:question:Faq_Question:V',
+		 	'vtiger_faq:status:faqstatus:Faq_Status:V',
+			'vtiger_faq:product_id:product_id:Faq_Product_Name:I',
+			'vtiger_faq:category:faqcategories:Faq_Category:V',
+			'vtiger_crmentity:createdtime:createdtime:Faq_Created_Time:T'),
+
+		 Array( 'vtiger_faq:question:question:Faq_Question:V',
+			 'vtiger_faq:answer:faq_answer:Faq_Answer:V',
+			 'vtiger_faq:status:faqstatus:Faq_Status:V',
+			 'vtiger_faq:product_id:product_id:Faq_Product_Name:I',
+			 'vtiger_faq:category:faqcategories:Faq_Category:V',
+			 'vtiger_crmentity:createdtime:createdtime:Faq_Created_Time:T'),
+
+		 Array(	 'vtiger_purchaseorder:subject:subject:PurchaseOrder_Subject:V',
+			 'vtiger_purchaseorder:postatus:postatus:PurchaseOrder_Status:V',
+			 'vtiger_purchaseorder:vendorid:vendor_id:PurchaseOrder_Vendor_Name:I',
+			 'vtiger_crmentity:smownerid:assigned_user_id:PurchaseOrder_Assigned_To:V',
+			 'vtiger_purchaseorder:duedate:duedate:PurchaseOrder_Due_Date:V'),
+		 
+		 Array ('vtiger_purchaseorder:subject:subject:PurchaseOrder_Subject:V',
+			 'vtiger_purchaseorder:vendorid:vendor_id:PurchaseOrder_Vendor_Name:I',
+			 'vtiger_crmentity:smownerid:assigned_user_id:PurchaseOrder_Assigned_To:V',
+			 'vtiger_purchaseorder:postatus:postatus:PurchaseOrder_Status:V',
+			 'vtiger_purchaseorder:carrier:carrier:PurchaseOrder_Carrier:V',
+			 'vtiger_poshipads:ship_street:ship_street:PurchaseOrder_Shipping_Address:V'),
+		
+		 Array(  'vtiger_invoice:subject:subject:Invoice_Subject:V',
+			 'vtiger_invoice:accountid:account_id:Invoice_Account_Name:I',
+			 'vtiger_invoice:salesorderid:salesorder_id:Invoice_Sales_Order:I',
+			 'vtiger_invoice:invoicestatus:invoicestatus:Invoice_Status:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Invoice_Assigned_To:V',
+			 'vtiger_crmentity:createdtime:createdtime:Invoice_Created_Time:T'),
+		 
+		 Array(	 'vtiger_invoice:subject:subject:Invoice_Subject:V',
+			 'vtiger_invoice:accountid:account_id:Invoice_Account_Name:I',
+			 'vtiger_invoice:salesorderid:salesorder_id:Invoice_Sales_Order:I',
+			 'vtiger_invoice:invoicestatus:invoicestatus:Invoice_Status:V',
+			 'vtiger_invoiceshipads:ship_street:ship_street:Invoice_Shipping_Address:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:Invoice_Assigned_To:V'),
+
+		 Array(	 'vtiger_salesorder:subject:subject:SalesOrder_Subject:V',
+			 'vtiger_salesorder:accountid:account_id:SalesOrder_Account_Name:I',
+			 'vtiger_salesorder:sostatus:sostatus:SalesOrder_Status:V',
+			 'vtiger_crmentity:smownerid:assigned_user_id:SalesOrder_Assigned_To:V',
+			 'vtiger_soshipads:ship_street:ship_street:SalesOrder_Shipping_Address:V',
+			 'vtiger_salesorder:carrier:carrier:SalesOrder_Carrier:V'),
+
                   );
 
 
 
-$cvstdfilters = Array(Array('columnname'=>'crmentity:modifiedtime:modifiedtime:Leads_Modified_Time',
+$cvstdfilters = Array(Array('columnname'=>'vtiger_crmentity:modifiedtime:modifiedtime:Leads_Modified_Time',
                             'datefilter'=>'thismonth',
                             'startdate'=>'2005-06-01',
                             'enddate'=>'2005-06-30'),
 
-		      Array('columnname'=>'crmentity:createdtime:createdtime:Accounts_Created_Time',
+		      Array('columnname'=>'vtiger_crmentity:createdtime:createdtime:Accounts_Created_Time',
                             'datefilter'=>'thisweek',
                             'startdate'=>'2005-06-19',
                             'enddate'=>'2005-06-25'),
 
-		      Array('columnname'=>'contactsubdetails:birthday:birthday:Contacts_Birthdate',
+		      Array('columnname'=>'vtiger_contactsubdetails:birthday:birthday:Contacts_Birthdate',
                             'datefilter'=>'today',
                             'startdate'=>'2005-06-25',
                             'enddate'=>'2005-06-25')
@@ -345,57 +428,107 @@ $cvstdfilters = Array(Array('columnname'=>'crmentity:modifiedtime:modifiedtime:L
 
 $cvadvfilters = Array(
                 	Array(
-               			 Array('columnname'=>'leaddetails:leadstatus:leadstatus:Leads_Lead_Status:V',
+               			 Array('columnname'=>'vtiger_leaddetails:leadstatus:leadstatus:Leads_Lead_Status:V',
 		                      'comparator'=>'e',
         		              'value'=>'Hot'
                      			)
                      	 ),
 		      		Array(
-                          Array('columnname'=>'account:account_type:accounttype:Accounts_Type:V',
+                          Array('columnname'=>'vtiger_account:account_type:accounttype:Accounts_Type:V',
                                 'comparator'=>'e',
                                  'value'=>'Prospect'
                                  )
                            ),
 				     Array(
-                            Array('columnname'=>'potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
+                            Array('columnname'=>'vtiger_potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
                                   'comparator'=>'e',
                                   'value'=>'Closed Won'
                                  )
                            ),
 				     Array(
-                            Array('columnname'=>'potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
+                            Array('columnname'=>'vtiger_potential:sales_stage:sales_stage:Potentials_Sales_Stage:V',
                                   'comparator'=>'e',
                                   'value'=>'Prospecting'
                                  )
                            ),
 				     Array(
-                            Array('columnname'=>'troubletickets:status:ticketstatus:HelpDesk_Status:V',
+                            Array('columnname'=>'vtiger_troubletickets:status:ticketstatus:HelpDesk_Status:V',
                                   'comparator'=>'n',
                                   'value'=>'Closed'
                                  )
                            ),
 				     Array(
-                            Array('columnname'=>'troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
+                            Array('columnname'=>'vtiger_troubletickets:priority:ticketpriorities:HelpDesk_Priority:V',
                                   'comparator'=>'e',
                                   'value'=>'High'
                                  )
                            ),
 				     Array(
-	                        Array('columnname'=>'quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
+	                        Array('columnname'=>'vtiger_quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
                                   'comparator'=>'n',
                                   'value'=>'Accepted'
                                  ),
-						    Array('columnname'=>'quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
+						    Array('columnname'=>'vtiger_quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
                                   'comparator'=>'n',
                                   'value'=>'Rejected'
                                  )
                            ),
 				     Array(
-                            Array('columnname'=>'quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
+                            Array('columnname'=>'vtiger_quotes:quotestage:quotestage:Quotes_Quote_Stage:V',
                                   'comparator'=>'e',
                                   'value'=>'Rejected'
                                  )
-                           )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_faq:status:faqstatus:Faq_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Draft'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_faq:status:faqstatus:Faq_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Published'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_purchaseorder:postatus:postatus:PurchaseOrder_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Created, Approved, Delivered'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_purchaseorder:postatus:postatus:PurchaseOrder_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Recieved Shipment'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_invoice:invoicestatus:invoicestatus:Invoice_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Created, Approved, Sent'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_invoice:invoicestatus:invoicestatus:Invoice_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Paid'
+                                 )
+			 ),
+
+			Array(
+                          Array('columnname'=>'vtiger_salesorder:sostatus:sostatus:SalesOrder_Status:V',
+                                'comparator'=>'e',
+                                 'value'=>'Created, Approved'
+                                 )
+			 )
+
                      );
 
 foreach($customviews as $key=>$customview)
@@ -414,22 +547,33 @@ foreach($customviews as $key=>$customview)
 	}
 }
 
+	/** to store the details of the customview in vtiger_customview table
+	  * @param $viewname :: Type String
+	  * @param $setdefault :: Type Integer 
+	  * @param $setmetrics :: Type Integer 
+	  * @param $cvmodule :: Type String
+	  * @returns  $customviewid of the stored custom view :: Type integer
+	 */	
 function insertCustomView($viewname,$setdefault,$setmetrics,$cvmodule)
 {
 	global $adb;
 
-	$genCVid = $adb->getUniqueID("customview");
+	$genCVid = $adb->getUniqueID("vtiger_customview");
 
 	if($genCVid != "")
 	{
 
-		$customviewsql = "insert into customview(cvid,viewname,setdefault,setmetrics,entitytype)";
+		$customviewsql = "insert into vtiger_customview(cvid,viewname,setdefault,setmetrics,entitytype)";
 		$customviewsql .= " values(".$genCVid.",'".$viewname."',".$setdefault.",".$setmetrics.",'".$cvmodule."')";
 		$customviewresult = $adb->query($customviewsql);
 	}
 	return $genCVid;
 }
 
+	/** to store the custom view columns of the customview in vtiger_cvcolumnlist table
+	  * @param $cvid :: Type Integer
+	  * @param $columnlist :: Type Array of columnlists
+	 */
 function insertCvColumns($CVid,$columnslist)
 {
 	global $adb;
@@ -437,19 +581,27 @@ function insertCvColumns($CVid,$columnslist)
 	{
 		for($i=0;$i<count($columnslist);$i++)
 		{
-			$columnsql = "insert into cvcolumnlist (cvid,columnindex,columnname)";
+			$columnsql = "insert into vtiger_cvcolumnlist (cvid,columnindex,columnname)";
 			$columnsql .= " values (".$CVid.",".$i.",'".$columnslist[$i]."')";
 			$columnresult = $adb->query($columnsql);
 		}
 	}
 }
 
+	/** to store the custom view stdfilter of the customview in vtiger_cvstdfilter table
+	  * @param $cvid :: Type Integer
+	  * @param $filtercolumn($tablename:$columnname:$fieldname:$fieldlabel) :: Type String
+	  * @param $filtercriteria(filter name) :: Type String
+	  * @param $startdate :: Type String
+	  * @param $enddate :: Type String
+	  * returns nothing 
+	 */
 function insertCvStdFilter($CVid,$filtercolumn,$filtercriteria,$startdate,$enddate)
 {
 	global $adb;
 	if($CVid != "")
 	{
-		$stdfiltersql = "insert into cvstdfilter(cvid,columnname,stdfilter,startdate,enddate)";
+		$stdfiltersql = "insert into vtiger_cvstdfilter(cvid,columnname,stdfilter,startdate,enddate)";
 		$stdfiltersql .= " values (".$CVid.",'".$filtercolumn."',";
 		$stdfiltersql .= "'".$filtercriteria."',";
 		$stdfiltersql .= "'".$startdate."',";
@@ -458,6 +610,12 @@ function insertCvStdFilter($CVid,$filtercolumn,$filtercriteria,$startdate,$endda
 	}
 }
 
+	/** to store the custom view advfilter of the customview in vtiger_cvadvfilter table
+	  * @param $cvid :: Type Integer
+	  * @param $filters :: Type Array('columnname'=>$tablename:$columnname:$fieldname:$fieldlabel,'comparator'=>$comparator,'value'=>$value)
+	  * returns nothing 
+	 */
+
 function insertCvAdvFilter($CVid,$filters)
 {
 	global $adb;
@@ -465,7 +623,7 @@ function insertCvAdvFilter($CVid,$filters)
 	{
 		foreach($filters as $i=>$filter)
 		{
-			$advfiltersql = "insert into cvadvfilter(cvid,columnindex,columnname,comparator,value)";
+			$advfiltersql = "insert into vtiger_cvadvfilter(cvid,columnindex,columnname,comparator,value)";
 			$advfiltersql .= " values (".$CVid.",".$i.",'".$filter['columnname']."',";
 			$advfiltersql .= "'".$filter['comparator']."',";
 			$advfiltersql .= "'".$filter['value']."')";

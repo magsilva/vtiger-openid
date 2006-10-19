@@ -15,11 +15,15 @@ require_once('themes/'.$theme.'/layout_utils.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
+global $current_language, $currentModule;
 
 if(isset($_REQUEST['fld_module']) && $_REQUEST['fld_module'] != '')
 	$fld_module = $_REQUEST['fld_module'];
 else	
 	$fld_module = 'Potentials';
+
+if(isset($_REQUEST['uitype']) && $_REQUEST['uitype'] != '')
+	$uitype = $_REQUEST['uitype'];
 
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MODULE_LISTS",getPickListModules());
@@ -30,6 +34,13 @@ if((sizeof($picklists_entries) %3) != 0)
 else
 	$value = sizeof($picklists_entries);
 
+if($fld_module == 'Events')
+
+	$temp_module_strings = return_module_language($current_language, 'Calendar');
+else
+	$temp_module_strings = return_module_language($current_language, $fld_module);
+
+$smarty->assign("TEMP_MOD", $temp_module_strings);
 $picklist_fields = array_chunk(array_pad($picklists_entries,$value,''),3);
 $smarty->assign("MODULE",$fld_module);
 $smarty->assign("PICKLIST_VALUES",$picklist_fields);
@@ -37,18 +48,25 @@ $smarty->assign("MOD", return_module_language($current_language,'Settings'));
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("CMOD", $mod_strings);
+$smarty->assign("UITYPE", $uitype);
 
 if($_REQUEST['directmode'] != 'ajax')
 	$smarty->display("Settings/PickList.tpl");
 else
 	$smarty->display("Settings/PickListContents.tpl");
 	
+	/** Function to get picklist fields for the given module 
+	 *  @ param $fld_module
+	 *  It gets the picklist details array for the given module in the given format
+	 *  			$fieldlist = Array(Array('fieldlabel'=>$fieldlabel,'generatedtype'=>$generatedtype,'columnname'=>$columnname,'fieldname'=>$fieldname,'value'=>picklistvalues))	
+	 */
+
 function getUserFldArray($fld_module)
 {
 	global $adb;
 	$user_fld = Array();
 	$tabid = getTabid($fldmodule);
-	$query = "select fieldlabel,generatedtype,columnname,fieldname from field where displaytype = 1 and (tabid = ".getTabid($fld_module)." && uitype IN (15,16)) || (tabid = ".getTabid($fld_module)." && fieldname='salutationtype')";
+	$query = "select fieldlabel,generatedtype,columnname,fieldname,uitype from vtiger_field where displaytype = 1 and (tabid = ".getTabid($fld_module)." AND uitype IN (15,16, 111,33)) OR (tabid = ".getTabid($fld_module)." AND fieldname='salutationtype')";
 	$result = $adb->query($query);
 	$noofrows = $adb->num_rows($result);
     if($noofrows > 0)
@@ -60,50 +78,42 @@ function getUserFldArray($fld_module)
 			$fld_name = $adb->query_result($result,$i,"fieldname");
 			if($fld_module == 'Events')	
 			{
-				if($adb->query_result($result,$i,"fieldname") != 'recurringtype' && $adb->query_result($result,$i,"fieldname") != 'activitytype' && $adb->query_result($result,$i,"fieldname") != 'taskpriority' && $adb->query_result($result,$i,"fieldname") != 'visibility')	
+				if($adb->query_result($result,$i,"fieldname") != 'recurringtype' && $adb->query_result($result,$i,"fieldname") != 'activitytype' && $adb->query_result($result,$i,"fieldname") != 'visibility')	
 				{	
 					$user_fld['fieldlabel'] = $adb->query_result($result,$i,"fieldlabel");	
 					$user_fld['generatedtype'] = $adb->query_result($result,$i,"generatedtype");	
 					$user_fld['columnname'] = $adb->query_result($result,$i,"columnname");	
 					$user_fld['fieldname'] = $adb->query_result($result,$i,"fieldname");	
-					$user_fld['value'] = getPickListValues($user_fld['fieldname']); 
-					$fieldlist[] = $user_fld;
-				}
-			}
-			elseif($fld_module == 'Faq' )
-			{
-				
-				if($adb->query_result($result,$i,"fieldname") != 'faqstatus')
-				{
-					$user_fld['fieldlabel'] = $adb->query_result($result,$i,"fieldlabel");	
-					$user_fld['generatedtype'] = $adb->query_result($result,$i,"generatedtype");	
-					$user_fld['columnname'] = $adb->query_result($result,$i,"columnname");	
-					$user_fld['fieldname'] = $adb->query_result($result,$i,"fieldname");	
+					$user_fld['uitype'] = $adb->query_result($result,$i,"uitype");	
 					$user_fld['value'] = getPickListValues($user_fld['fieldname']); 
 					$fieldlist[] = $user_fld;
 				}
 			}
 			else
 			{
-				if($fld_name != 'invoicestatus' && $fld_name != 'quotestage' && $fld_name != 'postatus' && $fld_name != 'sostatus')
-				{
 					$user_fld['fieldlabel'] = $adb->query_result($result,$i,"fieldlabel");	
 					$user_fld['generatedtype'] = $adb->query_result($result,$i,"generatedtype");	
 					$user_fld['columnname'] = $adb->query_result($result,$i,"columnname");	
 					$user_fld['fieldname'] = $adb->query_result($result,$i,"fieldname");	
+					$user_fld['uitype'] = $adb->query_result($result,$i,"uitype");	
 					$user_fld['value'] = getPickListValues($user_fld['fieldname']); 
 					$fieldlist[] = $user_fld;
-				}
 			}
     	}
     }
     return $fieldlist;
 }
 
+	/** Function to get picklist values for the given field  
+	 *  @ param $tablename
+	 *  It gets the picklist values for the given fieldname
+	 *  			$fldVal = Array(0=>value,1=>value1,-------------,n=>valuen)	
+	 */
+
 function getPickListValues($tablename)
 {
 	global $adb;	
-	$query = "select * from ".$tablename." order by sortorderid";
+	$query = "select * from vtiger_".$tablename." order by sortorderid";
 	$result = $adb->query($query);
 	$fldVal = Array();
 	while($row = $adb->fetch_array($result))
@@ -112,15 +122,18 @@ function getPickListValues($tablename)
 	}
 	return $fldVal;
 }
+	/** Function to get modules which has picklist values  
+	 *  It gets the picklist modules and return in an array in the following format 
+	 *  			$modules = Array($tabid=>$tablabel,$tabid1=>$tablabel1,$tabid2=>$tablabel2,-------------,$tabidn=>$tablabeln)	
+	 */
 function getPickListModules()
 {
 	global $adb;
-	$query = 'select distinct field.fieldname,field.tabid,tablabel from field inner join tab on tab.tabid=field.tabid where uitype IN (15,16)';
+	$query = 'select distinct vtiger_field.fieldname,vtiger_field.tabid,tablabel,uitype from vtiger_field inner join vtiger_tab on vtiger_tab.tabid=vtiger_field.tabid where uitype IN (15,16, 111,33) and vtiger_field.tabid != 29';
 	$result = $adb->query($query);
 	while($row = $adb->fetch_array($result))
 	{
-		if($row['fieldname'] != 'invoicestatus')	
-			$modules[$row['tabid']] = $row['tablabel']; 
+		$modules[$row['tabid']] = $row['tablabel']; 
 	}
 	return $modules;
 }

@@ -18,10 +18,14 @@ require_once('include/database/PearDatabase.php');
 require_once('Smarty_setup.php');
 require_once("data/Tracker.php");
 require_once('include/logging.php');
+require_once('include/ListView/ListView.php');
 require_once('include/ComboUtil.php');
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
+require_once('include/database/Postgres8.php');
+require_once('include/DatabaseUtil.php');
+
 
 global $app_strings;
 global $mod_strings;
@@ -32,18 +36,28 @@ $smarty = new vtigerCRM_Smarty;
 $category = getParentTab();
 $other_text = Array();
 
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
+
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to Change/Delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
 $url_string = ''; // assigning http url string
 
 //<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['HELPDESK_ORDER_BY'] != '')?($_SESSION['HELPDESK_ORDER_BY']):($focus->default_order_by));
-
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['HELPDESK_SORT_ORDER'] != '')?($_SESSION['HELPDESK_SORT_ORDER']):($focus->default_sort_order));
+$sorder = $focus->getSortOrder();
+$order_by = $focus->getOrderBy();
 
 $_SESSION['HELPDESK_ORDER_BY'] = $order_by;
 $_SESSION['HELPDESK_SORT_ORDER'] = $sorder;
@@ -53,18 +67,12 @@ $_SESSION['HELPDESK_SORT_ORDER'] = $sorder;
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
-	$url_string .="&query=true";
-
-	if (isset($_REQUEST['ticket_title'])) $name = $_REQUEST['ticket_title'];
-	if (isset($_REQUEST['ticket_id'])) $ticket_id_val = $_REQUEST['ticket_id'];
-	if (isset($_REQUEST['contact_name'])) $contact_name = $_REQUEST['contact_name'];
-	if (isset($_REQUEST['priority'])) $priority = $_REQUEST['priority'];
-	if (isset($_REQUEST['status'])) $status = $_REQUEST['status'];
-	if (isset($_REQUEST['category'])) $category = $_REQUEST['category'];
-	if (isset($_REQUEST['date'])) $date = $_REQUEST['date'];
-	if (isset($_REQUEST['current_user_only'])) $current_user_only = $_REQUEST['current_user_only'];
-
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
+	// we have a query
+	$url_string .="&query=true".$ustring;
+	$log->info("Here is the where clause for the list view: $where");
+	$smarty->assign("SEARCH_URL",$url_string);
+				
 }
 
 //<<<<cutomview>>>>>>>
@@ -73,15 +81,18 @@ $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
 //<<<<<customview>>>>>
-
+$smarty->assign("CHANGE_OWNER",getUserslist());
 if($viewid != 0)
 {
         $CActionDtls = $oCustomView->getCustomActionDetails($viewid);
 }
 // Buttons and View options
-if(isPermitted('HelpDesk',2,'') == 'yes')
+if(isPermitted('HelpDesk','Delete','') == 'yes')
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
-
+if(isPermitted('HelpDesk','EditView','') == 'yes')
+{
+        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+}
 if($viewnamedesc['viewname'] == 'All')
 {
 	$smarty->assign("ALL", 'All');
@@ -119,49 +130,65 @@ if(isset($order_by) && $order_by != '')
 {
 	if($order_by == 'smownerid')
 	{
-		$list_query .= ' ORDER BY users.user_name '.$sorder;
+		if( $adb->dbType == "pgsql")
+ 		    $list_query .= ' GROUP BY vtiger_users.user_name';
+		$list_query .= ' ORDER BY vtiger_users.user_name '.$sorder;
 	}
 	else
 	{
 		$tablename = getTableNameForField('HelpDesk',$order_by);
 		$tablename = (($tablename != '')?($tablename."."):'');
-
+		if( $adb->dbType == "pgsql")
+ 		    $list_query .= ' GROUP BY '.$tablename.$order_by;
+		
 	        $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 	}
 }
 else
 {
-	$list_query .= ' order by troubletickets.ticketid DESC';
+	if( $adb->dbType == "pgsql")
+ 	    $list_query .= ' GROUP BY vtiger_troubletickets.ticketid';
+ 	$list_query .= ' ORDER BY vtiger_troubletickets.ticketid DESC';	
 }
-
-
-$list_result = $adb->query($list_query);
 
 //Constructing the list view
 
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query( mkCountQuery( $list_query));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-	$start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-	$start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
+
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
+ //Postgres 8 fixes
+ if( $adb->dbType == "pgsql")
+     $list_query = fixPostgresQuery( $list_query, $log, 0);
+
+
 
 // Setting the record count string
 //modified by rdhital
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
+
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+if( $adb->dbType == "pgsql")
+     $list_result = $adb->query($list_query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+else
+     $list_result = $adb->query($list_query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
 
 //mass merge for word templates -- *Raj*17/11
 while($row = $adb->fetch_array($list_result))
@@ -170,11 +197,11 @@ while($row = $adb->fetch_array($list_result))
 }
 if(isset($ids))
 {
-	echo "<input name='allids' type='hidden' value='".implode($ids,";")."'>";
+	$smarty->assign("ALLIDS", implode($ids,";"));
 }
-if(isPermitted("HelpDesk",8,'') == 'yes') 
+if(isPermitted("HelpDesk","Merge") == 'yes') 
 {
-        $smarty->assign("MERGEBUTTON","<input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"button\" onclick=\"return massMerge()\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
+	$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('HelpDesk')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
 	$wordTemplateResult = fetchWordTemplateList("HelpDesk");
 	$tempCount = $adb->num_rows($wordTemplateResult);
 	$tempVal = $adb->fetch_array($wordTemplateResult);
@@ -183,7 +210,7 @@ if(isPermitted("HelpDesk",8,'') == 'yes')
 		$optionString .="<option value=\"".$tempVal["templateid"]."\">" .$tempVal["filename"] ."</option>";
 		$tempVal = $adb->fetch_array($wordTemplateResult);
 	}
-        $smarty->assign("WORDTEMPLATEOPTIONS","<td align=right>&nbsp;&nbsp;".$mod_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."<select name=\"mergefile\">".$optionString."</select>");
+	$smarty->assign("WORDTEMPLATEOPTIONS","<td>".$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."</td><td style=\"padding-left:5px;padding-right:5px\"><select class=\"small\" name=\"mergefile\">".$optionString."</select></td>");
 }
 //mass merge for word templates
 
@@ -204,9 +231,16 @@ $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"HelpDesk","index",$viewid);
 $alphabetical = AlphabeticalSearch($currentModule,'index','ticket_title','true','basic',"","","","",$viewid);
+$fieldnames = getAdvSearchfields($module);
+$criteria = getcriteria_options();
+$smarty->assign("CRITERIA", $criteria);
+$smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

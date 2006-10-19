@@ -43,18 +43,23 @@ goto checkmysql
 echo ""
 echo "making an attempt to kill any existing vtigercrm service"
 echo ""
-bin\apache -k stop -n vtigercrm5_beta
-bin\apache -k uninstall -n vtigercrm5_beta
+bin\apache -k stop -n vtigercrm5
+bin\apache -k uninstall -n vtigercrm5
+echo "Uninstalling apache service again for confirmation after sleeping for 10 seconds"
+echo ""
+%SLEEP_STR% -n 10 127.0.0.1>nul
+bin\apache -k stop -n vtigercrm5
+bin\apache -k uninstall -n vtigercrm5 
 echo ""
 echo ""
-echo "installing vtigercrm5_beta apache service"
+echo "Installing  vtigercrm5 apache service after sleeping for 10 seconds"
 echo ""
+%SLEEP_STR% -n 10 127.0.0.1>nul
+bin\apache -k install -n vtigercrm5 -f conf\httpd.conf
 echo ""
-bin\apache -k install -n vtigercrm5_beta -f conf\httpd.conf
+echo "Starting  vtigercrm5 apache service"
 echo ""
-echo "Starting  vtigercrm5_beta apache service"
-echo ""
-bin\apache -n vtigercrm5_beta -k start
+bin\apache -n vtigercrm5 -k start
 IF ERRORLEVEL 1 goto stopservice
 goto checkmysql
 
@@ -112,27 +117,27 @@ goto checkdatabase
 
 :checkdatabase
 echo ""
-echo "check to see if vtigercrm5_beta database already exists"
+echo "check to see if vtigercrm5 database already exists"
 echo ""
-mysql --port=%mysql_port% --user=%mysql_username% --password=%mysql_password% -e "show databases like 'vtigercrm5_beta'" | "%WINDIR%\system32\find.exe" "vtigercrm5_beta" > NUL
+mysql --port=%mysql_port% --user=%mysql_username% --password=%mysql_password% -e "show databases like 'vtigercrm5'" | "%WINDIR%\system32\find.exe" "vtigercrm5" > NUL
 IF ERRORLEVEL 1 goto dbnotexists
 echo ""
-ECHO  "vtigercrm5_beta database exists"
+ECHO  "vtigercrm5 database exists"
 echo ""
 goto end
 
 
 :dbnotexists
 echo ""
-ECHO "vtigercrm5_beta database does not exist"
+ECHO "vtigercrm5 database does not exist"
 echo ""
 echo %cd%
 echo ""
-echo "Proceeding to create database vtigercrm5_beta and populate the same"
+echo "Proceeding to create database vtigercrm5 and populate the same"
 echo ""
-mysql --user=%mysql_username% --password=%mysql_password% --port=%mysql_port% -e "create database if not exists vtigercrm5_beta"
+mysql --user=%mysql_username% --password=%mysql_password% --port=%mysql_port% -e "create database if not exists vtigercrm5"
 echo ""
-echo "vtigercrm5_beta database created"
+echo "vtigercrm5 database created"
 echo ""
 goto end
 
@@ -150,8 +155,25 @@ echo ""
 echo ""
 echo ""
 echo "********* Service not started as port # %apache_port% occupied ******* "
-echo "********* Kindly free port %apache_port% and restart again ******* "
 echo ""
+echo ""
+echo ""
+echo ""
+echo "********* I am sorry. I am not able to start the product as the apache port that you have specified:  port # %apache_port% seems to be occupied ******* "
+echo ""
+echo ""
+ echo "You could give me a different port number if you wish by doing the following ...."
+echo ""
+echo ""
+echo "********* Open the apache/conf/httpd.conf file, search for 'Listen' and change the port number ******* "
+echo ""
+echo ""
+echo ""
+echo ""
+echo "********* Change the apache port in startvTiger.bat and stopvTiger.bat too and then access the product from the browser in the following manner http://localhost:apacheport******* "
+echo ""
+echo ""
+echo "Thank You"
 echo ""
 echo ""
 set /p pt=Press Any Key to Continue...

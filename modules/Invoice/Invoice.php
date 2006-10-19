@@ -27,26 +27,21 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 
-// Account is used to store account information.
+// Account is used to store vtiger_account information.
 class Invoice extends CRMEntity {
 	var $log;
 	var $db;
-
-
-	// Stored fields
-	var $id;
-	var $mode;
-	
 		
-	var $table_name = "invoice";
-	var $tab_name = Array('crmentity','invoice','invoicebillads','invoiceshipads','invoicecf');
-	var $tab_name_index = Array('crmentity'=>'crmid','invoice'=>'invoiceid','invoicebillads'=>'invoicebilladdressid','invoiceshipads'=>'invoiceshipaddressid','invoicecf'=>'invoiceid');
+	var $table_name = "vtiger_invoice";
+	var $tab_name = Array('vtiger_crmentity','vtiger_invoice','vtiger_invoicebillads','vtiger_invoiceshipads','vtiger_invoicecf');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_invoice'=>'invoiceid','vtiger_invoicebillads'=>'invoicebilladdressid','vtiger_invoiceshipads'=>'invoiceshipaddressid','vtiger_invoicecf'=>'invoiceid');
 				
 	
-	var $entity_table = "crmentity";
+	var $entity_table = "vtiger_crmentity";
 	
-	var $billadr_table = "invoicebillads";
+	var $billadr_table = "vtiger_invoicebillads";
 
 	var $object_name = "Invoice";
 
@@ -58,10 +53,10 @@ class Invoice extends CRMEntity {
 
 	var $sortby_fields = Array('subject','crmid','invoicestatus','smownerid');		
 
-	// This is used to retrieve related fields from form posts.
+	// This is used to retrieve related vtiger_fields from form posts.
 	var $additional_column_fields = Array('assigned_user_name', 'smownerid', 'opportunity_id', 'case_id', 'contact_id', 'task_id', 'note_id', 'meeting_id', 'call_id', 'email_id', 'parent_name', 'member_id' );
 
-	// This is the list of fields that are in the lists.
+	// This is the list of vtiger_fields that are in the lists.
 	var $list_fields = Array(
 				'Invoice Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('invoice'=>'subject'),
@@ -81,10 +76,6 @@ class Invoice extends CRMEntity {
 				      );
 	var $list_link_field= 'subject';
 
-	var $record_id;
-	var $list_mode;
-        var $popup_type;
-
 	var $search_fields = Array(
 				'Invoice Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('purchaseorder'=>'subject'), 
@@ -95,91 +86,200 @@ class Invoice extends CRMEntity {
 				        'Subject'=>'subject',
 				      );
 
-	// This is the list of fields that are required.
+	// This is the list of vtiger_fields that are required.
 	var $required_fields =  array("accountname"=>1);
 
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'crmid';
 	var $default_sort_order = 'ASC';
 
+	/**	Constructor which will set the column_fields in this object
+	 */
 	function Invoice() {
 		$this->log =LoggerManager::getLogger('Invoice');
+		$this->log->debug("Entering Invoice() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Invoice');
+		$this->log->debug("Exiting Invoice method ...");
 	}
 
+	/**	Function used to get the sort order for Invoice listview
+	 *	@return string	$sorder	- first check the $_REQUEST['sorder'] if request value is empty then check in the $_SESSION['INVOICE_SORT_ORDER'] if this session value is empty then default sort order will be returned. 
+	 */
+	function getSortOrder()
+	{
+		global $log;
+                $log->debug("Entering getSortOrder() method ...");	
+		if(isset($_REQUEST['sorder'])) 
+			$sorder = $_REQUEST['sorder'];
+		else
+			$sorder = (($_SESSION['INVOICE_SORT_ORDER'] != '')?($_SESSION['INVOICE_SORT_ORDER']):($this->default_sort_order));
+		$log->debug("Exiting getSortOrder() method ...");
+		return $sorder;
+	}
+
+	/**	Function used to get the order by value for Invoice listview
+	 *	@return string	$order_by  - first check the $_REQUEST['order_by'] if request value is empty then check in the $_SESSION['INVOICE_ORDER_BY'] if this session value is empty then default order by will be returned. 
+	 */
+	function getOrderBy()
+	{
+		global $log;
+                $log->debug("Entering getOrderBy() method ...");
+		if (isset($_REQUEST['order_by'])) 
+			$order_by = $_REQUEST['order_by'];
+		else
+			$order_by = (($_SESSION['INVOICE_ORDER_BY'] != '')?($_SESSION['INVOICE_ORDER_BY']):($this->default_order_by));
+		$log->debug("Exiting getOrderBy method ...");
+		return $order_by;
+	}	
+
+
+	/**	function used to get the name of the current object
+	 *	@return string $this->name - name of the current object
+	 */
 	function get_summary_text()
 	{
+		global $log;
+		$log->debug("Entering get_summary_text() method ...");
+		$log->debug("Exiting get_summary_text method ...");
 		return $this->name;
 	}
+
+
+	/**	function used to get the list of activities which are related to the invoice
+	 *	@param int $id - invoice id
+	 *	@return array - return an array which will be returned from the function GetRelatedList
+	 */
 	function get_activities($id)
 	{
+		global $log,$singlepane_view;
+		$log->debug("Entering get_activities(".$id.") method ...");
 		 global $app_strings;
-		require_once('modules/Activities/Activity.php');
-        $focus = new Activity();
+		require_once('modules/Calendar/Activity.php');
+	        $focus = new Activity();
 
 		$button = '';
 
-		$returnset = '&return_module=Invoice&return_action=DetailView&return_id='.$id;
+		if($singlepane_view == 'true')
+			$returnset = '&return_module=Invoice&return_action=DetailView&return_id='.$id;
+		else
+			$returnset = '&return_module=Invoice&return_action=CallRelatedList&return_id='.$id;
 
-		$query = "SELECT contactdetails.lastname, contactdetails.firstname, contactdetails.contactid, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left join activitygrouprelation on activitygrouprelation.activityid=crmentity.crmid left join groups on groups.groupname=activitygrouprelation.groupname where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and crmentity.deleted=0 and (activity.status is not NULL && activity.status != 'Completed') and (activity.status is not NULL && activity.status != 'Deferred') or (activity.eventstatus != '' &&  activity.eventstatus = 'Planned')";
-		return  GetRelatedList('Invoice','Activities',$focus,$query,$button,$returnset);
+		$query = "SELECT vtiger_contactdetails.lastname, vtiger_contactdetails.firstname, vtiger_contactdetails.contactid, vtiger_activity.*,vtiger_seactivityrel.*,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime, vtiger_users.user_name from vtiger_activity inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_crmentity.crmid left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname where vtiger_seactivityrel.crmid=".$id." and activitytype='Task' and vtiger_crmentity.deleted=0 and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Completed') and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Deferred')";
+		$log->debug("Exiting get_activities method ...");
+		return  GetRelatedList('Invoice','Calendar',$focus,$query,$button,$returnset);
 	}
+
+	/**	function used to get the the activity history related to the quote
+	 *	@param int $id - invoice id
+	 *	@return array - return an array which will be returned from the function GetHistory
+	 */
 	function get_history($id)
 	{
-		$query = "SELECT contactdetails.lastname, contactdetails.firstname, contactdetails.contactid,
-				activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime,
-				crmentity.createdtime, crmentity.description, users.user_name
-			from activity
-				inner join seactivityrel on seactivityrel.activityid=activity.activityid
-				inner join crmentity on crmentity.crmid=activity.activityid
-				left join cntactivityrel on cntactivityrel.activityid= activity.activityid
-				left join contactdetails on contactdetails.contactid = cntactivityrel.contactid
-				inner join users on crmentity.smcreatorid= users.id
-				left join activitygrouprelation on activitygrouprelation.activityid=activity.activityid
-                                left join groups on groups.groupname=activitygrouprelation.groupname	
-			where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task')
-				and (activity.status = 'Completed' or activity.status = 'Deferred' or (activity.eventstatus != 'Planned' and activity.eventstatus != ''))
-				and seactivityrel.crmid=".$id;
+		global $log;
+		$log->debug("Entering get_history(".$id.") method ...");
+		$query = "SELECT vtiger_contactdetails.lastname, vtiger_contactdetails.firstname, vtiger_contactdetails.contactid,
+			vtiger_activity.*,vtiger_seactivityrel.*,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime,
+			vtiger_crmentity.createdtime, vtiger_crmentity.description, vtiger_users.user_name
+			from vtiger_activity
+				inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid
+				inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid
+				left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid
+				left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid
+				inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
+				left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid
+                                left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname	
+			where vtiger_activity.activitytype='Task'
+				and (vtiger_activity.status = 'Completed' or vtiger_activity.status = 'Deferred')
+				and vtiger_seactivityrel.crmid=".$id;
 		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
 
+		$log->debug("Exiting get_history method ...");
 		return getHistory('Invoice',$query,$id);
 	}
+
+
+	/**	function used to get the attachments which are related to the invoice
+	 *	@param int $id - invoice id to which we want to retrieve the attachments and notes
+         *      @return array - return an array which will be returned from the function getAttachmentsAndNotes
+        **/
 	function get_attachments($id)
 	{
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted crm2.createdtime, notes.notecontent description, users.user_name
-		// Inserted inner join users on crm2.smcreatorid= users.id
-		$query = "select notes.title,'Notes      '  ActivityType, notes.filename,
-			attachments.type  FileType,crm2.modifiedtime lastmodified,
-			seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid,
-			crm2.createdtime, notes.notecontent description, users.user_name
-		from notes
-			inner join senotesrel on senotesrel.notesid= notes.notesid
-			inner join crmentity on crmentity.crmid= senotesrel.crmid
-			inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0
-			left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid
-			left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id;
+		global $log;
+		$log->debug("Entering get_attachments(".$id.") method ...");
+		
+		$query = "select vtiger_notes.title,'Notes      ' as ActivityType, vtiger_notes.filename,
+ 		vtiger_attachments.type as FileType,crm2.modifiedtime as lastmodified,
+ 		vtiger_seattachmentsrel.attachmentsid as attachmentsid, vtiger_notes.notesid as crmid,
+ 			crm2.createdtime, vtiger_notes.notecontent as description, vtiger_users.user_name	
+		from vtiger_notes
+			inner join vtiger_senotesrel on vtiger_senotesrel.notesid= vtiger_notes.notesid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_senotesrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_notes.notesid and crm2.deleted=0
+			left join vtiger_seattachmentsrel  on vtiger_seattachmentsrel.crmid =vtiger_notes.notesid
+			left join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
+			inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$id;
+		
 		$query .= ' union all ';
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted crm2.createdtime, attachments.description, users.user_name
-		// Inserted inner join users on crm2.smcreatorid= users.id
-		// Inserted order by createdtime desc
-		$query .= "select attachments.description  title ,'Attachments'  ActivityType,
-			attachments.name filename, attachments.type FileType, crm2.modifiedtime lastmodified,
-			attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid,
-			crm2.createdtime, attachments.description, users.user_name
-		from attachments
-			inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid
-			inner join crmentity on crmentity.crmid= seattachmentsrel.crmid
-			inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id;
+
+		$query .= "select vtiger_attachments.description as title ,'Attachments' as ActivityType,
+ 		vtiger_attachments.name as filename, vtiger_attachments.type as FileType, crm2.modifiedtime as lastmodified,
+ 		vtiger_attachments.attachmentsid as attachmentsid, vtiger_seattachmentsrel.attachmentsid as crmid,	
+			crm2.createdtime, vtiger_attachments.description, vtiger_users.user_name
+		from vtiger_attachments
+			inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid= vtiger_attachments.attachmentsid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_seattachmentsrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_attachments.attachmentsid
+			inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$id;
+
+		$log->debug("Exiting get_attachments method ...");
 		return getAttachmentsAndNotes('Invoice',$query,$id);
 	}
 
+	/**	Function used to get the Status history of the Invoice
+	 *	@param $id - invoice id
+	 *	@return $return_data - array with header and the entries in format Array('header'=>$header,'entries'=>$entries_list) where as $header and $entries_list are arrays which contains header values and all column values of all entries
+	 */
+	function get_invoicestatushistory($id)
+	{	
+		global $log;
+		$log->debug("Entering get_invoicestatushistory(".$id.") method ...");
+
+		global $adb;
+		global $mod_strings;
+		global $app_strings;
+
+		$query = 'select vtiger_invoicestatushistory.*, vtiger_invoice.subject from vtiger_invoicestatushistory inner join vtiger_invoice on vtiger_invoice.invoiceid = vtiger_invoicestatushistory.invoiceid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_invoice.invoiceid where vtiger_crmentity.deleted = 0 and vtiger_invoice.invoiceid = '.$id;
+		$result=$adb->query($query);
+		$noofrows = $adb->num_rows($result);
+
+		$header[] = $app_strings['Invoice Id'];
+		$header[] = $app_strings['LBL_ACCOUNT_NAME'];
+		$header[] = $app_strings['LBL_AMOUNT'];
+		$header[] = $app_strings['LBL_INVOICE_STATUS'];
+		$header[] = $app_strings['LBL_LAST_MODIFIED'];
+
+		while($row = $adb->fetch_array($result))
+		{
+			$entries = Array();
+
+			$entries[] = $row['invoiceid'];
+			$entries[] = $row['accountname'];
+			$entries[] = $row['total'];
+			$entries[] = $row['invoicestatus'];
+			$entries[] = getDisplayDate($row['lastmodified']);
+
+			$entries_list[] = $entries;
+		}
+
+		$return_data = Array('header'=>$header,'entries'=>$entries_list);
+
+	 	$log->debug("Exiting get_invoicestatushistory method ...");
+
+		return $return_data;
+	}
 
 
 }

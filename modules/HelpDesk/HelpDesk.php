@@ -18,19 +18,14 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
 require_once('include/utils/utils.php');
-
+require_once('user_privileges/default_module_view.php');
 
 class HelpDesk extends CRMEntity {
 	var $log;
 	var $db;
 
-
-	// Stored fields
-	var $id;
-	var $mode;
-
-	var $tab_name = Array('crmentity','troubletickets','seticketsrel','ticketcf','ticketcomments');
-	var $tab_name_index = Array('crmentity'=>'crmid','troubletickets'=>'ticketid','seticketsrel'=>'ticketid','ticketcf'=>'ticketid','ticketcomments'=>'ticketid','attachments'=>'attachmentsid');
+	var $tab_name = Array('vtiger_crmentity','vtiger_troubletickets','vtiger_seticketsrel','vtiger_ticketcf','vtiger_ticketcomments','vtiger_attachments');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_troubletickets'=>'ticketid','vtiger_seticketsrel'=>'ticketid','vtiger_ticketcf'=>'ticketid','vtiger_ticketcomments'=>'ticketid','vtiger_attachments'=>'attachmentsid');
 	var $column_fields = Array();
 
 	var $sortby_fields = Array('title','status','priority','crmid','firstname','smownerid');
@@ -72,80 +67,148 @@ class HelpDesk extends CRMEntity {
 					'modifiedtime',
 					'createdtime'
 				);
+	var $search_fields = Array(
+		'Ticket ID' => Array('vtiger_crmentity'=>'crmid'),
+		'Subject' => Array('vtiger_troubletickets'=>'title')
+		);
+	var $search_fields_name = Array(
+		'Ticket ID' => '',
+		'Subject'=>'ticket_title',
+		);
 
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'crmid';
 	var $default_sort_order = 'DESC';
 
+	/**	Constructor which will set the column_fields in this object
+	 */
 	function HelpDesk() 
 	{
 		$this->log =LoggerManager::getLogger('helpdesk');
+		$this->log->debug("Entering HelpDesk() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('HelpDesk');
+		$this->log->debug("Exiting HelpDesk method ...");
 	}
+
+	/**	Function used to get the sort order for HelpDesk listview
+	 *	@return string	$sorder	- first check the $_REQUEST['sorder'] if request value is empty then check in the $_SESSION['HELPDESK_SORT_ORDER'] if this session value is empty then default sort order will be returned. 
+	 */
+	function getSortOrder()
+	{
+		global $log;
+                $log->debug("Entering getSortOrder() method ...");	
+		if(isset($_REQUEST['sorder'])) 
+			$sorder = $_REQUEST['sorder'];
+		else
+			$sorder = (($_SESSION['HELPDESK_SORT_ORDER'] != '')?($_SESSION['HELPDESK_SORT_ORDER']):($this->default_sort_order));
+		$log->debug("Exiting getSortOrder() method ...");
+		return $sorder;
+	}
+
+	/**	Function used to get the order by value for HelpDesk listview
+	 *	@return string	$order_by  - first check the $_REQUEST['order_by'] if request value is empty then check in the $_SESSION['HELPDESK_ORDER_BY'] if this session value is empty then default order by will be returned. 
+	 */
+	function getOrderBy()
+	{
+		global $log;
+                $log->debug("Entering getOrderBy() method ...");
+		if (isset($_REQUEST['order_by'])) 
+			$order_by = $_REQUEST['order_by'];
+		else
+			$order_by = (($_SESSION['HELPDESK_ORDER_BY'] != '')?($_SESSION['HELPDESK_ORDER_BY']):($this->default_order_by));
+		$log->debug("Exiting getOrderBy method ...");
+		return $order_by;
+	}	
 
 	/**     Function to form the query to get the list of activities
          *      @param  int $id - ticket id
-         *      @return void
-         *       but this function will call the function renderRelatedActivities with parameters query and ticket id
+	 *	@return array - return an array which will be returned from the function GetRelatedList
         **/
 	function get_activities($id)
 	{
+		global $log, $singlepane_view;
+		$log->debug("Entering get_activities(".$id.") method ...");
 		global $mod_strings;
 		global $app_strings;
-		require_once('modules/Activities/Activity.php');
+		require_once('modules/Calendar/Activity.php');
 		$focus = new Activity();
 
 		$button = '';
 
-		$returnset = '&return_module=HelpDesk&return_action=DetailView&return_id='.$id;
+		if($singlepane_view == 'true')
+			$returnset = '&return_module=HelpDesk&return_action=DetailView&return_id='.$id;
+		else
+			$returnset = '&return_module=HelpDesk&return_action=CallRelatedList&return_id='.$id;
 
-		$query = "SELECT activity.*, crmentity.crmid, contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, recurringevents.recurringtype, crmentity.smownerid, crmentity.modifiedtime, users.user_name from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left outer join recurringevents on recurringevents.activityid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid= cntactivityrel.contactid left join users on users.id=crmentity.smownerid left join activitygrouprelation on activitygrouprelation.activityid=crmentity.crmid left join groups on groups.groupname=activitygrouprelation.groupname where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting')";
-		return GetRelatedList('HelpDesk','Activities',$focus,$query,$button,$returnset);
+		$query = "SELECT vtiger_activity.*, vtiger_crmentity.crmid, vtiger_recurringevents.recurringtype, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime, vtiger_users.user_name from vtiger_activity inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid left outer join vtiger_recurringevents on vtiger_recurringevents.activityid=vtiger_activity.activityid left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_crmentity.crmid left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname where vtiger_seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') AND ( vtiger_activity.status is NULL OR vtiger_activity.status != 'Completed' ) and ( vtiger_activity.eventstatus is NULL OR vtiger_activity.eventstatus != 'Held')";
+		$log->debug("Exiting get_activities method ...");
+		
+		return GetRelatedList('HelpDesk','Calendar',$focus,$query,$button,$returnset);
 	}
 
-	/**     Function to display the History of the Ticket which just includes a file which contains the TicketHistory informations
+	/**     Function to get the Ticket History information as in array format
+	 *	@param int $ticketid - ticket id
+	 *	@return array - return an array with title and the ticket history informations in the following format
+							array(	
+								header=>array('0'=>'title'),
+								entries=>array('0'=>'info1','1'=>'info2',etc.,)
+							     )
 	 */
-	function Get_Ticket_History()
+	function get_ticket_history($ticketid)
 	{
-	        global $mod_strings;
-	        echo '<br><br>';
-	        echo get_form_header($mod_strings['LBL_TICKET_HISTORY'],"", false);
-        	include("modules/HelpDesk/TicketHistory.php");
+		global $log, $adb;
+		$log->debug("Entering into get_ticket_history($ticketid) method ...");
+
+		$query="select title,update_log from vtiger_troubletickets where ticketid=".$ticketid;
+		$result=$adb->query($query);
+		$update_log = $adb->query_result($result,0,"update_log");
+
+		$splitval = split('--//--',trim($update_log,'--//--'));
+
+		$header[] = $adb->query_result($result,0,"title");
+
+		$return_value = Array('header'=>$header,'entries'=>$splitval);
+
+		$log->debug("Exiting from get_ticket_history($ticketid) method ...");
+
+		return $return_value;
 	}
 
 	/**	Function to form the query to get the list of attachments and notes
 	 *	@param  int $id - ticket id
-	 *	@return void
-	 *	 but this function will call the function renderRelatedAttachments with parameters query and ticket id
+         *      @return array - return an array which will be returned from the function getAttachmentsAndNotes
 	**/
 	function get_attachments($id)
 	{
-		$query = "select notes.title,'Notes      '  ActivityType, notes.filename,
-			attachments.type  FileType,crm2.modifiedtime lastmodified,
-			seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid,
-			crm2.createdtime, notes.notecontent description, users.user_name
-		from notes
-			inner join senotesrel on senotesrel.notesid= notes.notesid
-			inner join crmentity on crmentity.crmid= senotesrel.crmid
-			inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0
-			left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid
-			left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id;
+		global $log;
+		$log->debug("Entering get_attachments(".$id.") method ...");
+		$query = "select vtiger_notes.title,'Notes      '  ActivityType, vtiger_notes.filename,
+		vtiger_attachments.type  FileType,crm2.modifiedtime lastmodified,
+		vtiger_seattachmentsrel.attachmentsid attachmentsid, vtiger_notes.notesid crmid,
+			crm2.createdtime, vtiger_notes.notecontent description, vtiger_users.user_name
+		from vtiger_notes
+			inner join vtiger_senotesrel on vtiger_senotesrel.notesid= vtiger_notes.notesid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_senotesrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_notes.notesid and crm2.deleted=0
+			left join vtiger_seattachmentsrel  on vtiger_seattachmentsrel.crmid =vtiger_notes.notesid
+			left join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
+			inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$id;
 
 		$query .= ' union all ';
 
-		$query .= "select attachments.description title ,'Attachments'  ActivityType,
-			attachments.name filename, attachments.type FileType,crm2.modifiedtime lastmodified,
-			attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid,
-			crm2.createdtime, attachments.description, users.user_name
-		from attachments
-			inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid
-			inner join crmentity on crmentity.crmid= seattachmentsrel.crmid
-			inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id;	
+		$query .= "select vtiger_attachments.description title ,'Attachments'  ActivityType,
+		vtiger_attachments.name filename, vtiger_attachments.type FileType,crm2.modifiedtime lastmodified,
+		vtiger_attachments.attachmentsid attachmentsid, vtiger_seattachmentsrel.attachmentsid crmid,
+			crm2.createdtime, vtiger_attachments.description, vtiger_users.user_name
+		from vtiger_attachments
+			inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid= vtiger_attachments.attachmentsid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_seattachmentsrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_attachments.attachmentsid
+			left join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$id;	
+		$log->debug("Exiting get_attachments method ...");
 		return getAttachmentsAndNotes('HelpDesk',$query,$id);
 	}
 
@@ -158,9 +221,11 @@ class HelpDesk extends CRMEntity {
 					     ) 
 				where $i = 0,1,..n which are all made for the ticket
 	**/
-         function get_ticket_comments_list($ticketid)
-	 {
-		 $sql = "select * from ticketcomments where ticketid=".$ticketid." order by createdtime DESC";
+	function get_ticket_comments_list($ticketid)
+	{
+		global $log;
+		$log->debug("Entering get_ticket_comments_list(".$ticketid.") method ...");
+		 $sql = "select * from vtiger_ticketcomments where ticketid=".$ticketid." order by createdtime DESC";
 		 $result = $this->db->query($sql);
 		 $noofrows = $this->db->num_rows($result);
 		 for($i=0;$i<$noofrows;$i++)
@@ -171,7 +236,7 @@ class HelpDesk extends CRMEntity {
 				 $name = getUserName($ownerid);
 			 elseif($ownertype == 'customer')
 			 {
-				 $sql1 = 'select * from portalinfo where id='.$ownerid;
+				 $sql1 = 'select * from vtiger_portalinfo where id='.$ownerid;
 				 $name = $this->db->query_result($this->db->query($sql1),0,'user_name');
 			 }
 
@@ -179,20 +244,23 @@ class HelpDesk extends CRMEntity {
 			 $output[$i]['owner'] = $name;
 			 $output[$i]['createdtime'] = $this->db->query_result($result,$i,"createdtime");
 		 }
+		$log->debug("Exiting get_ticket_comments_list method ...");
 		 return $output;
 	 }
 		
 	/**	Function to form the query which will give the list of tickets based on customername and id ie., contactname and contactid
 	 *	@param  string $user_name - name of the customer ie., contact name
 	 *	@param  int    $id	 - contact id 
-	 * 	@return array  which is return from the function process_list_query
+	 * 	@return array  - return an array which will be returned from the function process_list_query
 	**/
 	function get_user_tickets_list($user_name,$id,$where='',$match='')
 	{
+		global $log;
+		$log->debug("Entering get_user_tickets_list(".$user_name.",".$id.",".$where.",".$match.") method ...");
 
 		$this->db->println("where ==> ".$where);
 
-		$query = "select crmentity.crmid, troubletickets.*, crmentity.smownerid, crmentity.createdtime, crmentity.modifiedtime, contactdetails.firstname, contactdetails.lastname, products.productid, products.productname, ticketcf.* from troubletickets inner join ticketcf on ticketcf.ticketid = troubletickets.ticketid inner join crmentity on crmentity.crmid=troubletickets.ticketid left join contactdetails on troubletickets.parent_id=contactdetails.contactid left join products on products.productid = troubletickets.product_id left join users on crmentity.smownerid=users.id  where crmentity.deleted=0 and contactdetails.email='".$user_name."' and troubletickets.parent_id = '".$id."'";
+		$query = "select vtiger_crmentity.crmid, vtiger_troubletickets.*, vtiger_crmentity.smownerid, vtiger_crmentity.createdtime, vtiger_crmentity.modifiedtime, vtiger_contactdetails.firstname, vtiger_contactdetails.lastname, vtiger_products.productid, vtiger_products.productname, vtiger_ticketcf.* from vtiger_troubletickets inner join vtiger_ticketcf on vtiger_ticketcf.ticketid = vtiger_troubletickets.ticketid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_troubletickets.ticketid left join vtiger_contactdetails on vtiger_troubletickets.parent_id=vtiger_contactdetails.contactid left join vtiger_products on vtiger_products.productid = vtiger_troubletickets.product_id left join vtiger_users on vtiger_crmentity.smownerid=vtiger_users.id  where vtiger_crmentity.deleted=0 and vtiger_contactdetails.email='".$user_name."' and vtiger_troubletickets.parent_id = '".$id."'";
 
 		if(trim($where) != '')
 		{
@@ -213,7 +281,7 @@ class HelpDesk extends CRMEntity {
 				$this->db->println('key : '.$key.'...........value : '.$value);
 				$val = explode(" = ",$value);
 				$this->db->println('val0 : '.$val[0].'...........val1 : '.$val[1]);
-				if($val[0] == 'troubletickets.title')
+				if($val[0] == 'vtiger_troubletickets.title')
 				{
 					$where_conditions .= $val[0]."  ".$val[1];
 					if($count != $key) 	$where_conditions .= $join;
@@ -231,11 +299,12 @@ class HelpDesk extends CRMEntity {
 			$this->db->println("where condition for customer portal tickets search : ".$where_conditions);
 		}
 
-		$query .= " order by crmentity.crmid desc";
+		$query .= " order by vtiger_crmentity.crmid desc";
+		$log->debug("Exiting get_user_tickets_list method ...");
 		return $this->process_list_query($query);
 	}
 
-	/**	Function to process the query and return the result with number of rows
+	/**	Function to process the list query and return the result with number of rows
 	 *	@param  string $query - query 
 	 *	@return array  $response - array(	list           => array(   
 											$i => array(key => val)   
@@ -248,6 +317,8 @@ class HelpDesk extends CRMEntity {
 	**/
 	function process_list_query($query)
 	{
+		global $log;
+		$log->debug("Entering process_list_query(".$query.") method ...");
 	  
    		$result =& $this->db->query($query,true,"Error retrieving $this->object_name list: ");
 		$list = Array();
@@ -278,15 +349,26 @@ class HelpDesk extends CRMEntity {
 	        $response['next_offset'] = $next_offset;
         	$response['previous_offset'] = $previous_offset;
 
+		$log->debug("Exiting process_list_query method ...");
 	        return $response;
 	}
 
 	/**	Function to get the HelpDesk field labels in caps letters without space
-	 *	return array $mergeflds - array(	key => val	)    where   key=0,1,2..n & val = ASSIGNEDTO,RELATEDTO, .,etc
+	 *	@return array $mergeflds - array(	key => val	)    where   key=0,1,2..n & val = ASSIGNEDTO,RELATEDTO, .,etc
 	**/
 	function getColumnNames_Hd()
 	{
-		$sql1 = "select fieldlabel from field where tabid=13 and block <> 6 ";
+		global $log,$current_user;
+		$log->debug("Entering getColumnNames_Hd() method ...");
+		require('user_privileges/user_privileges_'.$current_user->id.'.php');
+		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
+		{
+			$sql1 = "select fieldlabel from vtiger_field where tabid=13 and block <> 30 ";
+		}else
+		{
+			$profileList = getCurrentUserProfileList();
+			$sql1 = "select fieldlabel from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=13 and vtiger_field.block <> 30 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
+		}
 		$result = $this->db->query($sql1);
 		$numRows = $this->db->num_rows($result);
 		for($i=0; $i < $numRows;$i++)
@@ -296,34 +378,45 @@ class HelpDesk extends CRMEntity {
 			$custom_fields[$i] = strtoupper($custom_fields[$i]);
 		}
 		$mergeflds = $custom_fields;
+		$log->debug("Exiting getColumnNames_Hd method ...");
 		return $mergeflds;
 	}
 
 	/**     Function to get the list of comments for the given ticket id
 	 *      @param  int  $ticketid - Ticket id
-	 *      @return list $list - the list of comments which are formed as boxed info with div tags.
+	 *      @return list $list - return the list of comments and comment informations as a html output where as these comments and comments informations will be formed in div tag.
 	**/
 	function getCommentInformation($ticketid)
 	{
+		global $log;
+		$log->debug("Entering getCommentInformation(".$ticketid.") method ...");
 		global $adb;
 		global $mod_strings;
-		$sql = "select * from ticketcomments where ticketid=".$ticketid;
+		$sql = "select * from vtiger_ticketcomments where ticketid=".$ticketid;
 		$result = $adb->query($sql);
 		$noofrows = $adb->num_rows($result);
 
 		if($noofrows == 0)
+		{
+			$log->debug("Exiting getCommentInformation method ...");
 			return '';
+		}
 
-		$list .= '<div style="overflow: scroll;height:200;width:100%;">';
+		$list .= '<div style="overflow: auto;height:200px;width:100%;">';
 		for($i=0;$i<$noofrows;$i++)
 		{
 			if($adb->query_result($result,$i,'comments') != '')
 			{
-				$list .= '<div valign="top" width="70%"class="dataField">';
+				//this div is to display the comment
+				$list .= '<div valign="top" style="width:99%;padding-top:10px;" class="dataField">';
 				$list .= make_clickable(nl2br($adb->query_result($result,$i,'comments')));
 
-				$list .= '</div><div valign="top" width="20%" class="dataLabel"><font color=darkred>';
+				$list .= '</div>';
+
+				//this div is to display the author and time
+				$list .= '<div valign="top" style="width:99%;border-bottom:1px dotted #CCCCCC;padding-bottom:5px;" class="dataLabel"><font color=darkred>';
 				$list .= $mod_strings['LBL_AUTHOR'].' : ';
+
 				if($adb->query_result($result,$i,'ownertype') == 'user')
 					$list .= getUserName($adb->query_result($result,$i,'ownerid'));
 				else
@@ -336,21 +429,135 @@ class HelpDesk extends CRMEntity {
 		}
 		$list .= '</div>';
 
+		$log->debug("Exiting getCommentInformation method ...");
 		return $list;
 	}
 
-	/**     Function to get the Customer Name who has made comment to the ticket from the portal
+	/**     Function to get the Customer Name who has made comment to the ticket from the customer portal
 	 *      @param  int    $id   - Ticket id
 	 *      @return string $customername - The contact name
 	**/
 	function getCustomerName($id)
 	{
+		global $log;
+		$log->debug("Entering getCustomerName(".$id.") method ...");
         	global $adb;
-	        $sql = "select * from portalinfo inner join troubletickets on troubletickets.parent_id = portalinfo.id where troubletickets.ticketid=".$id;
+	        $sql = "select * from vtiger_portalinfo inner join vtiger_troubletickets on vtiger_troubletickets.parent_id = vtiger_portalinfo.id where vtiger_troubletickets.ticketid=".$id;
         	$result = $adb->query($sql);
 	        $customername = $adb->query_result($result,0,'user_name');
+		$log->debug("Exiting getCustomerName method ...");
         	return $customername;
 	}
+	
+	/**	Function used to get the Activity History
+	 *	@param	int	$id - ticket id to which we want to display the activity history
+	 *	@return  array	- return an array which will be returned from the function getHistory
+	 */
+	function get_history($id)
+	{
+		global $log;
+		$log->debug("Entering get_history(".$id.") method ...");
+		$query = "SELECT vtiger_activity.activityid, vtiger_activity.subject, vtiger_activity.status, vtiger_activity.eventstatus,
+		vtiger_activity.activitytype, vtiger_troubletickets.ticketid, vtiger_troubletickets.title, vtiger_crmentity.modifiedtime,
+		vtiger_crmentity.createdtime, vtiger_crmentity.description, vtiger_users.user_name
+				from vtiger_activity
+				inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid= vtiger_activity.activityid
+				inner join vtiger_troubletickets on vtiger_troubletickets.ticketid = vtiger_seactivityrel.crmid
+				inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid
+				left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid
+                                left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname
+				inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
+				where (vtiger_activity.activitytype = 'Meeting' or vtiger_activity.activitytype='Call' or vtiger_activity.activitytype='Task')
+				and (vtiger_activity.status = 'Completed' or vtiger_activity.status = 'Deferred' or (vtiger_activity.eventstatus = 'Held' and vtiger_activity.eventstatus != ''))
+				and vtiger_seactivityrel.crmid=".$id;
+		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
+		$log->debug("Entering get_history method ...");
+		return getHistory('HelpDesk',$query,$id);
+	}
+
+	/** Function to get the update ticket history for the specified ticketid
+	  * @param $id -- $ticketid:: Type Integer 
+	 */	
+	function constructUpdateLog($focus, $mode, $assigned_group_name, $assigntype)
+	{
+		global $adb;
+		global $current_user;
+
+		if($mode != 'edit')//this will be updated when we create new ticket
+		{
+			$updatelog = " Ticket created. Assigned to ";
+
+			if($assigned_group_name != '' && $assigntype == 'T')
+			{
+				$updatelog .= " group ".$assigned_group_name;
+			}
+			elseif($focus->column_fields['assigned_user_id'] != '')
+			{
+				$updatelog .= " user ".getUserName($focus->column_fields['assigned_user_id']);
+			}
+			else
+			{
+				$updatelog .= " user ".getUserName($current_user->id);
+			}
+
+			$fldvalue = date("l dS F Y h:i:s A").' by '.$current_user->user_name;
+			$updatelog .= " -- ".$fldvalue."--//--";
+		}
+		else
+		{
+			$ticketid = $focus->id;
+
+			//First retrieve the existing information
+			$tktresult = $adb->query("select * from vtiger_troubletickets where ticketid='".$ticketid."'");
+			$crmresult = $adb->query("select * from vtiger_crmentity where crmid='".$ticketid."'");
+
+			$updatelog = $adb->query_result($tktresult,0,"update_log");
+
+			$old_user_id = $adb->query_result($crmresult,0,"smownerid");
+			$old_status = $adb->query_result($tktresult,0,"status");
+			$old_priority = $adb->query_result($tktresult,0,"priority");
+			$old_severity = $adb->query_result($tktresult,0,"severity");
+			$old_category = $adb->query_result($tktresult,0,"category");
+
+			//Assigned to change log
+			if($assigned_group_name != '' && $assigntype == 'T')
+			{
+				$group_info = getGroupName($ticketid,'HelpDesk');
+				$group_name = $group_info[0];
+				if($group_name != $assigned_group_name)
+					$updatelog .= ' Transferred to group '.$assigned_group_name.'\.';
+			}
+			elseif($focus->column_fields['assigned_user_id'] != $old_user_id)
+			{
+				$user_name = getUserName($focus->column_fields['assigned_user_id']);
+				$updatelog .= ' Transferred to user '.$user_name.'\.';
+			}
+			//Status change log
+			if($old_status != $focus->column_fields['ticketstatus'])
+			{
+				$updatelog .= ' Status Changed to '.$focus->column_fields['ticketstatus'].'\.';
+			}
+			//Priority change log
+			if($old_priority != $focus->column_fields['ticketpriorities'])
+			{
+				$updatelog .= ' Priority Changed to '.$focus->column_fields['ticketpriorities'].'\.';
+			}
+			//Severity change log
+			if($old_severity != $focus->column_fields['ticketseverities'])
+			{
+				$updatelog .= ' Severity Changed to '.$focus->column_fields['ticketseverities'].'\.';
+			}
+			//Category change log
+			if($old_category != $focus->column_fields['ticketcategories'])
+			{
+				$updatelog .= ' Category Changed to '.$focus->column_fields['ticketcategories'].'\.';
+			}
+
+			$updatelog .= ' -- '.date("l dS F Y h:i:s A").' by '.$current_user->user_name.'--//--';
+		}
+		return $updatelog;
+	}
+
 
 
 }

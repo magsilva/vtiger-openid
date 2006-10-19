@@ -12,8 +12,13 @@
 
 require_once('Smarty_setup.php'); 
 require_once('include/database/PearDatabase.php');
- 
-   $sql = "select * from emailtemplates order by templateid DESC";
+
+global $adb;
+global $log;
+
+$log->info("Inside Email Templates List View");
+
+   $sql = "select * from vtiger_emailtemplates order by templateid DESC";
    $result = $adb->query($sql);
    $temprow = $adb->fetch_array($result);
    
@@ -37,8 +42,11 @@ $smod_strings = return_module_language($current_language,'Settings');
 $smarty->assign("MOD", $smod_strings);
 $smarty->assign("MODULE", 'Settings');
 $smarty->assign("IMAGE_PATH", $image_path);
+$smarty->assign("PARENTTAB", $_REQUEST['parenttab']);
 
 $return_data=array();
+if ($temprow != null)
+{
 do
 {
   $templatearray=array();
@@ -49,6 +57,10 @@ do
   $return_data[]=$templatearray;
   $cnt++;
 }while($temprow = $adb->fetch_array($result));
+}
+
+$log->info("Exiting Email Templates List View");
+
 $smarty->assign("TEMPLATES",$return_data);
 $smarty->display("ListEmailTemplates.tpl");
 

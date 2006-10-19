@@ -1,101 +1,125 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
 
-<form id="form" name="new" action="index.php" method="post">
-<input type="hidden" name="module" value="Users">
-<input type="hidden" name="action" value="createrole">
-<input type="hidden" name="parenttab" value="Settings">
-<input type="hidden" name="returnaction" value="RoleDetailView">
-<input type="hidden" name="roleid" value="{$ROLEID}">
-<input type="hidden" name="mode" value="edit">
+	<div align=center>
+			{include file='SetMenu.tpl'}
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<form id="form" name="roleView" action="index.php" method="post">
+				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="action" value="createrole">
+				<input type="hidden" name="parenttab" value="Settings">
+				<input type="hidden" name="returnaction" value="RoleDetailView">
+				<input type="hidden" name="roleid" value="{$ROLEID}">
+				<input type="hidden" name="mode" value="edit">
+				<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ico-roles.gif" width="48" height="48" border=0 ></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listroles&parenttab=Settings">{$CMOD.LBL_ROLES}</a> &gt; {$CMOD.LBL_VIEWING} &quot;{$ROLE_NAME}&quot; </b></td>
+				</tr>
+				<tr>
+					<td valign=top class="small">{$CMOD.LBL_VIEWING} {$CMOD.LBL_PROPERTIES} &quot;{$ROLE_NAME}&quot; {$MOD.LBL_LIST_CONTACT_ROLE} </td>
+				</tr>
+				</table>
+				
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
+				<tr>
+				<td valign=top>
+					
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						<td class="big"><strong>{$CMOD.LBL_PROPERTIES} &quot;{$ROLE_NAME}&quot; </strong></td>
+						<td><div align="right">
+					 	    <input value="   {$APP.LBL_EDIT_BUTTON_LABEL}   " title="{$APP.LBL_EDIT_BUTTON_TITLE}" accessKey="{$APP.LBL_EDIT_BUTTON_KEY}" class="crmButton small edit" type="submit" name="Edit" >
+						</div></td>
+					  </tr>
+					</table>
+					<table width="100%"  border="0" cellspacing="0" cellpadding="5">
+                      <tr class="small">
+                        <td width="15%" class="small cellLabel"><strong>{$CMOD.LBL_ROLE_NAME}</strong></td>
+                        <td width="85%" class="cellText" >{$ROLE_NAME}</td>
+                      </tr>
+                      <tr class="small">
+                        <td class="small cellLabel"><strong>{$CMOD.LBL_REPORTS_TO}</strong></td>
+                        <td class="cellText">{$PARENTNAME}</td>
+                      </tr>
+                      <tr class="small">
+                        <td valign=top class="cellLabel"><strong>{$CMOD.LBL_MEMBER}</strong></td>
+                        <td class="cellText">
+						<table width="70%"  border="0" cellspacing="0" cellpadding="5">
+                          <tr class="small">
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$CMOD.LBL_ASSOCIATED_PROFILES}</strong></div>
+					</td>
+                            </tr>
+			{foreach item=elements from=$ROLEINFO.profileinfo}
+                          <tr class="small">
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<tr>
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br />
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$CMOD.LBL_CREATE_NEW_GROUP}</b></span>
-<hr noshade="noshade" size="1"/>
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
+                            <td width="16"><div align="center"></div></td>
+                            <td>
+										<a href="index.php?module=Users&action=profilePrivileges&parenttab=Settings&profileid={$elements.0}&mode=view">{$elements.1}</a><br>
+			    </td>  	 
+                          </tr>
+			{/foreach}
+   <tr class="small">
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$CMOD.LBL_ASSOCIATED_USERS}</strong></div>
+					</td>
+                            </tr>
+				{if $ROLEINFO.userinfo.0 neq ''}
+			{foreach item=elements from=$ROLEINFO.userinfo}
+                          <tr class="small">
 
-	<table align="center" border="0" cellpadding="5" cellspacing="0" width="75%">
-	<tbody><tr>
-	<td colspan="2" style="border-bottom: 1px dashed rgb(204, 204, 204);">&nbsp;</td>
+                            <td width="16"><div align="center"></div></td>
+                            <td>
+				<a href="index.php?module=Users&action=DetailView&parenttab=Settings&record={$elements.0}">{$elements.1}</a><br>
+			    </td>  	 
+                          </tr>
+			{/foreach}	
+			{/if}
+                        </table></td>
+                      </tr>
+                    </table>
+					<br>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr><td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+					</table>
+					
+					
+				</td>
+				</tr>
+				</table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
+		</td>
 	</tr>
-	<tr>
-	<td style="border-bottom: 1px dashed rgb(204, 204, 204); padding-right: 10px;" align="left" width="30%"><b>{$ROLE_NAME}</b></td>
-	<td style="border-bottom: 1px dashed rgb(204, 204, 204);" align="right" width="70%">
-	<input title="Edit" accessKey="C" class="small" onclick="this.form.action.value=\'createrole\'" type="submit" name="Edit" value="Edit Role">
-	</td>
-	</tr>
-	<tr>
-	<td style="padding-right: 10px;" align="right">&nbsp;</td>
-	<td>&nbsp;</td>
-	</tr>
-	<tr>
-	<td colspan="2" style="border-bottom: 1px solid rgb(204, 204, 204); padding-right: 10px;" align="right" valign="top">
-	<div style="overflow: auto; position: relative; left: 10px; top: 0px; width: 100%; height: 225px; text-align: left;">
-	<table border="0" cellpadding="0" cellspacing="0" width="100%">
-	<tbody>
-	
-	<tr>
-	<td align="right" valign="top" width="30%"><b>Associated Users :</b></td>
-	<td align="left" valign="top" width="70%">
-	<ul style="list-style-type: none;">
-	{foreach item=elements from=$ROLEINFO.userinfo}
-	<li><a href="index.php?module=Users&action=DetailView&record={$elements.0}">{$elements.1}</a></li>
-	{/foreach}	
-	</ul>
-	</td>
-	</tr>
-	
-	<tr>
-	<td align="right" valign="top" width="30%"><b>Associated profiles :</b></td>
-	<td align="left" valign="top" width="70%">
-	<ul style="list-style-type: none;">
-	{foreach item=elements from=$ROLEINFO.profileinfo}
-	<li><a href="index.php?module=Users&action=profilePrivileges&profileid={$elements.0}">{$elements.1}</a></li>
-	{/foreach}	
-	</ul>
-	</td>
-	</tr>
-	
-	</tbody>
+	</form>
 	</table>
+		
 	</div>
-	</td>
-
-	</tr>
-	<tr>
-	<td colspan="2" style="border-top: 1px solid rgb(204, 204, 204);" align="center">
-	<input title="Cancel" accessKey="C" class="small" onclick="window.history.back()" type="button" name="Cancel" value=" &lsaquo; Back">	
-	</td>
-	</tr>
-	</tbody></table>
-
-<td colspan="2" style="border-top:1px solid #CCCCCC;">&nbsp;</td>
-</tr>
-</table>
-</form>
 </td>
-
-</tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
-</td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-	{include file='SettingsSubMenu.tpl'}
-

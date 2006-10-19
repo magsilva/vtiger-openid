@@ -33,11 +33,14 @@ function getObj(n,d) {
       d=document;
 
    
-  if((p=n.indexOf("?"))>0&&parent.frames.length) {
+   if(n != undefined)
+   {
+	   if((p=n.indexOf("?"))>0&&parent.frames.length) {
 
-    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);
+		   d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);
 
-  }
+	   }
+   }
 
 
 
@@ -703,136 +706,146 @@ function numConstComp(fldName,fldLabel,type,constval) {
 
 function formValidate() {
 	for (var i=0; i<fieldname.length; i++) {
-		var type=fielddatatype[i].split("~")
-		if (type[1]=="M") {
-			if (!emptyCheck(fieldname[i],fieldlabel[i],getObj(fieldname[i]).type))
-                           	return false
-		}
-		
-		switch (type[0]) {
-			case "O"  : break;
-			case "V"  : break;
-			case "C"  : break;
-			case "DT" :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-				{	 
-					if (type[1]=="M")
-						if (!emptyCheck(type[2],fieldlabel[i],getObj(type[2]).type))
-                           	return false
-							
-					if(typeof(type[3])=="undefined") var currdatechk="OTH"
-                                        else var currdatechk=type[3]
-					
-					if (!dateTimeValidate(fieldname[i],type[2],fieldlabel[i],currdatechk))
-							return false
-					   	if (type[4]) {
-							if (!dateTimeComparison(fieldname[i],type[2],fieldlabel[i],type[5],type[6],type[4]))
-								return false
-
-					   	}
-				}		
-					   	break;
-			case "D"  :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-			{	
-					if(typeof(type[2])=="undefined") var currdatechk="OTH"
-                                        else var currdatechk=type[2]
-
-					if (!dateValidate(fieldname[i],fieldlabel[i],currdatechk))
-							return false
-					if (type[3]) {
-						if (!dateComparison(fieldname[i],fieldlabel[i],type[4],type[5],type[3]))
-								return false
-					  	}
-			}	
-					   	break;
-			case "T"  :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-			{	 
-					if(typeof(type[2])=="undefined") var currtimechk="OTH"
-                                        else var currtimechk=type[2]
-
-					if (!timeValidate(fieldname[i],fieldlabel[i],currtimechk))
-							return false
-						if (type[3]) {
-							if (!timeComparison(fieldname[i],fieldlabel[i],type[4],type[5],type[3]))
-								return false
-					   	}
-			}
-					   	break;
-			case "I"  :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-			{	
-					if (getObj(fieldname[i]).value.length!=0)
-                                        {
-						if (!intValidate(fieldname[i],fieldlabel[i]))
-							return false
-					   	if (type[2]) {
-							if (!numConstComp(fieldname[i],fieldlabel[i],type[2],type[3]))
-								return false
-					   	}
-					}
-			}
-				   	break;
-			case "N"  :
-			case "NN" :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-				{
-					if (getObj(fieldname[i]).value.length!=0)
-					{
-						if (typeof(type[2])=="undefined") var numformat="any"
-						else var numformat=type[2]
-					
-						if (type[0]=="NN") {
-							
-							if (!numValidate(fieldname[i],fieldlabel[i],numformat,true))
-	return false
-						} else {
-							if (!numValidate(fieldname[i],fieldlabel[i],numformat))
-							return false
-						}
-					   	if (type[3]) {
-					   		if (!numConstComp(fieldname[i],fieldlabel[i],type[3],type[4]))
-								return false
-					   	}
-					}
-				 }
-					break;
-			case "E"  :
-				if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
-				{
-					if (getObj(fieldname[i]).value.length!=0)
-					{
-						var etype = "EMAIL"
-						if (!patternValidate(fieldname[i],fieldlabel[i],etype))
-							return false
-					}
+		if(getObj(fieldname[i]) != null)
+		{
+			var type=fielddatatype[i].split("~")
+				if (type[1]=="M") {
+					if (!emptyCheck(fieldname[i],fieldlabel[i],getObj(fieldname[i]).type))
+						return false
 				}
-					break;
+
+			switch (type[0]) {
+				case "O"  : break;
+				case "V"  : break;
+				case "C"  : break;
+				case "DT" :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{	 
+						if (type[1]=="M")
+							if (!emptyCheck(type[2],fieldlabel[i],getObj(type[2]).type))
+								return false
+
+									if(typeof(type[3])=="undefined") var currdatechk="OTH"
+									else var currdatechk=type[3]
+
+										if (!dateTimeValidate(fieldname[i],type[2],fieldlabel[i],currdatechk))
+											return false
+												if (type[4]) {
+													if (!dateTimeComparison(fieldname[i],type[2],fieldlabel[i],type[5],type[6],type[4]))
+														return false
+
+												}
+					}		
+				break;
+				case "D"  :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{	
+						if(typeof(type[2])=="undefined") var currdatechk="OTH"
+						else var currdatechk=type[2]
+
+							if (!dateValidate(fieldname[i],fieldlabel[i],currdatechk))
+								return false
+									if (type[3]) {
+										if (!dateComparison(fieldname[i],fieldlabel[i],type[4],type[5],type[3]))
+											return false
+									}
+					}	
+				break;
+				case "T"  :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{	 
+						if(typeof(type[2])=="undefined") var currtimechk="OTH"
+						else var currtimechk=type[2]
+
+							if (!timeValidate(fieldname[i],fieldlabel[i],currtimechk))
+								return false
+									if (type[3]) {
+										if (!timeComparison(fieldname[i],fieldlabel[i],type[4],type[5],type[3]))
+											return false
+									}
+					}
+				break;
+				case "I"  :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{	
+						if (getObj(fieldname[i]).value.length!=0)
+						{
+							if (!intValidate(fieldname[i],fieldlabel[i]))
+								return false
+									if (type[2]) {
+										if (!numConstComp(fieldname[i],fieldlabel[i],type[2],type[3]))
+											return false
+									}
+						}
+					}
+				break;
+				case "N"  :
+					case "NN" :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{
+						if (getObj(fieldname[i]).value.length!=0)
+						{
+							if (typeof(type[2])=="undefined") var numformat="any"
+							else var numformat=type[2]
+
+								if (type[0]=="NN") {
+
+									if (!numValidate(fieldname[i],fieldlabel[i],numformat,true))
+										return false
+								} else {
+									if (!numValidate(fieldname[i],fieldlabel[i],numformat))
+										return false
+								}
+							if (type[3]) {
+								if (!numConstComp(fieldname[i],fieldlabel[i],type[3],type[4]))
+									return false
+							}
+						}
+					}
+				break;
+				case "E"  :
+					if (getObj(fieldname[i]) != null && getObj(fieldname[i]).value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0)
+					{
+						if (getObj(fieldname[i]).value.length!=0)
+						{
+							var etype = "EMAIL"
+								if (!patternValidate(fieldname[i],fieldlabel[i],etype))
+									return false
+						}
+					}
+				break;
+			}
 		}
 	}
        //added to check Start Date & Time,if Activity Status is Planned.//start
+	
         for (var j=0; j<fieldname.length; j++)
-        {
-            if(fieldname[j] == "date_start")
-            {
-               var datelabel = fieldlabel[j]
-               var datefield = fieldname[j]
-               var startdatevalue = getObj(datefield).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
-            }
-            if(fieldname[j] == "time_start")
-            {
-                var timelabel = fieldlabel[j]
-                var timefield = fieldname[j]
-                var timeval=getObj(timefield).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
-            }
-            if(fieldname[j] == "eventstatus" || fieldname[j] == "taskstatus")
-            {
-               var statusvalue = getObj(fieldname[j]).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
-               var statuslabel = fieldlabel[j++]
-            }
+	{
 
-        }
+		if(getObj(fieldname[j]) != null)
+		{
+			if(fieldname[j] == "date_start")
+			{
+				var datelabel = fieldlabel[j]
+					var datefield = fieldname[j]
+					var startdatevalue = getObj(datefield).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
+			}
+			if(fieldname[j] == "time_start")
+			{
+				var timelabel = fieldlabel[j]
+					var timefield = fieldname[j]
+					var timeval=getObj(timefield).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
+			}
+			if(fieldname[j] == "eventstatus" || fieldname[j] == "taskstatus")
+			{
+				var statusvalue = getObj(fieldname[j]).value.replace(/^\s+/g, '').replace(/\s+$/g, '')
+					var statuslabel = fieldlabel[j++]
+			}
+		}else
+		{
+			return true;
+		}
+	}
 	if(statusvalue == "Planned")
         {
                 var dateelements=splitDateVal(startdatevalue)
@@ -858,8 +871,6 @@ function formValidate() {
                chktime.setDate(dd)
                chktime.setHours(hourval)
                chktime.setMinutes(minval)
-               //chkdate.setHours(hourval)
-               //chkdate.setMinutes(minval)
                 if (!compareDates(chkdate,datelabel,currdate,"Current date & time for Activities with status as Planned","GE")) {
                         getObj(datefield).focus()
                         return false
@@ -872,7 +883,6 @@ function formValidate() {
                 else return true
 
 	 }//end
-
 
 	return true
 }
@@ -1103,13 +1113,22 @@ function show(divId)
 
 }
 
+/*
+* javascript function to display the div tag
+* @param divId :: div tag ID
+*/
+function showBlock(divId)
+{
+    var id = document.getElementById(divId);
+    id.style.display = 'block';
+}
+
 
 /*
 * javascript function to hide the div tag
 * @param divId :: div tag ID
 */
 function hide(divId)
-
 {
 
     var id = document.getElementById(divId);
@@ -1117,28 +1136,40 @@ function hide(divId)
     id.style.display = 'none';
 
 }
+function fnhide(divId)
+{
 
-function fnLoadValues(obj1,obj2,SelTab,unSelTab){
+    var id = document.getElementById(divId);
 
-   var tabName1 = document.getElementById(obj1);
+    id.style.display = 'none';
+}
 
-   var tabName2 = document.getElementById(obj2);
+function fnLoadValues(obj1,obj2,SelTab,unSelTab,moduletype,module){
+	
+   var oform = document.forms['EditView'];
+   oform.action.value='Save';	
+   if((moduletype == 'inventory' && validateInventory(module)) ||(moduletype == 'normal') && formValidate())	
+   if(formValidate())
+   {	
+	   var tabName1 = document.getElementById(obj1);
 
-   var tagName1 = document.getElementById(SelTab);
+	   var tabName2 = document.getElementById(obj2);
 
-   var tagName2 = document.getElementById(unSelTab);
+	   var tagName1 = document.getElementById(SelTab);
 
-   if(tabName1.className == "dvtUnSelectedCell")
+	   var tagName2 = document.getElementById(unSelTab);
 
-       tabName1.className = "dvtSelectedCell";
+	   if(tabName1.className == "dvtUnSelectedCell")
 
-   if(tabName2.className == "dvtSelectedCell")
+		   tabName1.className = "dvtSelectedCell";
 
-       tabName2.className = "dvtUnSelectedCell";   
-   tagName1.style.display='block';
+	   if(tabName2.className == "dvtSelectedCell")
 
-   tagName2.style.display='none';
+		   tabName2.className = "dvtUnSelectedCell";   
+	   tagName1.style.display='block';
 
+	   tagName2.style.display='none';
+   }
 }
 
 function fnCopy(source,design){
@@ -1236,11 +1267,11 @@ function fnAddSrch(option_values,criteria_values){
 
     var colthree = row.insertCell(2);
 
-    colone.innerHTML="<select name='Fields"+count+"' class='detailedViewTextBox'>"+option_values+"</select>";
+    colone.innerHTML="<select id='Fields"+count+"' name='Fields"+count+"' class='detailedViewTextBox'>"+option_values+"</select>";
 
-    coltwo.innerHTML="<select name='Condition"+count+"' class='detailedViewTextBox'>"+criteria_values+"</select> ";
+    coltwo.innerHTML="<select id='Condition"+count+"' name='Condition"+count+"' class='detailedViewTextBox'>"+criteria_values+"</select> ";
 
-    colthree.innerHTML="<input type='text' name='Srch_value"+count+"' class='detailedViewTextBox'>";
+    colthree.innerHTML="<input type='text' id='Srch_value"+count+"' name='Srch_value"+count+"' class='detailedViewTextBox'>";
 
 }
 
@@ -1341,83 +1372,46 @@ function fnvshobj(obj,Lay){
     var tagName = document.getElementById(Lay);
     var leftSide = findPosX(obj);
     var topSide = findPosY(obj);
-    tagName.style.left= leftSide + 'px';
+    var maxW = tagName.style.width;
+    var widthM = maxW.substring(0,maxW.length-2);
+    var getVal = eval(leftSide) + eval(widthM);
+    if(getVal  > document.body.clientWidth ){
+        leftSide = eval(leftSide) - eval(widthM);
+        tagName.style.left = leftSide + 34 + 'px';
+    }
+    else
+        tagName.style.left= leftSide + 'px';
     tagName.style.top= topSide + 'px';
-    tagName.style.visibility = 'visible';
+    tagName.style.display = 'block';
+    tagName.style.visibility = "visible";
+}
+
+function posLay(obj,Lay){
+    var tagName = document.getElementById(Lay);
+    var leftSide = findPosX(obj);
+    var topSide = findPosY(obj);
+    var maxW = tagName.style.width;
+    var widthM = maxW.substring(0,maxW.length-2);
+    var getVal = eval(leftSide) + eval(widthM);
+    if(getVal  > document.body.clientWidth ){
+        leftSide = eval(leftSide) - eval(widthM);
+        tagName.style.left = leftSide + 'px';
+    }
+    else
+        tagName.style.left= leftSide + 'px';
+    tagName.style.top= topSide + 'px';
 }
 
 function fninvsh(Lay){
     var tagName = document.getElementById(Lay);
     tagName.style.visibility = 'hidden';
+    tagName.style.display = 'none';
 }
 
 function fnvshNrm(Lay){
     var tagName = document.getElementById(Lay);
     tagName.style.visibility = 'visible';
-}
-
-
-// Add & Delete Row in a Table
-
-function fnAddRow(){
-	rowCnt++;
-	var tableName = document.getElementById('proTab');
-	var prev = tableName.rows.length;
-    var count = prev;
-    var row = tableName.insertRow(prev);
-	row.id = "row"+count;
-	if(count%2)
-		row.className = "dvtCellLabel";
-	else
-		row.className = "dvtCellInfo";
-	var colone = row.insertCell(0);
-	var coltwo = row.insertCell(1);
-	var colthree = row.insertCell(2);
-	var colfour = row.insertCell(3);
-	var colfive = row.insertCell(4);
-	var colsix = row.insertCell(5);
-	var colseven = row.insertCell(6);
-	colone.innerHTML="<input type='text' name='txtProduct"+count+"' class='detailedViewProdTextBox' readonly/>&nbsp;<img src='themes/blue/images/search.gif' onclick='productPickList(this)' align='absmiddle' /><input type='hidden' id='hdnProductId"+count+"' name='hdnProductId"+count+"'>";
-	coltwo.innerHTML="<div id='qtyInStock"+count+"'>";	
-	colthree.innerHTML="<input type='text' name='txtQty"+count+"' class='detailedViewTextBox' onfocus='this.className=\"detailedViewTextBoxOn\"' onBlur='this.className=\"detailedViewTextBox\"; settotalnoofrows(); calcTotal(this);' /> ";
-	colfour.innerHTML="&nbsp;</div><div id='unitPrice"+count+"'></div>";
-	colfive.innerHTML="<input type='text' name='txtListPrice"+count+"' class='detailedViewProdTextBox' readonly onBlur='settotalnoofrows(); calcTotal(this)'>&nbsp;<img src='themes/blue/images/pricebook.gif' onClick='priceBookPickList(this)' align='absmiddle' style='cursor:hand;cursor:pointer' title='Price Book' /> ";
-	colsix.innerHTML="&nbsp;<div id='total"+count+"' align='right'></div><input type='hidden' id='hdnTotal"+count+"' name='hdnTotal"+count+"'>";
-	colseven.innerHTML="<span class='delTxt' onclick=\"deleteRow(this.parentNode.parentNode.rowIndex)\">Del</span>";
-
-}
-function fnAddRowForPO(){
-	rowCnt++;
-
-	var tableName = document.getElementById('proTab');
-	var prev = tableName.rows.length;
-	var count = prev;
-	var row = tableName.insertRow(prev);
-	row.id = "row"+count;
-	if(count%2)
-		row.className = "dvtCellLabel";
-	else
-		row.className = "dvtCellInfo";
-	var colone = row.insertCell(0);
-	var coltwo = row.insertCell(1);
-	var colthree = row.insertCell(2);
-	var colfour = row.insertCell(3);
-	var colfive = row.insertCell(4);
-	var colsix = row.insertCell(5);
-	colone.innerHTML="<input type='text' name='txtProduct"+count+"' class='detailedViewProdTextBox' readonly/>&nbsp;<img src='themes/blue/images/search.gif' onclick='productPickList(this)' align='absmiddle' /><input type='hidden' id='hdnProductId"+count+"' name='hdnProductId"+count+"'>";
-	coltwo.innerHTML="<input type='text' name='txtQty"+count+"' class='detailedViewTextBox' onfocus='this.className=\"detailedViewTextBoxOn\"' onBlur='this.className=\"detailedViewTextBox\"; settotalnoofrows(); calcTotal(this);' /> ";
-	colthree.innerHTML="&nbsp;<div id='unitPrice"+count+"'></div>";
-	colfour.innerHTML="<input type='text' name='txtListPrice"+count+"' class='detailedViewProdTextBox' readonly onBlur='settotalnoofrows(); calcTotal(this)'>&nbsp;<img src='themes/blue/images/pricebook.gif' onClick='priceBookPickList(this)' align='absmiddle' style='cursor:hand;cursor:pointer' title='Price Book' /> ";
-	colfive.innerHTML="&nbsp;<div id='total"+count+"' align='right'></div><input type='hidden' id='hdnTotal"+count+"' name='hdnTotal"+count+"'>";
-	colsix.innerHTML="<span class='delTxt' onclick=\"deleteRow(this.parentNode.parentNode.rowIndex)\">Del</span>";
-
-}
-  
- 
-function deleteRow(i)
-{
-	rowCnt--;
-	 document.getElementById('proTab').deleteRow(i);
+    tagName.style.display = 'block';
 }
 
 function cancelForm(frm)
@@ -1427,11 +1421,11 @@ function cancelForm(frm)
 
 function trim(s)
 {
-	while (s.substring(0,1) == " ")
+	while (s.substring(0,1) == " " || s.substring(0,1) == "\n")
 	{
 		s = s.substring(1, s.length);
 	}
-	while (s.substring(s.length-1, s.length) == ' ') {
+	while (s.substring(s.length-1, s.length) == " " || s.substring(s.length-1,s.length) == "\n") {
 		s = s.substring(0,s.length-1);
 	}
 	return s;
@@ -1446,5 +1440,281 @@ function clear_form(form)
 			form.elements[j].value = '';
 		}
 	}
+}
+
+function ActivateCheckBox()
+{
+        var map = document.getElementById("saved_map_checkbox");
+        var source = document.getElementById("saved_source");
+
+        if(map.checked == true)
+        {
+                source.disabled = false;
+        }
+        else
+        {
+                source.disabled = true;
+        }
+}
+
+//wipe for Convert Lead  
+
+function fnSlide2(obj,inner)
+{
+  var buff = document.getElementById(obj).height;
+  closeLimit = buff.substring(0,buff.length);
+  menu_max = eval(closeLimit);
+  var tagName = document.getElementById(inner);
+  document.getElementById(obj).style.height=0 + "px"; menu_i=0;
+  if (tagName.style.display == 'none')
+          fnexpanLay2(obj,inner);
+  else
+        fncloseLay2(obj,inner);
+ }
+
+function fnexpanLay2(obj,inner)
+{
+    // document.getElementById(obj).style.display = 'run-in';
+   var setText = eval(closeLimit) - 1;
+   if (menu_i<=eval(closeLimit))
+   {
+            if (menu_i>setText){document.getElementById(inner).style.display='block';}
+       document.getElementById(obj).style.height=menu_i + "px";
+           setTimeout(function() { fnexpanLay2(obj,inner); },5);
+        menu_i=menu_i+5;
+   }
+}
+
+ function fncloseLay2(obj,inner)
+{
+  if (menu_max >= eval(openLimit))
+   {
+            if (menu_max<eval(closeLimit)){document.getElementById(inner).style.display='none';}
+       document.getElementById(obj).style.height=menu_max +"px";
+          setTimeout(function() { fncloseLay2(obj,inner); }, 5);
+       menu_max = menu_max -5;
+   }
+}
+
+function addOnloadEvent(fnc){
+  if ( typeof window.addEventListener != "undefined" )
+    window.addEventListener( "load", fnc, false );
+  else if ( typeof window.attachEvent != "undefined" ) {
+    window.attachEvent( "onload", fnc );
+  }
+  else {
+    if ( window.onload != null ) {
+      var oldOnload = window.onload;
+      window.onload = function ( e ) {
+        oldOnload( e );
+        window[fnc]();
+      };
+    }
+    else
+      window.onload = fnc;
+  }
+}
+function InternalMailer(record_id,type) {
+        var url;
+        switch(type) {
+                case 'record_id':
+                        url = 'index.php?module=Emails&action=EmailsAjax&internal_mailer=true&type='+type+'&record=&rec_id='+record_id+'&file=EditView';
+                break;
+                case 'email_addy':
+                        url = 'index.php?module=Emails&action=EmailsAjax&internal_mailer=true&type='+type+'&record=&email_addy='+record_id+'&file=EditView';
+                break;
+
+        }
+
+        var opts = "menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes";
+        openPopUp('xComposeEmail',this,url,'createemailWin',830,662,opts);
+}
+
+function fnHide_Event(obj){
+        document.getElementById(obj).style.visibility = 'hidden';
+}
+
+function OpenCompose(id,mode) 
+{
+	switch(mode)
+	{		
+		case 'edit':
+			url = 'index.php?module=Emails&action=EmailsAjax&file=EditView&record='+id;
+			break;
+		case 'create':
+			url = 'index.php?module=Emails&action=EmailsAjax&file=EditView';
+			break;
+		case 'forward':
+			url = 'index.php?module=Emails&action=EmailsAjax&file=EditView&record='+id+'&forward=true';
+			break;
+	}
+	openPopUp('xComposeEmail',this,url,'createemailWin',820,689,'menubar=no,toolbar=no,location=no,status=no,resizable=no,scrollbars=yes');
+}
+
+//Function added for Mass select in Popup - Philip
+function SelectAll(mod,parmod)
+{
+
+        x = document.selectall.selected_id.length;
+	var y=0;
+	if(parmod != 'Calendar')
+        {
+                var module = window.opener.document.getElementById('return_module').value
+                var entity_id = window.opener.document.getElementById('parent_id').value
+        }
+        idstring = "";
+	namestr = "";
+
+        if ( x == undefined)
+        {
+
+                if (document.selectall.selected_id.checked)
+                {
+			idstring = document.selectall.selected_id.value;
+			if(parmod == 'Calendar')
+                                namestr = document.getElementById('calendarCont'+idstring).innerHTML;
+                        y=1;
+                }
+                else
+		{
+                        alert("Please select at least one entity");
+                        return false;
+                }
+        }
+        else
+        {
+                y=0;
+                for(i = 0; i < x ; i++)
+                {
+                        if(document.selectall.selected_id[i].checked)
+                        {
+                                idstring = document.selectall.selected_id[i].value +";"+idstring;
+				if(parmod == 'Calendar')
+                                {
+                                        idval = document.selectall.selected_id[i].value;
+                                        namestr = document.getElementById('calendarCont'+idval).innerHTML+"\n"+namestr;
+                                }
+                  		y=y+1;
+                        }
+                }
+	}
+	if (y != 0)
+        {
+        	document.selectall.idlist.value=idstring;
+        }
+        else
+        {
+                alert("Please select at least one entity");
+                return false;
+        }
+        if(confirm("Are you sure you want to add the selected "+y+" records ?"))
+        {
+		if(parmod == 'Calendar')
+                {
+                        window.opener.document.EditView.contactidlist.value = idstring;
+                        window.opener.document.EditView.contactlist.value = namestr;
+                }
+                else
+                {
+			opener.document.location.href="index.php?module="+module+"&parentid="+entity_id+"&action=updateRelations&destination_module="+mod+"&idlist="+idstring;
+		}
+                self.close();
+        }
+	else
+        {
+                return false;
+        }
+}
+function ShowEmail(id)
+{
+       url = 'index.php?module=Emails&action=EmailsAjax&file=DetailView&record='+id;
+       openPopUp('xComposeEmail',this,url,'createemailWin',820,695,'menubar=no,toolbar=no,location=no,status=no,resizable=no,scrollbars=yes');
+}
+
+var bSaf = (navigator.userAgent.indexOf('Safari') != -1);
+var bOpera = (navigator.userAgent.indexOf('Opera') != -1);
+var bMoz = (navigator.appName == 'Netscape');
+function execJS(node) {
+    var st = node.getElementsByTagName('SCRIPT');
+    var strExec;
+    for(var i=0;i<st.length; i++) {
+      if (bSaf) {
+        strExec = st[i].innerHTML;
+      }
+      else if (bOpera) {
+        strExec = st[i].text;
+      }
+      else if (bMoz) {
+        strExec = st[i].textContent;
+      }
+      else {
+        strExec = st[i].text;
+      }
+      try {
+        eval(strExec);
+      } catch(e) {
+        alert(e);
+      }
+    }
+}
+
+//Function added for getting the Tab Selected Values (Standard/Advanced Filters) for Custom View - Ahmed
+function fnLoadCvValues(obj1,obj2,SelTab,unSelTab){
+
+   var tabName1 = document.getElementById(obj1);
+
+   var tabName2 = document.getElementById(obj2);
+
+   var tagName1 = document.getElementById(SelTab);
+
+   var tagName2 = document.getElementById(unSelTab);
+
+   if(tabName1.className == "dvtUnSelectedCell")
+
+       tabName1.className = "dvtSelectedCell";
+
+   if(tabName2.className == "dvtSelectedCell")
+
+       tabName2.className = "dvtUnSelectedCell";   
+   tagName1.style.display='block';
+
+   tagName2.style.display='none';
+
+}
+
+
+// Drop Dwon Menu
+
+
+function fnDropDown(obj,Lay){
+    var tagName = document.getElementById(Lay);
+    var leftSide = findPosX(obj);
+    var topSide = findPosY(obj);
+    var maxW = tagName.style.width;
+    var widthM = maxW.substring(0,maxW.length-2);
+    var getVal = eval(leftSide) + eval(widthM);
+    if(getVal  > document.body.clientWidth ){
+        leftSide = eval(leftSide) - eval(widthM);
+        tagName.style.left = leftSide + 34 + 'px';
+    }
+    else
+        tagName.style.left= leftSide + 'px';
+    tagName.style.top= topSide + 28 +'px';
+    tagName.style.display = 'block';
+ }
+
+function fnShowDrop(obj){
+	document.getElementById(obj).style.display = 'block';
+}
+
+function fnHideDrop(obj){
+	document.getElementById(obj).style.display = 'none';
+}
+
+function getCalendarPopup(imageid,fieldid,dateformat)
+{
+        Calendar.setup ({
+                inputField : fieldid, ifFormat : dateformat, showsTime : false, button : imageid, singleClick : true, step : 1
+        });
 }
 

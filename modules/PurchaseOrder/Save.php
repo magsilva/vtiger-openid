@@ -28,7 +28,10 @@ require_once('include/database/PearDatabase.php');
 $local_log =& LoggerManager::getLogger('index');
 
 $focus = new Order();
-
+global $current_user;
+$currencyid=fetchCurrency($current_user->id);
+$rate_symbol = getCurrencySymbolandCRate($currencyid);
+$rate = $rate_symbol['rate'];
 setObjectValuesFromRequest(&$focus);
 
 //Added code for auto product stock updation on receiving goods
@@ -44,37 +47,10 @@ if($focus->column_fields['postatus'] == 'Received Shipment' && $focus->mode == '
 }
 
 $focus->save("PurchaseOrder");
-if($focus->mode == 'edit')
-{
-        $query1 = "delete from poproductrel where purchaseorderid=".$focus->id;
-        $adb->query($query1);
 
-}
-//Printing the total Number of rows
-$tot_no_prod = $_REQUEST['totalProductCount'];
-for($i=1; $i<=$tot_no_prod; $i++)
-{
-        $product_id_var = 'hdnProductId'.$i;
-        $status_var = 'hdnRowStatus'.$i;
-        $qty_var = 'txtQty'.$i;
-        $list_price_var = 'txtListPrice'.$i;
 
-        $prod_id = $_REQUEST[$product_id_var];
-        $prod_status = $_REQUEST[$status_var];
-        $qty = $_REQUEST[$qty_var];
-        $listprice = $_REQUEST[$list_price_var];
-        if($prod_status != 'D')
-        {
-
-                $query ="insert into poproductrel values(".$focus->id.",".$prod_id.",".$qty.",".$listprice.")";
-                $adb->query($query);
-		if($update_prod_stock == 'true')
-                {
-                        addToProductStock($prod_id,$qty);
-                }
-		
-        }
-}
+//Based on the total Number of rows we will save the product relationship with this entity
+saveInventoryProductDetails(&$focus, 'PurchaseOrder', $update_prod_stock);
 
 
 $return_id = $focus->id;

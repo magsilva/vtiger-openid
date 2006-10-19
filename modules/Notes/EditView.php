@@ -23,10 +23,9 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Notes/Note.php');
-require_once('modules/Notes/Forms.php');
 require_once('include/utils/utils.php');
 
-global $app_strings,$app_list_strings,$mod_strings,$theme;
+global $app_strings,$app_list_strings,$mod_strings,$theme,$currentModule;
 
 $focus = new Note();
 $smarty = new vtigerCRM_Smarty();
@@ -41,7 +40,7 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] !='')
 	$focus->id = $_REQUEST['record'];
 	$focus->mode = 'edit';
 	$focus->retrieve_entity_info($_REQUEST['record'],"Notes");
-        $focus->name=$focus->column_fields['title'];
+        $focus->name=$focus->column_fields['notes_title'];
 }
 if(isset($_REQUEST['parent_id']))
 {
@@ -96,10 +95,10 @@ require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Notes",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else	
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Notes",$disp_view,$mode,$focus->column_fields,'BAS'));
+	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
 }	
 $smarty->assign("OP_MODE",$disp_view);
 $category = getParentTab();
@@ -111,7 +110,7 @@ $log->info("Note detail view");
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Note");
+$smarty->assign("SINGLE_MOD",$app_strings['Note']);
 //Display the FCKEditor or not? -- configure $FCKEDITOR_DISPLAY in config.php 
 $smarty->assign("FCKEDITOR_DISPLAY",$FCKEDITOR_DISPLAY);
 
@@ -154,7 +153,6 @@ $smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
 $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 $smarty->assign("ID", $focus->id);
 $smarty->assign("OLD_ID", $old_id );
 
@@ -170,10 +168,20 @@ else
 }
 
 if (isset($focus->parent_type) && $focus->parent_type != "") {
-        $change_parent_button = "<input title='".$app_strings['LBL_CHANGE_BUTTON_TITLE']."' accessKey='".$app_strings['LBL_CHANGE_BUTTON_KEY']."' tabindex='3' type='button' class='button' value='".$app_strings['LBL_CHANGE_BUTTON_LABEL']."' name='button' LANGUAGE=javascript onclick='return window.open(\"index.php?module=\"+ document.EditView.parent_type.value + \"&action=Popup&html=Popup_picker&form=TasksEditView\",\"test\",\"width=600,height=400,resizable=1,scrollbars=1\");'>";
+        $change_parent_button = "<input title='".$app_strings['LBL_CHANGE_BUTTON_TITLE']."' accessKey='".$app_strings['LBL_CHANGE_BUTTON_KEY']."' vtiger_tabindex='3' type='button' class='button' value='".$app_strings['LBL_CHANGE_BUTTON_LABEL']."' name='button' LANGUAGE=javascript onclick='return window.open(\"index.php?module=\"+ document.EditView.parent_type.value + \"&action=Popup&html=Popup_picker&form=TasksEditView\",\"test\",\"width=600,height=400,resizable=1,scrollbars=1\");'>";
         $smarty->assign("CHANGE_PARENT_BUTTON", $change_parent_button);
 }
 if ($focus->parent_type == "Account") $smarty->assign("DEFAULT_SEARCH", "&query=true&account_id=$focus->parent_id&account_name=".urlencode($focus->parent_name));
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+$tabid = getTabid("Notes");
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
+ $data = split_validationdataArray($validationData);
+
+ $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+ $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+ $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
 
 if($focus->mode == 'edit')
 	$smarty->display("salesEditView.tpl");

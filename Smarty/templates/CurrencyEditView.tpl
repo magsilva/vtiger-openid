@@ -1,5 +1,4 @@
-{*
-
+{*<!--
 /*********************************************************************************
 ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
  * ("License"); You may not use this file except in compliance with the License
@@ -8,96 +7,135 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
 *
- ********************************************************************************/ *}
-<form action="index.php" method="post" name="index" id="form">
-<input type="hidden" name="module" value="Settings">
-<input type="hidden" name="action" value="index">
-<input type="hidden" name="record" value="{$ID}">
-<input type="hidden" name="return_module" value="{$RETURN_MODULE}">
-<input type="hidden" name="return_action" value="{$RETURN_ACTION}">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-	<tr>
-		<td class="showPanelBg" valign="top" width="95%"  style="padding-left:20px; "><br />
-			<span class="lvtHeaderText"> {$MOD.LBL_MODULE_NAME} &gt;{$MOD.LBL_CONFIGURATION} &gt; {$MOD.LBL_CURRENCY_INFO} </span>
-			<hr noshade="noshade" size="1" />
-		</td>
-		<td width="5%" class="showPanelBg">&nbsp;</td>
-	</tr>
-	<tr>
-		<td width="98%" style="padding-left:20px;" valign="top">
-			<!-- module Select Table -->
-			<table width="95%"  border="0" cellspacing="0" cellpadding="0" align="center">
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+<br>
+	<div align=center>
+			{include file='SetMenu.tpl'}
+			<!-- DISPLAY -->
+			<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+			<form action="index.php" method="post" name="index" id="form">
+			<input type="hidden" name="module" value="Settings">
+			<input type="hidden" name="parenttab" value="{$PARENTTAB}">
+			<input type="hidden" name="action" value="index">
+			<input type="hidden" name="record" value="{$ID}">
+			<tr>
+				<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}currency.gif" alt="Users" width="48" height="48" border=0 title="Users"></td>
+				<td class="heading2" valign="bottom" ><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=CurrencyListView&parenttab=Settings">{$MOD.LBL_CURRENCY_SETTINGS}</a> > 
+				{if $ID neq ''}
+					{$MOD.LBL_EDIT} &quot;{$CURRENCY_NAME}&quot; 
+				{else}
+					{$MOD.LBL_NEW_CURRENCY}
+				{/if}
+				</b></td>
+			</tr>
+			<tr>
+				<td valign=top class="small">{$MOD.LBL_CURRENCY_DESCRIPTION}</td>
+			</tr>
+			</table>
+				
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
 				<tr>
-					<td width="7" height="6" style="font-size:1px;font-family:Arial, Helvetica, sans-serif;"><img src="{$IMAGE_PATH}top_left.jpg" align="top"  /></td>
-					<td bgcolor="#EBEBEB" style="font-size:1px;font-family:Arial, Helvetica, sans-serif;height:6px;"></td>
-					<td width="8" height="6" style="font-size:1px;font-family:Arial, Helvetica, sans-serif;"><img src="{$IMAGE_PATH}top_right.jpg" width="8" height="6" align="top" /></td>
-				</tr>
-				<tr>
-					<td bgcolor="#EBEBEB" width="7"></td>
-					<td bgcolor="#ECECEC" style="padding-left:10px;padding-top:10px;vertical-align:top;">
-					<table width="100%"  border="0" cellspacing="0" cellpadding="10">
-						<tr>
-							<td rowspan="11" bgcolor="#FFFFFF"  width="25%" style="background-image:url({$IMAGE_PATH}noimage.gif);background-position:center;background-repeat:no-repeat; " >&nbsp;</td>
-							<td colspan="2" class="genHeaderBig" width="75%">Currency<br />
-							<hr /> </td>
-						</tr>
-					        <tr>
-							<td align="right" width="25%"><b>{$MOD.LBL_CURRENCY_NAME} : </b></td>
-							<td width="50%" align="left" ><input type="text" name="currency_name" value="{$CURRENCY_NAME}" class="txtBox" /></td>
-						</tr>
-						<tr>
-							<td align="right"><b>{$MOD.LBL_CURRENCY_CODE} : </b></td>
-							<td><input type="text" name="currency_code" value="{$CURRENCY_CODE}" class="txtBox" /></td>
-						</tr>
-						<tr>
-							<td align="right"><b>{$MOD.LBL_CURRENCY_SYMBOL} : </b></td>
-							<td><input type="text" name="currency_symbol" value="{$CURRENCY_SYMBOL}" class="txtBox" /></td>
-						</tr>
-						<tr>
-							<td align="right"><b>{$MOD.LBL_CURRENCY_CRATE}  : </b></td>
-							<td><input type="text" name="conversion_rate" value="{$CONVERSION_RATE}" class="txtBox" /></td>
-						</tr>
-						<tr>
-							<td align="right"><b>{$MOD.LBL_CURRENCY_STATUS}  : </b></td>
-							<td><select name="currency_status" value="{$CURRENCY_STATUS}" class="importBox">
-								<option value="Active" {$SELECT}>{$MOD.LBL_ACTIVE}</option>
-					        	        <option value="Inactive" {$SELECT}>{$MOD.LBL_INACTIVE}</option>
-					                    </select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2"  width="75%" style="padding-bottom:0px;padding-top:0px; "><hr /> </td>
-						</tr>
-						<tr>
-							<td colspan="2" align="center">
-							<input title="{$APP.LBL_SAVE_BUTTON_LABEL}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="classBtn" onclick="this.form.action.value='SaveCurrencyInfo'; return validate()" type="submit" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" >&nbsp;&nbsp;
-							<input title="{$APP.LBL_CANCEL_BUTTON_LABEL}>" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="classBtn" onclick="this.form.action.value='index'; this.form.module.value='Settings'; this.form.return_action.value='index'; this.form.return_module.value='Settings';" type="submit" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}">
-							</td>
-						</tr>
+				<td>
+				
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						{if $ID neq ''}
+							<td class="big"><strong>{$MOD.LBL_SETTINGS} {$APP.LBL_FOR} &quot;{$CURRENCY_NAME}&quot;  </strong></td>
+						{else}
+							<td class="big"><strong>&quot;{$MOD.LBL_NEW_CURRENCY}&quot;  </strong></td>
+						{/if}
+						<td class="small" align=right>
+							<input title="{$APP.LBL_SAVE_BUTTON_LABEL}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="crmButton small save" onclick="this.form.action.value='SaveCurrencyInfo'; return validate()" type="submit" name="button" value="{$APP.LBL_SAVE_BUTTON_LABEL}" >&nbsp;&nbsp;
+							<input title="{$APP.LBL_CANCEL_BUTTON_LABEL}>" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" class="crmButton small cancel" onclick="window.history.back()" type="button" name="button" value="{$APP.LBL_CANCEL_BUTTON_LABEL}">
+						</td>
+					</tr>
 					</table>
-					</td>
-					<td bgcolor="#EBEBEB" width="8"></td>
-				</tr>
-				<tr>
-					<td width="7" height="8" style="font-size:1px;font-family:Arial, Helvetica, sans-serif;"><img src="{$IMAGE_PATH}bottom_left.jpg" align="bottom"  /></td>
-					<td bgcolor="#ECECEC" height="8" style="font-size:1px;" ></td>
-					<td width="8" height="8" style="font-size:1px;font-family:Arial, Helvetica, sans-serif;"><img src="{$IMAGE_PATH}bottom_right.jpg" align="bottom" /></td>
-				</tr>
-			</table><br />
-		</td>
-		<td>&nbsp;</td>
-	</tr>
-</table>
-</form>
+					
+			<table border=0 cellspacing=0 cellpadding=0 width=100% class="listRow">
+			<tr>
+			<td class="small" valign=top >
+			<table width="100%"  border="0" cellspacing="0" cellpadding="5">
+			  <tr>
+                            <td width="20%" nowrap class="small cellLabel"><font color="red">*</font><strong>{$MOD.LBL_CURRENCY_NAME}</strong></td>
+                            <td width="80%" class="small cellText"><input type="text" class="detailedViewTextBox small" value="{$CURRENCY_NAME}" name="currency_name"></td>
+                          </tr>
+                          <tr valign="top">
+                            <td nowrap class="small cellLabel"><font color="red">*</font><strong>{$MOD.LBL_CURRENCY_CODE}</strong></td>
+                            <td class="small cellText"><input type="text" class="detailedViewTextBox small" value="{$CURRENCY_CODE}" name="currency_code"></td>
+                          </tr>
+                          <tr valign="top">
+                            <td nowrap class="small cellLabel"><font color="red">*</font><strong>{$MOD.LBL_CURRENCY_SYMBOL}</strong></td>
+                            <td class="small cellText"><input type="text" class="detailedViewTextBox small" value="{$CURRENCY_SYMBOL}" name="currency_symbol"></td>
+                          </tr>
+                          <tr valign="top">
+                            <td nowrap class="small cellLabel"><font color="red">*</font><strong>{$MOD.LBL_CURRENCY_CRATE}</strong><br>({$MOD.LBL_BASE_CURRENCY}{$MASTER_CURRENCY})</td>
 
+                            <td class="small cellText"><input type="text" class="detailedViewTextBox small" value="{$CONVERSION_RATE}" name="conversion_rate"></td>
+                          </tr>
+                          <tr>
+                            <td nowrap class="small cellLabel"><strong>{$MOD.LBL_CURRENCY_STATUS}</strong></td>
+                            <td class="small cellText">
+				<select name="currency_status" {$STATUS_DISABLE} class="importBox">
+					<option value="Active"  {$ACTSELECT}>{$MOD.LBL_ACTIVE}</option>
+		        	        <option value="Inactive" {$INACTSELECT}>{$MOD.LBL_INACTIVE}</option>
+              	                </select>
+			    </td>
+                          </tr>	
+                        </table>
+						
+						</td>
+					  </tr>
+					</table>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr>
+					  <td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td>
+					</tr>
+					</table>
+				</td>
+				</tr>
+				</table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	</form>
+	</table>
+		
+	</div>
+</td>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
+</table>
+{literal}
 <script>
-        function validate() {ldelim}
+        function validate() {
                 if (!emptyCheck("currency_name","Currency Name","text")) return false
                         if (!emptyCheck("currency_code","Currency Code","text")) return false
                                 if (!emptyCheck("currency_symbol","Currency Symbol","text")) return false
                                         if (!emptyCheck("conversion_rate","Conversion Rate","text")) return false
                                                 if (!emptyCheck("currency_status","Currency Status","text")) return false
-                                                        return true;
+						if(isNaN(getObj("conversion_rate").value) || eval(getObj("conversion_rate")
+.value) == 0)
+                                                {
+                                                        alert("Enter valid Conversion Rate")
+                                                        return false
+                                                }
+                                                return true;
 
-        {rdelim}
+        }
 </script>
+{/literal}

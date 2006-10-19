@@ -29,8 +29,9 @@ $local_log =& LoggerManager::getLogger('index');
 $focus = new Potential();
 global $current_user;
 $currencyid=fetchCurrency($current_user->id);
-$curr_symbol=getCurrencySymbol($currencyid);
-$rate = getConversionRate($currencyid,$curr_symbol);
+$rate_symbol = getCurrencySymbolandCRate($currencyid);
+$rate = $rate_symbol['rate'];
+$curr_symbol= $rate_symbol['symbol'];
 
 setObjectValuesFromRequest(&$focus);
 
@@ -43,6 +44,7 @@ if(isset($_REQUEST['amount']))
 $focus->save("Potentials");
 $return_id = $focus->id;
 
+if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
 if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
 else $return_module = "Potentials";
 if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
@@ -55,50 +57,9 @@ $local_log->debug("Saved record with id of ".$return_id);
 if($_REQUEST['return_viewname'] == '') $return_viewname='0';
 if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
 
-//Added to send mail to the potential-owner about the Potential
-$status = sendMailToOwner(&$focus);
+//Added to send mail to the vtiger_potential-owner about the Potential
+$status = sendNotificationToOwner('Potentials',&$focus);
 
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
-
-function sendMailToOwner($focus)
-{
-	require_once("modules/Emails/mail.php");
-	global $current_user;
-
-	$ownername = getUserName($focus->column_fields['assigned_user_id']);
-	$ownermailid = getUserEmailId('id',$focus->column_fields['assigned_user_id']);
-
-	$description = 'Dear '.$ownername.',<br><br>';
-
-	if($focus->mode == 'edit')
-	{
-		$subject = 'Regarding Potential updation - '.$focus->column_fields['potentialname'];
-		$description .= 'The Potential has been updated.';
-	}
-	else
-	{
-		$subject = 'Regarding Potential assignment - '.$focus->column_fields['potentialname'];
-		$description .= 'The Potential has been assigned to you.';
-	}
-	$description .= 'The Potential details are:<br><br>';
-	$description .= 'Potential Id : '.$focus->id.'<br>';
-
-	$column_fields = array(
-				'potentialname'=>'Potential Name',
-				'amount'=>'Amount',
-				'closingdate'=>'Expected Close Date',
-				'opportunity_type'=>'Opportunity Type',
-				'description'=>'Description',
-			      );
-	foreach($column_fields as $fieldname => $fieldlabel)
-	{
-		$description .= $fieldlabel.' : <b>'.$focus->column_fields[$fieldname].'</b><br>';
-	}
-
-	$status = send_mail('Potentials',$ownermailid,$current_user->user_name,'',$subject,$description);
-	return $status;
-}
-
-
+header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&viewname=$return_viewname");
 
 ?>

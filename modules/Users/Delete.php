@@ -10,11 +10,11 @@
  ********************************************************************************/
 
 
-$sql= 'delete from salesmanactivityrel where smid='.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
+$sql= 'delete from vtiger_salesmanactivityrel where smid='.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
 $adb->query($sql);
 
-if($_REQUEST['return_module'] == 'Activities')
+if($_REQUEST['return_module'] == 'Calendar')
 	$mode ='&activity_mode=Events';
 
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action'].$mode."&record=".$_REQUEST['return_id']);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action'].$mode."&record=".$_REQUEST['return_id']."&relmodule=".$_REQUEST['module']);
 ?>

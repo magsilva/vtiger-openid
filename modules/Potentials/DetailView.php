@@ -23,12 +23,13 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Potentials/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 
 global $mod_strings;
 global $app_strings;
+global $currentModule, $singlepane_view;
 
 $focus = new Potential();
 $smarty = new vtigerCRM_Smarty;
@@ -53,7 +54,8 @@ $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
 $smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$smarty->assign("IMAGE_PATH", $image_path);
+$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $smarty->assign("ID", $focus->id);
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
@@ -62,28 +64,43 @@ $smarty->assign("ACCOUNTID",$focus->column_fields['account_id']);
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
 
-$smarty->assign("BLOCKS", getBlocks("Potentials","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
-$smarty->assign("SINGLE_MOD","Potential");
+$smarty->assign("SINGLE_MOD", 'Opportunity');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-$permissionData = $_SESSION['action_permission_set'];
 
-if(isPermitted("Potentials",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Potentials","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
-if(isPermitted("Invoice",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Invoice","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("CONVERTINVOICE","permitted");
-if(isPermitted("Potentials",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Potentials","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
+$tabid = getTabid("Potentials");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
 
-//Security check for related list
-global $profile_id;
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+       
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 $smarty->assign("CONVERTMODE",'potentoinvoice');
 $smarty->assign("MODULE","Potentials");
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
 $smarty->display("DetailView.tpl");
 ?>

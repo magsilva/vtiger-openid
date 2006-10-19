@@ -22,6 +22,9 @@ require_once('include/ListView/ListView.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
+require_once('include/database/Postgres8.php');
+require_once('include/DatabaseUtil.php');
+
 
 global $app_strings,$list_max_entries_per_page;
 
@@ -39,16 +42,26 @@ $focus = new Potential();
 $smarty = new vtigerCRM_Smarty();
 $other_text = Array();
 
-//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['POTENTIALS_ORDER_BY'] != '')?($_SESSION['POTENTIALS_ORDER_BY']):($focus->default_order_by));
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
 
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['POTENTIALS_SORT_ORDER'] != '')?($_SESSION['POTENTIALS_SORT_ORDER']):($focus->default_sort_order));
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to Change/Delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
+//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
+$sorder = $focus->getSortOrder();
+$order_by = $focus->getOrderBy();
 
 $_SESSION['POTENTIALS_ORDER_BY'] = $order_by;
 $_SESSION['POTENTIALS_SORT_ORDER'] = $sorder;
@@ -56,15 +69,14 @@ $_SESSION['POTENTIALS_SORT_ORDER'] = $sorder;
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
 	// we have a query
-	$url_string .="&query=true";
-
-	//Call for search function - Jaguar
-	$where=Search($currentModule);
-
-
+	$url_string .="&query=true".$ustring;
+	$log->info("Here is the where clause for the list view: $where");
+	$smarty->assign("SEARCH_URL",$url_string);
+				
 	//Added for Custom Field Search
-	$sql="select * from field where tablename='potentialscf' order by fieldlabel";
+/*	$sql="select * from vtiger_field where vtiger_tablename='potentialscf' order by vtiger_fieldlabel";
 	$result=$adb->query($sql);
 	for($i=0;$i<$adb->num_rows($result);$i++)
 	{
@@ -76,18 +88,17 @@ if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 		if(isset($customfield[$i]) && $customfield[$i] != '')
 		{
 			if($uitype[$i] == 56)
-				$str = " potentialscf.".$column[$i]." = 1";
+				$str = " vtiger_potentialscf.".$column[$i]." = 1";
 			elseif($uitype[$i] == 15)//Added to handle the picklist customfield - after 4.2 patch2
-				$str = " potentialscf.".$column[$i]." = '".$customfield[$i]."'";
+				$str = " vtiger_potentialscf.".$column[$i]." = '".$customfield[$i]."'";
 			else
-				$str = " potentialscf.".$column[$i]." like '$customfield[$i]%'";
+				$str = " vtiger_potentialscf.".$column[$i]." like '$customfield[$i]%'";
 			array_push($where_clauses, $str);
 			$url_string .="&".$column[$i]."=".$customfield[$i];
 		}
 	}
 
-	$log->info("Here is the where clause for the list view: $where");
-
+*/
 }
 
 //<<<<cutomview>>>>>>>
@@ -96,11 +107,15 @@ $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
 //<<<<<customview>>>>>
+$smarty->assign("CHANGE_OWNER",getUserslist());
 
-
-if(isPermitted('Potentials',2,'') == 'yes')
+if(isPermitted('Potentials','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
+}
+if(isPermitted('Potentials','EditView','') == 'yes')
+{
+        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 }
 
 if($viewnamedesc['viewname'] == 'All')
@@ -122,13 +137,18 @@ if($viewid != "0")
 
 if(isset($where) && $where != '')
 {
-	$list_query .= " AND ".$where;
+	if(isset($_REQUEST['from_dashboard']) && $_REQUEST['from_dashboard'] == 'true')
+		$list_query .= " AND vtiger_potential.sales_stage = 'Closed Won' AND ".$where;
+	else
+		$list_query .= " AND ".$where;
 }
 
 if(isset($order_by) && $order_by != '')
 {
 	if($order_by == 'smownerid')
         {
+		if( $adb->dbType == "pgsql")
+ 		    $list_query .= ' GROUP BY user_name';
                 $list_query .= ' ORDER BY user_name '.$sorder;
         }
         else
@@ -136,12 +156,13 @@ if(isset($order_by) && $order_by != '')
 		$tablename = getTableNameForField('Potentials',$order_by);
 		$tablename = (($tablename != '')?($tablename."."):'');
 
+		if( $adb->dbType == "pgsql")
+ 		    $list_query .= ' GROUP BY '.$tablename.$order_by;
+
                 $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
         }
 
 }
-
-$list_result = $adb->query($list_query);
 
 //Constructing the list view
 
@@ -157,22 +178,22 @@ $smarty->assign("CATEGORY",$category);
 
 
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query( mkCountQuery( $list_query));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-	$start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-	$start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
+
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
+//Postgres 8 fixes
+if( $adb->dbType == "pgsql")
+    $list_query = fixPostgresQuery( $list_query, $log, 0);
 
 
 // Setting the record count string
@@ -180,6 +201,17 @@ $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
+
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+if( $adb->dbType == "pgsql")
+     $list_result = $adb->query($list_query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+ else
+     $list_result = $adb->query($list_query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
@@ -201,12 +233,17 @@ $smarty->assign("LISTENTITY", $listview_entries);
 
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Potentials","index",$viewid);
 $alphabetical = AlphabeticalSearch($currentModule,'index','potentialname','true','basic',"","","","",$viewid);
+$fieldnames = getAdvSearchfields($module);
+$criteria = getcriteria_options();
+$smarty->assign("CRITERIA", $criteria);
+$smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
 $smarty->assign("SELECT_SCRIPT", $view_script);
 
-
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

@@ -32,6 +32,8 @@ require_once("modules/Emails/mail.php");
  */
 function makeRandomPassword() 
 {
+	global $log;
+	$log->debug("Entering makeRandomPassword() method ...");
         $salt = "abcdefghijklmnopqrstuvwxyz0123456789";
         srand((double)microtime()*1000000);
         $i = 0;
@@ -42,12 +44,13 @@ function makeRandomPassword()
                 $pass = $pass . $tmp;
                 $i++;
 	}
+$log->debug("Exiting makeRandomPassword method ...");
       return $pass;
 }
 
 $local_log =& LoggerManager::getLogger('index');
 
-global $log;
+global $log,$adb;
 $focus = new Contact();
 
 setObjectValuesFromRequest(&$focus);
@@ -57,9 +60,9 @@ if (!isset($_REQUEST['email_opt_out'])) $focus->email_opt_out = 'off';
 if (!isset($_REQUEST['do_not_call'])) $focus->do_not_call = 'off';
 
 //Checking If image is given or not
-$image_upload_array=SaveImage($_FILES,'contact',$focus->id,$focus->mode);
+//$image_upload_array=SaveImage($_FILES,'contact',$focus->id,$focus->mode);
 $image_name_val=$image_upload_array['imagename'];
-$image_error=$image_upload_array['imageerror'];
+$image_error="false";
 $errormessage=$image_upload_array['errormessage'];
 $saveimage=$image_upload_array['saveimage'];
 
@@ -81,7 +84,7 @@ if($image_error=="true") //If there is any error in the file upload then moving 
         {
                 if(isset($_REQUEST[$fieldname]))
                 {
-			$log->debug("Assigning the previous values given for the contact to respective fields ");
+			$log->debug("Assigning the previous values given for the contact to respective vtiger_fields ");
                         $field_values_passed.="&";
                         $value = $_REQUEST[$fieldname];
                         $focus->column_fields[$fieldname] = $value;
@@ -110,7 +113,7 @@ if($image_error=="true") //If there is any error in the file upload then moving 
 if($saveimage=="true")
 {
         $focus->column_fields['imagename']=$image_name_val;
-        $log->debug("Assign the Image name to the field name ");
+        $log->debug("Assign the Image name to the vtiger_field name ");
 }
 //Saving the contact
 if($image_error=="false")
@@ -128,10 +131,19 @@ if($image_error=="false")
 
 	$local_log->debug("Saved record with id of ".$return_id);
 
+	if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] == "Campaigns")
+	{
+		if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "")
+		{
+			$sql = "insert into vtiger_campaigncontrel values (".$_REQUEST['return_id'].",".$focus->id.")";
+			$adb->query($sql);
+		}
+	}
+
 	//BEGIN -- Code for Create Customer Portal Users password and Send Mail 
 	if($_REQUEST['portal'] == '' && $_REQUEST['mode'] == 'edit')
 	{
-		$sql = "update portalinfo set user_name='".$_REQUEST['email']."',isactive=0 where id=".$_REQUEST['record'];
+		$sql = "update vtiger_portalinfo set user_name='".$_REQUEST['email']."',isactive=0 where id=".$_REQUEST['record'];
 		$adb->query($sql);
 	}
 	elseif($_REQUEST['portal'] != '' && $_REQUEST['email'] != '')// && $_REQUEST['mode'] != 'edit')
@@ -142,7 +154,7 @@ if($image_error=="false")
 		if($_REQUEST['mode'] != 'edit')
 			$insert = 'true';
 
-		$sql = "select id,user_name,user_password,isactive from portalinfo";
+		$sql = "select id,user_name,user_password,isactive from vtiger_portalinfo";
 		$result = $adb->query($sql);
 
 		for($i=0;$i<$adb->num_rows($result);$i++)
@@ -156,7 +168,7 @@ if($image_error=="false")
 					$flag = 'true';
 				else
 				{
-					$sql = "update portalinfo set user_name='".$username."', isactive=1 where id=".$id;
+					$sql = "update vtiger_portalinfo set user_name='".$username."', isactive=1 where id=".$id;
 					$adb->query($sql);
 					$update = 'true';
 					$flag = 'true';
@@ -172,7 +184,7 @@ if($image_error=="false")
 		if($insert == 'true')
 		{
 			$password = makeRandomPassword();
-			$sql = "insert into portalinfo (id,user_name,user_password,type,isactive) values(".$focus->id.",'".$username."','".$password."','C',1)";
+			$sql = "insert into vtiger_portalinfo (id,user_name,user_password,type,isactive) values(".$focus->id.",'".$username."','".$password."','C',1)";
 			$adb->query($sql);
 		}
 
@@ -181,7 +193,7 @@ if($image_error=="false")
 		$contents .= 'Your Customer Portal Login details are given below:';
 		$contents .= "<br><br>User Id : ".$_REQUEST['email'];
 		$contents .= '<br>Password : '.$password;
-		$contents .= "<br><br><a href='".$PORTAL_URL."/cp_index.php'>Please Login Here</a>";
+		$contents .= "<br><br><a href='".$PORTAL_URL."/login.php'>Please Login Here</a>";
 
 		$contents .= '<br><br><b>Note : </b>We suggest you to change your password after logging in first time.';
 		$contents .= '<br><br>Support Team';
@@ -202,6 +214,11 @@ if($image_error=="false")
 	if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
 
 	if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
+
+	//Send notification mail to the assigned to owner about the contact creation
+	if($focus->column_fields['notify_owner'] == 1 || $focus->column_fields['notify_owner'] == 'on')
+		$status = sendNotificationToOwner('Contacts',&$focus);
+
 	header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&activity_mode=$activitymode&viewname=$return_viewname");
 
 }

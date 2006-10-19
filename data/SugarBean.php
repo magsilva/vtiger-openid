@@ -32,16 +32,14 @@ class SugarBean
     /**
      * This method implements a generic insert and update logic for any SugarBean
      * This method only works for subclasses that implement the same variable names.
-     * This method uses the presence of an id field that is not null to signify and update.
-     * The id field should not be set otherwise.
-     * todo - Add support for field type validation and encoding of parameters.
+     * This method uses the presence of an id vtiger_field that is not null to signify and update.
+     * The id vtiger_field should not be set otherwise.
+     * todo - Add support for vtiger_field type validation and encoding of parameters.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
      */
 	
-	var $new_schema = false;
-	var $new_with_id = false;
 
 	function save($module_name= '') 
 	{
@@ -60,7 +58,7 @@ class SugarBean
 		}
 
 		//$this->date_modified = $this->db->formatDate(date('YmdHis'));
-		$this->date_modified = date('YmdHis');
+		$this->date_modified = $this->db->formatDate(date('YmdHis'));	
 		if (isset($current_user)) $this->modified_user_id = $current_user->id;
 		
 		if($isUpdate)
@@ -70,12 +68,12 @@ class SugarBean
 		else
 		{
     			//$this->date_entered = $this->db->formatDate(date('YmdHis'));
-			$this->date_entered = date('YmdHis');
+			$this->date_entered = $this->db->formatDate(date('YmdHis'));
 
 			if($this->new_schema && 
 				$this->new_with_id == false)
 			{
-                          $this->id = $adb->getUniqueID("users");
+                          $this->id = $this->db->getUniqueID("vtiger_users");
 			}
                         
 			$query = "INSERT into ".$this->table_name;
@@ -91,7 +89,7 @@ class SugarBean
 		$updKeyValues='';
 		foreach($this->column_fields as $field)
 		{
-			// Do not write out the id field on the update statement.
+			// Do not write out the id vtiger_field on the update statement.
 			// We are not allowed to change ids.
 			if($isUpdate && ('id' == $field))
 				continue;
@@ -119,7 +117,7 @@ class SugarBean
 				/*else
 					$query = $query.", ";
 	
-				$query = $query.$field."='".PearDatabase::quote(from_html($this->$field,$isUpdate))."'";
+				$query = $query.$field."='".$adb->quote(from_html($this->$field,$isUpdate))."'";
 				*/
 				if($isUpdate)
 				{
@@ -160,18 +158,20 @@ class SugarBean
     
     /**
      * This function retrieves a record of the appropriate type from the DB.
-     * It fills in all of the fields from the DB into the object it was called on.
+     * It fills in all of the vtiger_fields from the DB into the object it was called on.
      * param $id - If ID is specified, it overrides the current value of $this->id.  If not specified the current value of $this->id will be used.
      * returns this - The object that it was called apon or null if exactly 1 record was not found.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
-     */
 	 function retrieve($id = -1, $encodeThis=true) {
 		if ($id == -1) {
 			$id = $this->id;
 		}
-// GS porting crmentity
+		if($id == '') {
+			return null;
+		}
+// GS porting vtiger_crmentity
 $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 //		$query = "SELECT * FROM $this->table_name WHERE ID = '$id'";
 		$this->log->debug("Retrieve $this->object_name: ".$query);
@@ -192,22 +192,10 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 				$this->$field = $row[$field];
 			}
 		}
-
-		$this->fill_in_additional_detail_fields();
-
 		return $this;
 	}
+     */
 
-	/**
-	 * This function returns a paged list of the current object type.  It is intended to allow for
-	 * hopping back and forth through pages of data.  It only retrieves what is on the current page.
-	 * This method must be called on a new instance.  It trashes the values of all the fields in the current one.
-	 */
-	function get_lead_list($order_by = "", $where = "", $row_offset = 0) {
-		$query = $this->create_lead_list_query($order_by, $where);
-		return $this->process_list_query($query, $row_offset);
-	}
-		
 	function get_list($order_by = "", $where = "", $row_offset = 0, $limit=-1, $max=-1) {
 		$this->log->debug("get_list:  order_by = '$order_by' and where = '$where' and limit = '$limit'");
 		
@@ -224,8 +212,42 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 	 */
 	function get_full_list($order_by = "", $where = "") {
 		$this->log->debug("get_full_list:  order_by = '$order_by' and where = '$where'");
-		$query = $this->create_list_query($order_by, $where);
-		return $this->process_full_list_query($query);
+		$query = "SELECT * FROM $this->table_name ";
+		
+		if($where != "")
+			$query .= "where ($where) AND deleted=0";
+		else
+			$query .= "where deleted=0";
+
+		if(!empty($order_by))
+			$query .= " ORDER BY $order_by";
+
+		$result =& $this->db->query($query, false);
+
+		if($this->db->getRowCount($result) > 0){
+		
+			// We have some data.
+			while ($row = $this->db->fetchByAssoc($result)) {
+				foreach($this->list_fields as $field)
+				{
+					if (isset($row[$field])) {
+						$this->$field = $row[$field];
+						
+						$this->log->debug("process_full_list: $this->object_name({$row['id']}): ".$field." = ".$this->$field);
+					}
+					else {
+ 	                                                $this->$field = '';   
+					}
+				}
+
+
+				$list[] = clone($this);         //added clone tosupport PHP5
+			}
+		}
+
+		if (isset($list)) return $list;
+		else return null;
+
 	}
 
 	function create_list_query($order_by, $where)
@@ -239,8 +261,6 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 
 		if(!empty($order_by))
 			$query .= " ORDER BY $order_by";
-
-		
 
 		return $query;
 	}
@@ -287,9 +307,8 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 					}
 				}
 
-				$this->fill_in_additional_list_fields();
 
-				$list[] = $this;
+				$list[] = clone($this);   //added clone to support PHP5
 			}
 		}
 
@@ -302,37 +321,6 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 		return $response;
 	}
 
-	function process_full_list_query($query)
-	{
-		$this->log->debug("process_full_list_query: query is ".$query);
-		$result =& $this->db->query($query, false);
-		$this->log->debug("process_full_list_query: result is ".$result);
-
-		if($this->db->getRowCount($result) > 0){
-		
-			// We have some data.
-			while ($row = $this->db->fetchByAssoc($result)) {
-				foreach($this->list_fields as $field)
-				{
-					if (isset($row[$field])) {
-						$this->$field = $row[$field];
-						
-						$this->log->debug("process_full_list: $this->object_name({$row['id']}): ".$field." = ".$this->$field);
-					}
-					else {
- 	                                                $this->$field = '';   
-					}
-				}
-
-				$this->fill_in_additional_list_fields();
-
-				$list[] = $this;
-			}
-		}
-
-		if (isset($list)) return $list;
-		else return null;
-	}
 	
 	/**
 	 * Track the viewing of a detail record.  This leverages get_summary_text() which is object specific
@@ -341,46 +329,14 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	 */
-/*	function track_view($user_id, $current_module)
-	{
-		$this->log->debug("About to call tracker (user_id, module_name, item_id)($user_id, $current_module, $this->id)");
-
-		$tracker = new Tracker();
-		$tracker->track_view($user_id, $current_module, $this->id, $this->get_summary_text());
-	}
-	*/
 	function track_view($user_id, $current_module,$id='')
 	{
-		$this->log->debug("About to call tracker (user_id, module_name, item_id)($user_id, $current_module, $this->id)");
+		$this->log->debug("About to call vtiger_tracker (user_id, module_name, item_id)($user_id, $current_module, $this->id)");
 
 		$tracker = new Tracker();
 		$tracker->track_view($user_id, $current_module, $id, '');
 	}
 
-
-	/**
-	 * This is designed to be overridden and add specific fields to each record.  This allows the generic query to fill in
-	 * the major fields, and then targetted queries to get related fields and add them to the record.  The contact's account for instance.
-	 * This method is only used for populating extra fields in lists
-	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
-	 * All Rights Reserved..
-	 * Contributor(s): ______________________________________..
-	 */
-	function fill_in_additional_list_fields()
-	{
-	}
-
-	/**
-	 * This is designed to be overridden and add specific fields to each record.  This allows the generic query to fill in
-	 * the major fields, and then targetted queries to get related fields and add them to the record.  The contact's account for instance.
-	 * This method is only used for populating extra fields in the detail form
-	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
-	 * All Rights Reserved..
-	 * Contributor(s): ______________________________________..
-	 */
-	function fill_in_additional_detail_fields()
-	{
-	}
 
 	/** This function should be overridden in each module.  It marks an item as deleted.
 	* If it is not overridden, then marking this type of item is not allowed
@@ -402,12 +358,12 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 	}
 
 
-	/* This is to allow subclasses to fill in row specific columns of a list view form */
+	/* This is to allow subclasses to fill in row specific columns of a list view form 
 	function list_view_parse_additional_sections(&$list_form)
 	{
 	}
-
-	/* This function assigns all of the values into the template for the list view */
+	*/
+	/* This function assigns all of the values into the template for the list view 
 	function get_list_view_array(){
 		$return_array = Array();
 		
@@ -439,7 +395,7 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 				$where_clause .= " AND ";
 			} 
 
-			$where_clause .= "$name = ".PearDatabase::quote($value)."";
+			$where_clause .= "$name = ".$adb->quote($value)."";
 		} 
 
 		$where_clause .= " AND deleted=0";
@@ -468,15 +424,14 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 				$this->$field = $row[$field];
 			}
 		} 
-		$this->fill_in_additional_detail_fields();
 		return $this;
 	}
 
 	// this method is called during an import before inserting a bean
 	// define an associative array called $special_fields
-	// the keys are user defined, and don't directly map to the bean's fields
+	// the keys are user defined, and don't directly map to the bean's vtiger_fields
 	// the value is the method name within that bean that will do extra
-	// processing for that field. example: 'full_name'=>'get_names_from_full_name'
+	// processing for that vtiger_field. example: 'full_name'=>'get_names_from_full_name'
 
 	function process_special_fields() 
 	{ 
@@ -488,31 +443,8 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 			} 
 		} 
 	}
-	/**
-		builds a generic search based on the query string using or
-		do not include any $this-> because this is called on without having the class instantiated
+
 	*/
-	function build_generic_where_clause($value){
-			$where_clause = "WHERE "; 
-		$first = 1; 
-		foreach ($fields_array as $name=>$value) 
-		{ 
-			if ($first) 
-			{ 
-				$first = 0;
-			} 
-			else 
-			{ 
-				$where_clause .= " or";
-			} 
-
-			$where_clause .= "$name = ".PearDatabase::quote($value)."";
-		} 
-
-		$where_clause .= " AND deleted=0";
-		return $where_clause;
-	}
-
 }
 
 

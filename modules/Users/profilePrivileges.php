@@ -1,4 +1,14 @@
 <?php
+/*********************************************************************************
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+*
+ ********************************************************************************/
+
 require_once('include/utils/UserInfoUtil.php');
 require_once('include/utils/utils.php');
 
@@ -16,8 +26,20 @@ if($_REQUEST['mode'] =='create' && $_REQUEST['radiobutton'] != 'baseprofile')
 	$parentProfileId = '';
 
 
-
 $smarty = new vtigerCRM_Smarty;
+if(isset($_REQUEST['selected_tab']) && $_REQUEST['selected_tab']!='')
+	$smarty->assign("SELECTED_TAB", $_REQUEST['selected_tab']);
+else
+	$smarty->assign("SELECTED_TAB", "global_privileges");
+
+if(isset($_REQUEST['selected_module']) && $_REQUEST['selected_module']!='')
+	$smarty->assign("SELECTED_MODULE", $_REQUEST['selected_module']);
+else
+	$smarty->assign("SELECTED_MODULE", "field_Leads");
+
+$smarty->assign("PARENTPROFILEID", $parentProfileId);
+$smarty->assign("RADIOBUTTON", $_REQUEST['radiobutton']);
+
 $secondaryModule='';
 $mode='';
 $output ='';
@@ -49,7 +71,7 @@ if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != '')
 
 
 
-//Initially setting the secondary selected tab
+//Initially setting the secondary selected vtiger_tab
 $mode=$_REQUEST['mode'];
 if($mode == 'create')
 {
@@ -121,7 +143,7 @@ if($mode == 'view')
 		$stand[]=$tab_create_per;
 		$stand[]=$tab_delete_per;
 		$stand[]=$tab_view_per;
-		$privileges_stand[]=$stand;
+		$privileges_stand[$tabid]=$stand;
 	}
 }
 if($mode == 'edit')
@@ -145,7 +167,7 @@ if($mode == 'edit')
 		$stand[]=$tab_create_per;
 		$stand[]=$tab_delete_per;
 		$stand[]=$tab_view_per;
-		$privileges_stand[]=$stand;
+		$privileges_stand[$tabid]=$stand;
 	}
 }
 if($mode == 'create')
@@ -171,7 +193,7 @@ if($mode == 'create')
 			$stand[]=$tab_create_per;
 			$stand[]=$tab_delete_per;
 			$stand[]=$tab_view_per;
-			$privileges_stand[]=$stand;
+			$privileges_stand[$tabid]=$stand;
 		}	
 	}
 	else
@@ -195,7 +217,7 @@ if($mode == 'create')
 			$stand[]=$tab_create_per;
 			$stand[]=$tab_delete_per;
 			$stand[]=$tab_view_per;
-			$privileges_stand[]=$stand;
+			$privileges_stand[$tabid]=$stand;
 		}
 	}
 
@@ -216,7 +238,7 @@ if($mode == 'view')
 		$tab_allow_per = getDisplayValue($tab_allow_per_id,$tabid,'');	
 		$tab[]=$entity_name;
 		$tab[]=$tab_allow_per;
-		$privileges_tab[]=$tab;
+		$privileges_tab[$tabid]=$tab;
 	}
 }
 if($mode == 'edit')
@@ -231,7 +253,7 @@ if($mode == 'edit')
 		$tab_allow_per = getDisplayOutput($tab_allow_per_id,$tabid,'');	
 		$tab[]=$entity_name;
 		$tab[]=$tab_allow_per;
-		$privileges_tab[]=$tab;
+		$privileges_tab[$tabid]=$tab;
 	}
 }
 if($mode == 'create')
@@ -248,7 +270,7 @@ if($mode == 'create')
 			$tab_allow_per = getDisplayOutput($tab_allow_per_id,$tabid,'');	
 			$tab[]=$entity_name;
 			$tab[]=$tab_allow_per;
-			$privileges_tab[]=$tab;
+			$privileges_tab[$tabid]=$tab;
 		}
 	}
 	else
@@ -263,12 +285,11 @@ if($mode == 'create')
 			$tab_allow_per = getDisplayOutput(0,$tabid,'');	
 			$tab[]=$entity_name;
 			$tab[]=$tab_allow_per;
-			$privileges_tab[]=$tab;
+			$privileges_tab[$tabid]=$tab;
 		}
 	}
 
 }
-$privileges_tab = array_chunk($privileges_tab, 2);
 $smarty->assign("TAB_PRIV",$privileges_tab);			
 
 //utilities privileges
@@ -283,15 +304,15 @@ if($mode == 'view')
 		$no_of_actions=sizeof($action_array);
 		foreach($action_array as $action_id=>$act_per)
 		{
-			$action_name = getActionName($action_id);
+			$action_name = getActionname($action_id);
 			$tab_util_act_per = $action_array[$action_id];
 			$tab_util_per = getDisplayValue($tab_util_act_per,$tabid,$action_id);
 			$util[]=$action_name;
 			$util[]=$tab_util_per;
 		}
 		$util=array_chunk($util,2);
-		$util=array_chunk($util,2);
-		$privilege_util[$entity_name] = $util;
+		$util=array_chunk($util,3);
+		$privilege_util[$tabid] = $util;
 	}
 }
 elseif($mode == 'edit')
@@ -304,15 +325,15 @@ elseif($mode == 'edit')
 		$no_of_actions=sizeof($action_array);
 		foreach($action_array as $action_id=>$act_per)
 		{
-			$action_name = getActionName($action_id);
+			$action_name = getActionname($action_id);
 			$tab_util_act_per = $action_array[$action_id];
 			$tab_util_per = getDisplayOutput($tab_util_act_per,$tabid,$action_id);
 			$util[]=$action_name;
 			$util[]=$tab_util_per;
 		}
 		$util=array_chunk($util,2);
-		$util=array_chunk($util,2);
-		$privilege_util[$entity_name] = $util;
+		$util=array_chunk($util,3);
+		$privilege_util[$tabid] = $util;
 	}
 }
 elseif($mode == 'create')
@@ -327,15 +348,15 @@ elseif($mode == 'create')
 			$no_of_actions=sizeof($action_array);
 			foreach($action_array as $action_id=>$act_per)
 			{
-				$action_name = getActionName($action_id);
+				$action_name = getActionname($action_id);
 				$tab_util_act_per = $action_array[$action_id];
 				$tab_util_per = getDisplayOutput($tab_util_act_per,$tabid,$action_id);
 				$util[]=$action_name;
 				$util[]=$tab_util_per;
 			}
 			$util=array_chunk($util,2);
-			$util=array_chunk($util,2);
-			$privilege_util[$entity_name] = $util;
+			$util=array_chunk($util,3);
+			$privilege_util[$tabid] = $util;
 		}
 	}
 	else
@@ -348,15 +369,15 @@ elseif($mode == 'create')
 			$no_of_actions=sizeof($action_array);
 			foreach($action_array as $action_id=>$act_per)
 			{
-				$action_name = getActionName($action_id);
+				$action_name = getActionname($action_id);
 				$tab_util_act_per = $action_array[$action_id];
 				$tab_util_per = getDisplayOutput(0,$tabid,$action_id);
 				$util[]=$action_name;
 				$util[]=$tab_util_per;
 			}
 			$util=array_chunk($util,2);
-			$util=array_chunk($util,2);
-			$privilege_util[$entity_name] = $util;
+			$util=array_chunk($util,3);
+			$privilege_util[$tabid] = $util;
 		}
 
 	}
@@ -367,7 +388,7 @@ $smarty->assign("UTILITIES_PRIV",$privilege_util);
 //Field privileges		
 $modArr=getFieldModuleAccessArray();
 
- 
+
 $no_of_mod=sizeof($modArr);
 for($i=0;$i<$no_of_mod; $i++)
 {
@@ -378,6 +399,19 @@ for($i=0;$i<$no_of_mod; $i++)
 }
 $smarty->assign("PRI_FIELD_LIST",$privilege_fld);	
 $smarty->assign("MODE",$mode);
+
+$disable_field_array = Array();
+$sql_disablefield = "select * from vtiger_def_org_field";
+$result = $adb->query($sql_disablefield);
+$noofrows=$adb->num_rows($result);
+for($i=0; $i<$noofrows; $i++)
+{
+	$FieldId = $adb->query_result($result,$i,'fieldid');
+	$Visible = $adb->query_result($result,$i,'visible');
+
+	$disable_field_array[$FieldId] = $Visible;
+}
+
 if($mode=='view')
 {
 	$fieldListResult = getProfile2AllFieldList($modArr,$profileId);
@@ -385,22 +419,27 @@ if($mode=='view')
 	{
 		$field_module=array();
 		$module_name=key($fieldListResult);
+		$module_id = getTabid($module_name);
+		$language_strings = return_module_language($current_language,$module_name);
 		for($j=0; $j<count($fieldListResult[$module_name]); $j++)
 		{
 			$field=array();
 			if($fieldListResult[$module_name][$j][1] == 0)
 			{
-				$visible = "<img src=".$image_path."/yes.gif>";
+				$visible = "<img src=".$image_path."/prvPrfSelectedTick.gif>";
 			}
 			else
 			{
 				$visible = "<img src=".$image_path."/no.gif>";
 			}
-			$field[]=$fieldListResult[$module_name][$j][0];
+			if($language_strings[$fieldListResult[$module_name][$j][0]] != '')
+				$field[]=$language_strings[$fieldListResult[$module_name][$j][0]];
+			else
+				$field[]=$fieldListResult[$module_name][$j][0];
 			$field[]=$visible;
 			$field_module[]=$field;
 		}
-		$privilege_field[$module_name] = array_chunk($field_module,2);
+		$privilege_field[$module_id] = array_chunk($field_module,3);
 		next($fieldListResult);
 	}
 }
@@ -411,6 +450,8 @@ elseif($mode=='edit')
 	{
 		$field_module=array();
 		$module_name=key($fieldListResult);
+		$module_id = getTabid($module_name);
+		$language_strings = return_module_language($current_language,$module_name);
 		for($j=0; $j<count($fieldListResult[$module_name]); $j++)
 		{
 			$fldLabel= $fieldListResult[$module_name][$j][0];
@@ -418,8 +459,12 @@ elseif($mode=='edit')
 			$mandatory = '';
 			$readonly = '';
 			$field=array();
-
-			if($uitype == 2 || $uitype == 51 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
+			if($disable_field_array[$fieldListResult[$module_name][$j][4]] == 1)
+			{
+				$mandatory = '<font color="blue">*</font>';
+				$readonly = 'disabled';
+			}
+			if($uitype == 2 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
 			{
 				$mandatory = '<font color="red">*</font>';
 				$readonly = 'disabled';
@@ -432,11 +477,15 @@ elseif($mode=='edit')
 			{
 				$visible = "";
 			}
-			$field[]=$mandatory.' '.$fldLabel;
-			$field[]='<input type="checkbox" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
+			if($language_strings[$fldLabel] != '')
+				$field[]=$mandatory.' '.$language_strings[$fldLabel];
+			else
+				$field[]=$mandatory.' '.$fldLabel;
+							
+			$field[]='<input id="'.$module_id.'_field_'.$fieldListResult[$module_name][$j][4].'" onClick="selectUnselect(this);" type="checkbox" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
 			$field_module[]=$field;
 		}
-		$privilege_field[$module_name] = array_chunk($field_module,2);
+		$privilege_field[$module_id] = array_chunk($field_module,3);
 		next($fieldListResult);
 	}
 }
@@ -449,6 +498,8 @@ elseif($mode=='create')
 		{
 			$field_module=array();
 			$module_name=key($fieldListResult);
+			$module_id = getTabid($module_name);
+			$language_strings = return_module_language($current_language,$module_name);
 			for($j=0; $j<count($fieldListResult[$module_name]); $j++)
 			{
 				$fldLabel= $fieldListResult[$module_name][$j][0];
@@ -457,7 +508,12 @@ elseif($mode=='create')
 				$readonly = '';
 				$field=array();
 
-				if($uitype == 2 || $uitype == 51 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
+				if($disable_field_array[$fieldListResult[$module_name][$j][4]] == 1)
+				{
+					$mandatory = '<font color="blue">*</font>';
+					$readonly = 'disabled';
+				}
+				if($uitype == 2 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
 				{
 					$mandatory = '<font color="red">*</font>';
 					$readonly = 'disabled';
@@ -470,11 +526,14 @@ elseif($mode=='create')
 				{
 					$visible = "";
 				}
-				$field[]=$mandatory.' '.$fldLabel;
-				$field[]='<input type="checkbox" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
+				if($language_strings[$fldLabel] != '')
+					$field[]=$mandatory.' '.$language_strings[$fldLabel];
+				else
+					$field[]=$mandatory.' '.$fldLabel;
+				$field[]='<input type="checkbox" id="'.$module_id.'_field_'.$fieldListResult[$module_name][$j][4].'" onClick="selectUnselect(this);" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
 				$field_module[]=$field;
 			}
-			$privilege_field[$module_name] = array_chunk($field_module,2);
+			$privilege_field[$module_id] = array_chunk($field_module,3);
 			next($fieldListResult);
 		}
 	}
@@ -485,6 +544,8 @@ elseif($mode=='create')
 		{
 			$field_module=array();
 			$module_name=key($fieldListResult);
+			$module_id = getTabid($module_name);
+			$language_strings = return_module_language($current_language,$module_name);
 			for($j=0; $j<count($fieldListResult[$module_name]); $j++)
 			{
 				$fldLabel= $fieldListResult[$module_name][$j][0];
@@ -493,17 +554,25 @@ elseif($mode=='create')
 				$readonly = '';
 				$field=array();
 
-				if($uitype == 2 || $uitype == 51 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
+				if($disable_field_array[$fieldListResult[$module_name][$j][4]] == 1)
+				{
+					$mandatory = '<font color="blue">*</font>';
+					$readonly = 'disabled';
+				}
+				if($uitype == 2 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
 				{
 					$mandatory = '<font color="red">*</font>';
 					$readonly = 'disabled';
 				}	
 				$visible = "checked";
-				$field[]=$mandatory.' '.$fldLabel;
-				$field[]='<input type="checkbox" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
+				if($language_strings[$fldLabel] != '')
+					$field[]=$mandatory.' '.$language_strings[$fldLabel];
+				else
+					$field[]=$mandatory.' '.$fldLabel;
+				$field[]='<input type="checkbox" id="'.$module_id.'_field_'.$fieldListResult[$module_name][$j][4].'"  onClick="selectUnselect(this);" name="'.$fieldListResult[$module_name][$j][4].'" '.$visible.' '.$readonly.'>';
 				$field_module[]=$field;
 			}
-			$privilege_field[$module_name] = array_chunk($field_module,2);
+			$privilege_field[$module_id] = array_chunk($field_module,3);
 			next($fieldListResult);
 		}	
 	}
@@ -517,6 +586,11 @@ if($mode == 'view')
 else
 	$smarty->display("EditProfile.tpl");
 
+/** returns html image code based on the input id
+  * @param $id -- Role Name:: Type varchar
+  * @returns $value -- html image code:: Type varcha:w
+  *
+ */	
 function getGlobalDisplayValue($id,$actionid)
 {
 	global $image_path;
@@ -526,7 +600,7 @@ function getGlobalDisplayValue($id,$actionid)
 	}
 	elseif($id == 0)
 	{
-		$value = '<img src="'.$image_path.'yes.gif">';
+		$value = '<img src="'.$image_path.'prvPrfSelectedTick.gif">';
 	}
 	elseif($id == 1)
 	{
@@ -541,6 +615,12 @@ function getGlobalDisplayValue($id,$actionid)
 
 }
 
+
+/** returns html check box code based on the input id
+  * @param $id -- Role Name:: Type varchar
+  * @returns $value -- html check box code:: Type varcha:w
+  *
+ */
 function getGlobalDisplayOutput($id,$actionid)
 {
 	if($actionid == '1')
@@ -559,16 +639,22 @@ function getGlobalDisplayOutput($id,$actionid)
 	}
 	elseif($id == 0)
 	{
-		$value = '<input type="checkbox" name="'.$name.'" checked>';
+		$value = '<input type="checkbox" id="'.$name.'_chk" onClick="invoke'.$name.'();" name="'.$name.'" checked>';
 	}
 	elseif($id == 1)
 	{
-		$value = '<input type="checkbox" name="'.$name.'">';
+		$value = '<input type="checkbox" id="'.$name.'_chk" onClick="invoke'.$name.'();" name="'.$name.'">';
 	}
 	return $value;
 
 }
 
+
+/** returns html image code based on the input id
+  * @param $id -- Role Name:: Type varchar
+  * @returns $value -- html image code:: Type varcha:w
+  *
+ */
 function getDisplayValue($id)
 {
 	global $image_path;
@@ -579,7 +665,7 @@ function getDisplayValue($id)
 	}
 	elseif($id == 0)
 	{
-		$value = '<img src="'.$image_path.'yes.gif">';
+		$value = '<img src="'.$image_path.'prvPrfSelectedTick.gif">';
 	}
 	elseif($id == 1)
 	{
@@ -593,16 +679,36 @@ function getDisplayValue($id)
 
 }
 
+
+/** returns html check box code based on the input id
+  * @param $id -- Role Name:: Type varchar
+  * @returns $value -- html check box code:: Type varcha:w
+  *
+ */
 function getDisplayOutput($id,$tabid,$actionid)
 {
 	if($actionid == '')
 	{
 		$name = $tabid.'_tab';
+		$ckbox_id = 'tab_chk_com_'.$tabid; 
+		$jsfn = 'hideTab('.$tabid.')';
 	}
 	else
 	{
 		$temp_name = getActionname($actionid);
 		$name = $tabid.'_'.$temp_name;
+		$ckbox_id = 'tab_chk_'.$actionid.'_'.$tabid; 
+		if($actionid == 1)	
+			$jsfn = 'unSelectCreate('.$tabid.')'; 
+		elseif($actionid == 4)	
+			$jsfn = 'unSelectView('.$tabid.')';
+		elseif($actionid == 2)	
+			$jsfn = 'unSelectDelete('.$tabid.')';
+		else
+		{
+			$ckbox_id = $tabid.'_field_util_'.$actionid; 
+			$jsfn = 'javascript:';
+		}	
 	}
 
 
@@ -613,11 +719,11 @@ function getDisplayOutput($id,$tabid,$actionid)
 	}
 	elseif($id == 0)
 	{
-		$value = '<input type="checkbox" name="'.$name.'" checked>';
+		$value = '<input type="checkbox" onClick="'.$jsfn.';" id="'.$ckbox_id.'" name="'.$name.'" checked>';
 	}
 	elseif($id == 1)
 	{
-		$value = '<input type="checkbox" name="'.$name.'">';
+		$value = '<input type="checkbox" onClick="'.$jsfn.';" id="'.$ckbox_id.'" name="'.$name.'">';
 	}
 	return $value;
 

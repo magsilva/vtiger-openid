@@ -1,93 +1,101 @@
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
 {literal}
 <script>
-function ajaxSaveResponse(response)
-{
-	document.getElementById("announcement").innerHTML=response.responseText;
-	hide("an_busy");
-}
 function Announcement()
 {
-	show("an_busy");
-	var ajaxObj = new Ajax(ajaxSaveResponse);
-	var announcement=document.getElementById("announcement").value;
-	//var title=document.getElementById("title_announce").value;
-	var urlstring = "module=Users&action=UsersAjax&announcement="+announcement+"&announce_save=yes";
-	ajaxObj.process("index.php?",urlstring);
+	$("an_busy").style.display="inline";
+	var announcement=$("announcement").value;
+	new Ajax.Request(
+	'index.php',
+        {queue: {position: 'end', scope: 'command'},
+       		method: 'post',
+	        postBody: 'module=Users&action=UsersAjax&announcement='+announcement+'&announce_save=yes',
+	        onComplete: function(response) {
+					$("announcement").innerHTML=response.responseText;
+					$("an_busy").style.display="none";
+                        	}
+	        }
+	);
 }
 </script>
 {/literal}
-<style type="text/css">@import url(themes/blue/style.css);</style>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br/>
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$MOD.LBL_ANNOUNCEMENT}</b><div id="an_busy" style="display:none;float:left;position:relative;"><img src="{$IMAGE_PATH}vtbusy.gif" align="right"></div></span>
-<hr noshade="noshade" size="1" />
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
-
-	<table align="center" border="0" cellpadding="0" cellspacing="0" width="95%">
-	<tbody><tr>
-	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="7"><img src="{$IMAGE_PATH}top_left.jpg" align="top"></td>
-	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif; height: 6px;" bgcolor="#ebebeb"></td>
-	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="8"><img src="{$IMAGE_PATH}top_right.jpg" align="top" height="6" width="8"></td>
-	</tr>
-	<tr>
-
-	<td bgcolor="#ebebeb" width="7"></td>
-	<td bgcolor="#ececec">
-	<table border="0" cellpadding="5" cellspacing="0" width="100%">
-	<tbody><tr bgcolor="#ffffff">
-	<td width="5%"><img src="include/images/announ.gif" align="absmiddle" hspace="5" vspace="5"></td>
-	<td width="95%">
-	<span class="genHeaderBig">{$MOD.LBL_SETTING_ANNOUNCEMENT}</span><br>
-	{$MOD.LBL_ANNOUNCEMENT_INFO}
-	</td>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+<br>
+	<div align=center>
 	
+			{include file='SetMenu.tpl'}
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}announ.gif" width="48" height="48" border=0></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > {$MOD.LBL_ANNOUNCEMENT} </b><div id="an_busy" style="display:none;float:left;position:relative;"><img src="{$IMAGE_PATH}vtbusy.gif" align="right"></div></td>
+				</tr>
+				<tr>
+					<td valign=top class="small">{$MOD.LBL_ANNOUNCEMENT_DESC} </td>
+				</tr>
+				</table>
+				
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
+				<tr>
+				<td>
+				
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						<td class="big"><strong>{$MOD.LBL_ANNOUNCE_TEXT}</strong></td>
+						<td class="small" align=right><input type="button" class="crmButton small save" value="{$MOD.LBL_UPDATE_BUTTON}" onclick="javascript:Announcement();"></td>
+					</tr>
+					</table>
+					
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="listTable">
+					<tr>
+						<td class="colHeader small" valign=top>{$MOD.LBL_ANNOUNCEMENT_INFO}</td>
+					  </tr>
+					<tr>
+						<td class="listTableRow small" valign=top><textarea class=small width=90% height=100px id="announcement" name="announcement">{$ANNOUNCE}</textarea></td>
+					  </tr>
+					</table>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr><td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+					</table>
+				</td>
+				</tr>
+				</table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
+		</td>
 	</tr>
-	<tr><td colspan="2">&nbsp;</td></tr>
-	<tr>
-	<td align="right" valign="top">&nbsp;</td>
-	<td align="left"><b>{$MOD.LBL_SETTING_ANNOUNCEMENT}</b><br>
-	<textarea id="announcement" name="announcement" class="detailedViewTextBox" rows="5">{$ANNOUNCE}</textarea>
-	</td>
-	</tr>	
+	</table>
+		
+	</div>
 
-	<tr>
-	<td align="right" valign="top">&nbsp;</td>
-	<td align="center">
-	<input title="{$APP.LBL_SAVE_BUTTON_LABEL}" value=" &nbsp;{$APP.LBL_SAVE_BUTTON_LABEL}&nbsp; " accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="classBtn" onclick="javascript:Announcement();" type="button">
-	</td>
-	</tr>
-	</tbody></table>
-	</td>
-	<td bgcolor="#ebebeb" width="8"></td>
-	
-	</tr>
-	<tr>
-	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="7"><img src="{$IMAGE_PATH}bottom_left.jpg" align="bottom"></td>
-	<td style="font-size: 1px;" bgcolor="#ececec" height="8"></td>
-	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="8"><img src="{$IMAGE_PATH}bottom_right.jpg" align="bottom"></td>
-	</tr>
-	</tbody></table>
-
 </td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-	{include file='SettingsSubMenu.tpl'}
 {literal}
 <script>
 function validate() {

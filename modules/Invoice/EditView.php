@@ -25,18 +25,19 @@ require_once('data/Tracker.php');
 require_once('modules/Invoice/Invoice.php');
 require_once('modules/Quotes/Quote.php');
 require_once('modules/SalesOrder/SalesOrder.php');
-require_once('modules/Invoice/Forms.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/FormValidationUtil.php');
 
-global $app_strings,$mod_strings,$log;
+global $app_strings,$mod_strings,$currentModule,$log,$current_user;
 
 $focus = new Invoice();
 $smarty = new vtigerCRM_Smarty();
-
+$currencyid=fetchCurrency($current_user->id);
+$rate_symbol = getCurrencySymbolandCRate($currencyid);
+$rate = $rate_symbol['rate'];
 if(isset($_REQUEST['record']) && $_REQUEST['record'] != '') 
 {
     if(isset($_REQUEST['convertmode']) &&  $_REQUEST['convertmode'] == 'quotetoinvoice')
@@ -46,7 +47,15 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
 	$quote_focus->id = $quoteid;
 	$quote_focus->retrieve_entity_info($quoteid,"Quotes");
 	$focus = getConvertQuoteToInvoice($focus,$quote_focus,$quoteid);
-			
+
+	//Added to display the Quote's associated vtiger_products -- when we create vtiger_invoice from Quotes DetailView 
+	$associated_prod = getAssociatedProducts("Quotes",$quote_focus);
+	$txtTax = (($quote_focus->column_fields['txtTax'] != '')?$quote_focus->column_fields['txtTax']:'0.000');
+	$txtAdj = (($quote_focus->column_fields['txtAdjustment'] != '')?$quote_focus->column_fields['txtAdjustment']:'0.000');
+
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$smarty->assign("MODE", $quote_focus->mode);
+	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
     }
     elseif(isset($_REQUEST['convertmode']) &&  $_REQUEST['convertmode'] == 'sotoinvoice')
     {
@@ -55,6 +64,19 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
         $so_focus->id = $soid;
         $so_focus->retrieve_entity_info($soid,"SalesOrder");
         $focus = getConvertSoToInvoice($focus,$so_focus,$soid);
+
+	//added to set the PO number and terms and conditions
+	$focus->column_fields['vtiger_purchaseorder'] = $so_focus->column_fields['vtiger_purchaseorder'];
+	$focus->column_fields['terms_conditions'] = $so_focus->column_fields['terms_conditions'];
+
+	//Added to display the SalesOrder's associated vtiger_products -- when we create vtiger_invoice from SO DetailView
+	$associated_prod = getAssociatedProducts("SalesOrder",$so_focus);
+	$txtTax = (($so_focus->column_fields['txtTax'] != '')?$so_focus->column_fields['txtTax']:'0.000');
+	$txtAdj = (($so_focus->column_fields['txtAdjustment'] != '')?$so_focus->column_fields['txtAdjustment']:'0.000');
+
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$smarty->assign("MODE", $so_focus->mode);
+	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
 
     }
     elseif(isset($_REQUEST['convertmode']) &&  $_REQUEST['convertmode'] == 'potentoinvoice')
@@ -73,7 +95,7 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
                 }
 
         }
-	//Handling for dateformat in invoicedate field
+	//Handling for dateformat in vtiger_invoicedate vtiger_field
         if($focus->column_fields['invoicedate'] != '')
         {
               $curr_due_date = $focus->column_fields['invoicedate'];
@@ -89,6 +111,18 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
         $focus->mode = 'edit';
         $focus->name=$focus->column_fields['subject'];
 
+	/*
+	//Added to display the SO's associated products -- when we select SO in Edit Invoice page
+	if(isset($_REQUEST['salesorder_id']) && $_REQUEST['salesorder_id'] !='')
+	{
+		$associated_prod = getAssociatedProducts("SalesOrder",$so_focus,$focus->column_fields['salesorder_id']);
+	}
+
+	$smarty->assign("SALESORDER_ID", $focus->column_fields['salesorder_id']);
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$smarty->assign("MODE", $so_focus->mode);
+	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
+	*/
     }		
     else
     {	
@@ -112,7 +146,7 @@ else
 			}
 
 		}
-		//Handling for dateformat in invoicedate field
+		//Handling for dateformat in vtiger_invoicedate vtiger_field
                 if($focus->column_fields['invoicedate'] != '')
                 {
                         $curr_due_date = $focus->column_fields['invoicedate'];
@@ -125,11 +159,21 @@ else
 		$so_focus->retrieve_entity_info($soid,"SalesOrder");
 		$focus = getConvertSoToInvoice($focus,$so_focus,$soid);
 
+		//Added to display the SO's associated products -- when we select SO in New Invoice page
+		if(isset($_REQUEST['salesorder_id']) && $_REQUEST['salesorder_id'] !='')
+		{
+			$associated_prod = getAssociatedProducts("SalesOrder",$so_focus,$focus->column_fields['salesorder_id']);
+		}
+
+		$smarty->assign("SALESORDER_ID", $focus->column_fields['salesorder_id']);
+		$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+		$smarty->assign("MODE", $so_focus->mode);
+		$smarty->assign("AVAILABLE_PRODUCTS", 'true');
+
 	}
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
-	$num_of_products = getNoOfAssocProducts("Invoice",$focus);
-	$associated_prod = getAssociatedProducts("Invoice",$focus);
+	$INVOICE_associated_prod = getAssociatedProducts("Invoice",$focus);
 	$focus->id = "";
     	$focus->mode = ''; 	
 }
@@ -137,15 +181,15 @@ if(isset($_REQUEST['opportunity_id']) && $_REQUEST['opportunity_id'] !='')
 {
 	$potfocus = new Potential();
         $potfocus->column_fields['potential_id'] = $_REQUEST['opportunity_id'];
-	$num_of_products = getNoOfAssocProducts("Potentials",$potfocus,$potfocus->column_fields['potential_id']);
         $associated_prod = getAssociatedProducts("Potentials",$potfocus,$potfocus->column_fields['potential_id']);
 	
 }
 if(isset($_REQUEST['product_id']) && $_REQUEST['product_id'] != '') {
         $focus->column_fields['product_id'] = $_REQUEST['product_id'];
-	  $log->debug("Invoice EditView: Product Id from the request is ".$_REQUEST['product_id']);
-	$num_of_products = getNoOfAssocProducts("Products",$focus,$focus->column_fields['product_id']);
+	$log->debug("Invoice EditView: Product Id from the request is ".$_REQUEST['product_id']);
 	$associated_prod = getAssociatedProducts("Products",$focus,$focus->column_fields['product_id']);
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
 } 
  
  
@@ -178,17 +222,26 @@ $comboFieldNames = Array('accounttype'=>'account_type_dom'
 $comboFieldArray = getComboArray($comboFieldNames);
 
 $disp_view = getView($focus->mode);
+$mode = $focus->mode;
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Invoice",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else	
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Invoice",$disp_view,$mode,$focus->column_fields,'BAS'));
+	$bas_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS');
+	$adv_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV');
+
+	$blocks['basicTab'] = $bas_block;
+	if(is_array($adv_block ))
+		$blocks['moreTab'] = $adv_block;
+
+	$smarty->assign("BLOCKS",$blocks);
+	$smarty->assign("BLOCKS_COUNT",count($blocks));
 }
 
 $smarty->assign("OP_MODE",$disp_view);
 
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Invoice");
+$smarty->assign("SINGLE_MOD",'Invoice');
 
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
@@ -210,40 +263,53 @@ elseif(isset($_REQUEST['convertmode']) &&  ($_REQUEST['convertmode'] == 'sotoinv
 {
 	$smarty->assign("MODE", $focus->mode);
 	$se_array=getProductDetailsBlockInfo($focus->mode,"SalesOrder",$so_focus);
+
+	$txtTax = (($so_focus->column_fields['txtTax'] != '')?$so_focus->column_fields['txtTax']:'0.000');
+	$txtAdj = (($so_focus->column_fields['txtAdjustment'] != '')?$so_focus->column_fields['txtAdjustment']:'0.000');
+	
+	$associated_prod = getAssociatedProducts("SalesOrder",$so_focus);
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$smarty->assign("MODE", $focus->mode);
 }
 elseif($focus->mode == 'edit')
 {
 	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
+	$associated_prod = getAssociatedProducts("Invoice",$focus);
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
 	$smarty->assign("MODE", $focus->mode);
-	$se_array=getProductDetailsBlockInfo($focus->mode,"Invoice",$focus);
 }
 elseif(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
 {
-	$smarty->assign("MODE", $focus->mode);
-	$se_array=getProductDetailsBlockInfo($focus->mode,"",$focus,$num_of_products,$associated_prod);
+	$associated_prod = $INVOICE_associated_prod;
+	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
+        $smarty->assign("MODE", $focus->mode);
 }
 elseif((isset($_REQUEST['product_id']) && $_REQUEST['product_id'] != '') || (isset($_REQUEST['opportunity_id']) && $_REQUEST['opportunity_id'] != '')) {
+	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$InvTotal = getInventoryTotal($_REQUEST['return_module'],$_REQUEST['return_id']);
+	$InvTotal = convertFromDollar($InvTotal,$rate);
         $smarty->assign("MODE", $focus->mode);
-	$focus->column_fields['txtTax'] = "0.000";
-        $focus->column_fields['txtAdjustment'] = "0.000";
-        $focus->column_fields['hdnSubTotal'] = ".00";
-        $focus->column_fields['hdnGrandTotal'] =".00";
-        $se_array=getProductDetailsBlockInfo($focus->mode,"",$focus,$num_of_products,$associated_prod);
 
+	//this is to display the Product Details in first row when we create new PO from Product relatedlist
+	if($_REQUEST['return_module'] == 'Products')
+	{
+		$smarty->assign("PRODUCT_ID",$_REQUEST['product_id']);
+		$smarty->assign("PRODUCT_NAME",getProductName($_REQUEST['product_id']));
+		$smarty->assign("UNIT_PRICE",getUnitPrice($_REQUEST['product_id']));
+		$smarty->assign("QTY_IN_STOCK",getPrdQtyInStck($_REQUEST['product_id']));
+		$smarty->assign("VAT_TAX",getProductTaxPercentage("VAT",$_REQUEST['product_id']));
+		$smarty->assign("SALES_TAX",getProductTaxPercentage("Sales",$_REQUEST['product_id']));
+		$smarty->assign("SERVICE_TAX",getProductTaxPercentage("Service",$_REQUEST['product_id']));
+	}
 }
-else
-{
-	$smarty->assign("ROWCOUNT", '1');
-	$smarty->assign("TAXVALUE", '0');
-	$smarty->assign("ADJUSTMENTVALUE", '0');
-}
+
 
 if(isset($cust_fld))
 {
         $smarty->assign("CUSTOMFIELD", $cust_fld);
 }
 
-		
+$smarty->assign("ASSOCIATEDPRODUCTS",$associated_prod);
 
 if(isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
 else $smarty->assign("RETURN_MODULE","Invoice");
@@ -260,12 +326,21 @@ $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
 
+//in create new Invoice, get all available product taxes and shipping & Handling taxes
+if($focus->mode != 'edit')
+{
+	$tax_details = getAllTaxes('available');
+	$sh_tax_details = getAllTaxes('available','sh');
+
+	$smarty->assign("GROUP_TAXES",$tax_details);
+	$smarty->assign("SH_TAXES",$sh_tax_details);
+}
 
 
 
-$invoice_tables = Array('invoice','invoicebillads','invoiceshipads'); 
+
  $tabid = getTabid("Invoice");
- $validationData = getDBValidationData($invoice_tables,$tabid);
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
@@ -274,9 +349,12 @@ $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
 $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
 $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if($focus->mode == 'edit')
-$smarty->display("salesEditView.tpl");
+	$smarty->display("Inventory/InventoryEditView.tpl");
 else
-$smarty->display('CreateView.tpl');
+	$smarty->display('Inventory/InventoryCreateView.tpl');
 
 ?>

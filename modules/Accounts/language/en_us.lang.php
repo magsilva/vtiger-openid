@@ -81,10 +81,10 @@ $mod_strings = Array(
 'NTC_COPY_SHIPPING_ADDRESS'=>'Copy shipping address to billing address',
 'NTC_REMOVE_MEMBER_ORG_CONFIRMATION'=>'Are you sure you want to remove this record as a member organization?',
 'LBL_DUPLICATE'=>'Potential Duplicate Accounts',
-'MSG_DUPLICATE' => 'Creating this account may potentialy create a duplicate account. You may either select an account from the list below or you may click on Create New Account to continue creating a new account with the previously entered data.',
+'MSG_DUPLICATE' => 'Creating this vtiger_account may vtiger_potentialy create a duplicate vtiger_account. You may either select an vtiger_account from the list below or you may click on Create New Account to continue creating a new vtiger_account with the previously entered data.',
 
 'LBL_INVITEE'=>'Contacts',
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
 
 'LBL_SELECT_ACCOUNT'=>'Select Account',
 'LBL_GENERAL_INFORMATION'=>'General Information',
@@ -104,7 +104,7 @@ $mod_strings = Array(
 'LBL_NEW_CONTACT'=>'New Contact',
 'LBL_CONTACT_TITLE'=>'Contacts',
 
-//Added fields after RC1 - Release
+//Added vtiger_fields after RC1 - Release
 'LBL_ALL'=>'All',
 'LBL_PROSPECT'=>'Prospect',
 'LBL_INVESTOR'=>'Investor',
@@ -126,7 +126,7 @@ $mod_strings = Array(
 'Other Email'=>'Other Email',
 'Ownership'=>'Ownership',
 'Rating'=>'Rating',
-'industry'=>'industry',
+'industry'=>'Industry',
 'SIC Code'=>'SIC Code',
 'Type'=>'Type',
 'Annual Revenue'=>'Annual Revenue',
@@ -137,8 +137,8 @@ $mod_strings = Array(
 'Shipping City'=>'Shipping City',
 'Billing State'=>'Billing State',
 'Shipping State'=>'Shipping State',
-'Billing Code'=>'Billing Code',
-'Shipping Code'=>'Shipping Code',
+'Billing Code'=>'Billing Postal Code',
+'Shipping Code'=>'Shipping Postal Code',
 'Billing Country'=>'Billing Country',
 'Shipping Country'=>'Shipping Country',
 'Created Time'=>'Created Time',
@@ -150,6 +150,65 @@ $mod_strings = Array(
 //Added after 4.2 patch 2
 'Email Opt Out'=>'Email Opt Out',
 'LBL_EMAIL_OPT_OUT'=>'Email Opt Out:',
+
+//Added after 5Alpha5
+'Notify Owner'=>'Notify Owner',
+
+//Added for existing picklist entries
+
+'--None--'=>'--None--',
+
+'Acquired'=>'Acquired',
+'Active'=>'Active',
+'Market Failed'=>'Market Failed',
+'Project Cancelled'=>'Project Cancelled',
+'Shutdown'=>'Shutdown',
+
+'Apparel'=>'Apparel',
+'Banking'=>'Banking',
+'Biotechnology'=>'Biotechnology',
+'Chemicals'=>'Chemicals',
+'Communications'=>'Communications',
+'Construction'=>'Construction',
+'Consulting'=>'Consulting',
+'Education'=>'Education',
+'Electronics'=>'Electronics',
+'Energy'=>'Energy',
+'Engineering'=>'Engineering',
+'Entertainment'=>'Entertainment',
+'Environmental'=>'Environmental',
+'Finance'=>'Finance',
+'Food & Beverage'=>'Food & Beverage',
+'Government'=>'Government',
+'Healthcare'=>'Healthcare',
+'Hospitality'=>'Hospitality',
+'Insurance'=>'Insurance',
+'Machinery'=>'Machinery',
+'Manufacturing'=>'Manufacturing',
+'Media'=>'Media',
+'Not For Profit'=>'Not For Profit',
+'Recreation'=>'Recreation',
+'Retail'=>'Retail',
+'Shipping'=>'Shipping',
+'Technology'=>'Technology',
+'Telecommunications'=>'Telecommunications',
+'Transportation'=>'Transportation',
+'Utilities'=>'Utilities',
+'Other'=>'Other',
+
+'Analyst'=>'Analyst',
+'Competitor'=>'Competitor',
+'Customer'=>'Customer',
+'Integrator'=>'Integrator',
+'Investor'=>'Investor',
+'Partner'=>'Partner',
+'Press'=>'Press',
+'Prospect'=>'Prospect',
+'Reseller'=>'Reseller',
+
+
+
+
 );
 
 ?>

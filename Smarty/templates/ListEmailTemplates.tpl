@@ -1,7 +1,15 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
-<style type="text/css">@import url(../themes/blue/style.css);</style>
-
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 <script>
 function massDelete()
 {ldelim}
@@ -13,11 +21,12 @@ function massDelete()
 
                 if (document.massdelete.selected_id.checked)
                {ldelim}
-                        document.massdelete.idlist.value=document.massdelete.selected_id.value;
+                        document.massdelete.idlist.value=document.massdelete.selected_id.value+';';
+			xx=1;
                 {rdelim}
                 else
                 {ldelim}
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 {rdelim}
         {rdelim}
@@ -38,7 +47,7 @@ function massDelete()
                 {rdelim}
                else
                 {ldelim}
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 {rdelim}
        {rdelim}
@@ -53,86 +62,94 @@ function massDelete()
 
 {rdelim}
 </script>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+<br>
+	<div align=center>
+	
+			{include file='SetMenu.tpl'}
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
-<!-- EMAIL TEMPLATE PAGE STARTS HERE -->
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-	<tr>
-		 <td class="showPanelBg" valign="top" width="90%"  style="padding-left:20px; "><br />
-        	        <span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > {$UMOD.LBL_EMAIL_TEMPLATES_LIST}</b></span>
-            	    <hr noshade="noshade" size="1" />
-		</td>
-
-		<td width="10%" class="showPanelBg">&nbsp;</td>
-	</tr>
-	<tr>
-		<td width="90%" style="padding-left:20px;" valign="top">
-			<table width="100%" cellpadding="3" cellspacing="0" class="prdTab" >
-			<form  name="massdelete" method="POST">
-    			<input name="idlist" type="hidden">
-    			<input name="module" type="hidden" value="Users">
-    			<input name="action" type="hidden" value="deleteemailtemplate">
-				<tr><td colspan="4" style="border:0px;">&nbsp;</td></tr>
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<form  name="massdelete" method="POST">
+	    			<input name="idlist" type="hidden">
+    				<input name="module" type="hidden" value="Users">
+    				<input name="action" type="hidden" value="deleteemailtemplate">
 				<tr>
-					<td colspan="2" align="left" style="border:0px;"><input type="submit" value="Delete" onclick="return massDelete();" class="small" /></td>
-					<td style="border:0px;">&nbsp;</td>
-
-					<td align="right" style="border:0px;">
-						<div align="right"><input type="submit" value="New Template" name="profile"  class="small" onclick="this.form.action.value='createemailtemplate';"/></div>
-					</td>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ViewTemplate.gif" width="45" height="60" border=0></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > {$UMOD.LBL_EMAIL_TEMPLATES} </b></td>
 				</tr>
-				<tr>{*<td colspan="4" style="border:0px;">&nbsp;</td>*}</tr>
 				<tr>
-				  <th width="5%"  style="border-top:1px solid #CCCCCC;height:30px;"><input type="checkbox" name="selectall" onClick=toggleSelect(this.checked,"selected_id") ></th>
-				  <th width="20%" style="border-top:1px solid #CCCCCC; "><b>{$UMOD.LBL_TEMPLATE_HEADER}</b></th>
-
-				  <th width="50%" style="border-top:1px solid #CCCCCC; "><b>{$UMOD.LBL_DESCRIPTION}</b></th>
-				  <th width="25%" style="border-top:1px solid #CCCCCC; "><b>{$UMOD.LBL_TEMPLATE_TOOLS}</b></th>
-			  </tr>
-				{foreach item=template from=$TEMPLATES}
-				<tr onMouseOver="this.className='prvPrfHoverOn'" onMouseOut="this.className='prvPrfHoverOut'">
-				<td><input type="checkbox" name="selected_id" value="{$template.templateid}" onClick=toggleSelectAll(this.name,"selectall") /></td>
-				<td nowrap>
-				{if $template.foldername == "Public"}
-					<img src="{$IMAGE_PATH}public.gif" align="absmiddle" />
-				{else}
-					<img src="{$IMAGE_PATH}private.gif" align="absmiddle" />
-				{/if}				
-				&nbsp;<a href="index.php?module=Users&action=detailviewemailtemplate&templateid={$template.templateid}" >{$template.templatename}</a></td>
-				<td>{$template.description}</td>
-				<td><a href="#">View sample Email </a></td>
-			  	</tr>
+					<td valign=top class="small">{$UMOD.LBL_EMAIL_TEMPLATE_DESC}</td>
+				</tr>
+				</table>
 				
-				{/foreach}
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
 				<tr>
-				  <td colspan="3" style="border:0px">
-
-				  	<img src="{$IMAGE_PATH}private.gif" align="absmiddle" />&nbsp;{$UMOD.LBL_TEMPLATE_PRIVATE}
-					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-					<img src="{$IMAGE_PATH}public.gif" align="absmiddle"/>&nbsp;{$UMOD.LBL_TEMPLATE_PUBLIC}
+				<td>
+				
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						<td class="big"><strong>{$UMOD.LBL_EMAIL_TEMPLATES}</strong></td>
+						<td class="small" align=right>&nbsp;
+						</td>
+					</tr>
+					</table>
 					
-				  </td>
-				  <td style="border:0px">
-				  	<div align="right"><a href="#">Go to Page Top</a></div>
-				  </td>
-			  	</tr>
-			</form>	
-			</table>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="listTableTopButtons">
+					<tr>
+						<td class=small><input type="submit" value="{$UMOD.LBL_DELETE}" onclick="return massDelete();" class="crmButton delete small"></td>
+						<td class=small align=right><input class="crmButton create small" type="submit" value="{$UMOD.LBL_NEW_TEMPLATE}" name="profile"  class="classBtn" onclick="this.form.action.value='createemailtemplate';this.form.parenttab.value='Settings';"></td>
+					</tr>
+					</table>
+					<table border="0" cellspacing="0" cellpadding="5" width="100%" class="listTable">
+					<tr>
+						<td width="2%" class="colHeader small">#</td>
+						<td width="3%" class="colHeader small">{$UMOD.LBL_LIST_SELECT}</td>
+						<td width="25%" class="colHeader small">{$UMOD.LBL_EMAIL_TEMPLATE}</td>
+						<td width="50%" class="colHeader small">{$UMOD.LBL_DESCRIPTION}</td>
+					        <td width="20%" class="colHeader small">{$UMOD.LBL_TEMPLATE_TOOLS}</td>
+					</tr>
+					{foreach name=emailtemplate item=template from=$TEMPLATES}
+					<tr>
+						<td class="listTableRow small" valign=top>{$smarty.foreach.emailtemplate.iteration}</td>
+						<td class="listTableRow small" valign=top><input type="checkbox" name="selected_id" value="{$template.templateid}" onClick=toggleSelectAll(this.name,"selectall") class=small></td>
+						<td class="listTableRow small" valign=top>
+							<a href="index.php?module=Users&action=detailviewemailtemplate&parenttab=Settings&templateid={$template.templateid}" ><b>{$template.templatename}</b></a>
+						</td>
+						<td class="listTableRow small" valign=top>{$template.description}&nbsp;</td>
+					        <td class="listTableRow small" valign=top>
+							<a href="index.php?module=Users&action=detailviewemailtemplate&parenttab=Settings&templateid={$template.templateid}">{$UMOD.LNK_SAMPLE_EMAIL}</a>
+						</td>
+					</tr>
+					{/foreach}	
+					</table>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr>
+					  <td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td>
+					</tr>
+					</table>
+				</td>
+				</tr>
+				</table>
 			
+			
+			
+			</td>
+			</tr>
+			</table>
 		</td>
-		<td>&nbsp;</td>
 	</tr>
-</table>
-<!-- END -->
-
+	</form>
+	</table>
+		
+	</div>
 </td>
-</tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
-
-{$JAVASCRIPT}
-{include file='SettingsSubMenu.tpl'}
-
-

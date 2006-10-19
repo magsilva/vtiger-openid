@@ -26,7 +26,8 @@ require_once('modules/PurchaseOrder/PurchaseOrder.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
-global $mod_strings,$app_strings,$theme,$profile_id;
+require_once('user_privileges/default_module_view.php');
+global $mod_strings,$app_strings,$theme,$currentModule,$singlepane_view;
 
 $focus = new Order();
 
@@ -53,37 +54,53 @@ $smarty->assign("APP", $app_strings);
 
 $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);
-$smarty->assign("MODULE","PurchaseOrder");
+$smarty->assign("MODULE",$currentModule);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
 
-$smarty->assign("BLOCKS", getBlocks("PurchaseOrder","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
-$smarty->assign("SINGLE_MOD","PurchaseOrder");
+$smarty->assign("SINGLE_MOD", 'PurchaseOrder');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("PurchaseOrder",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("PurchaseOrder","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
 $smarty->assign("CREATEPDF","permitted");
 	
-if(isPermitted("PurchaseOrder",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("PurchaseOrder","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
-//Security check for related list
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
 
 //Get the associated Products and then display above Terms and Conditions
 $smarty->assign("ASSOCIATED_PRODUCTS",getDetailAssociatedProducts('PurchaseOrder',$focus));
 
-$smarty->display("DetailView.tpl");
+ $tabid = getTabid("PurchaseOrder");
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
+ $data = split_validationdataArray($validationData);
+
+ $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+ $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+ $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
+$smarty->display("Inventory/InventoryDetailView.tpl");
 
 
 ?>

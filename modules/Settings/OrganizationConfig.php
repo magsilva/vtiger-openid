@@ -35,9 +35,9 @@ require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 
-$sql="select * from organizationdetails";
+$sql="select * from vtiger_organizationdetails";
 $result = $adb->query($sql);
-$organization_name = $adb->query_result($result,0,'organizationame');
+$organization_name = $adb->query_result($result,0,'organizationname');
 $organization_address= $adb->query_result($result,0,'address');
 $organization_city = $adb->query_result($result,0,'city');
 $organization_state = $adb->query_result($result,0,'state');

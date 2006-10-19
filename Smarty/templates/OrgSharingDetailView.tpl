@@ -1,228 +1,247 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
+{literal}
+<style>
+DIV.fixedLay{
+	border:3px solid #CCCCCC;
+	background-color:#FFFFFF;
+	width:500px;
+	position:fixed;
+	left:250px;
+	top:98px;
+	display:block;
+}
+</style>
+{/literal}
+{literal}
+<!--[if lte IE 6]>
+<STYLE type=text/css>
+DIV.fixedLay {
+	POSITION: absolute;
+}
+</STYLE>
+<![endif]-->
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<tr>
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br/>
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$CMOD.LBL_ORG_SHARING_PRIVILEGES}</b></span>
-<hr noshade="noshade" size="1" />
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
-	
-			<!-- module Select Table -->
-			<table border="0" cellpadding="0" cellspacing="0" width="100%">
-			  <tbody><tr>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="7"><img src="{$IMAGE_PATH}top_left.jpg" align="top"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif; height: 6px;" bgcolor="#ebebeb"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="8"><img src="{$IMAGE_PATH}top_right.jpg" align="top" height="6" width="8"></td>
-			  </tr>
+{/literal}
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
 
-			  <tr>
-				<td bgcolor="#ebebeb" width="7"></td>
-				<td style="padding-left: 10px; height: 20px; vertical-align: middle;" bgcolor="#ececec">
-						view :&nbsp;<a href="javascript:show('customdiv');show('globaldiv');">Both</a>&nbsp;|&nbsp;<a href="javascript:hide('customdiv');show('globaldiv');" >Global Access Privileges</a>&nbsp;|&nbsp;
-						<a href="javascript:show('customdiv');hide('globaldiv');">Custom Access Privileges</a>
-				</td>
+	<div align=center>
+			{include file="SetMenu.tpl"}
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}shareaccess.gif" alt="Users" width="48" height="48" border=0 title="Users"></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > {$MOD.LBL_SHARING_ACCESS} </b></td>
+					<td rowspan=2 class="small" align=right>&nbsp;</td>
+				</tr>
+				<tr>
+					<td valign=top class="small">{$MOD.LBL_SHARING_ACCESS_DESCRIPTION}</td>
+				</tr>
+				</table>
 
-				<td bgcolor="#ebebeb" width="8"></td>
-			  </tr>
-			  <tr>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="7"><img src="{$IMAGE_PATH}bottom_left.jpg" align="bottom"></td>
-				<td style="font-size: 1px;" bgcolor="#ececec" height="8"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="8"><img src="{$IMAGE_PATH}bottom_right.jpg" align="bottom"></td>
-			  </tr>
-		  </tbody></table><br>
-		  <!-- end of module select -->
-
-		  <!-- GLOBAL ACCESS MODULE -->
-		  	<div id="globaldiv">
-		  	  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-			  <tbody><tr>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="7"><img src="{$IMAGE_PATH}top_left.jpg" align="top"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif; height: 6px;" bgcolor="#ebebeb"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="8"><img src="{$IMAGE_PATH}top_right.jpg" align="top" height="6" width="8"></td>
-			  </tr>
-			  <tr>
-				<td bgcolor="#ebebeb" width="7"></td>
-
-				<td bgcolor="#ebebeb">	
-						<table border="0" cellpadding="3" cellspacing="0" width="100%">
-							<tbody>
-							<form action="index.php" method="post" name="new" id="form">
-							<input type="hidden" name="module" value="Users">
-							<input type="hidden" name="action" value="OrgSharingEditView">
-							<input type="hidden" name="parenttab" value="Settings">
-							<tr>
-								<td class="genHeaderSmall" height="25" valign="middle">Global Access Privileges</td>
-								<td align="right"><input class=small title="Edit" accessKey="C" type="submit" name="Edit" value={$CMOD.LBL_EDIT_PERMISSIONS}></td>
-								
-							</tr>
-							<tr><td colspan="2"></td></tr>
-							 <tr>
-						  		<td colspan="2" style="padding: 0px 0px 0px 1px;" bgcolor="#ffffff">
-
-									<table class="globTab" cellpadding="0" cellspacing="0">
-									<tbody>
-									{foreach item=module from=$DEFAULT_SHARING}	
-										<tr class="prvPrfHoverOff" onmouseover="this.className='prvPrfHoverOn'" onmouseout="this.className='prvPrfHoverOff'">
-									    <th width="20%">{$module.0}</th>
-									    <td width="30%">
-										{if $module.1 neq 'Private' && $module.1 neq 'Hide Details'}
-											<img src="{$IMAGE_PATH}public.gif" align="absmiddle">
-										{else}
-											<img src="{$IMAGE_PATH}private.gif" align="absmiddle">
-										{/if}
-										{$module.1}</td>
-									    <td width="50%">{$module.2}</td>
-								      	</tr>
-								 	{/foreach} 
-								  	</tbody>
-									</table>
-								</td>
-						  </tr>
-						</form>
-						</tbody>
-						</table>
-						 <!-- End of Module Display -->
-			         </td>
-				<td bgcolor="#ebebeb" width="8"></td>
-			  </tr>
-
-			  <tr>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="7"><img src="{$IMAGE_PATH}bottom_left.jpg" align="bottom"></td>
-				<td style="font-size: 1px;" bgcolor="#ebebeb" height="8"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="8"><img src="{$IMAGE_PATH}bottom_right.jpg" align="bottom"></td>
-			  </tr>
-		  </tbody></table><br>
-		</div>
-
+				<br>
+			  	<!-- GLOBAL ACCESS MODULE -->
+		  		<div id="globaldiv">
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+				<form action="index.php" method="post" name="new" id="orgSharingform">
+				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="action" value="OrgSharingEditView">
+				<input type="hidden" name="parenttab" value="Settings">
+				<tr>
+					<td class="big"><strong>1. {$CMOD.LBL_GLOBAL_ACCESS_PRIVILEGES}</strong></td>
+					<td class="small" align=right>
+						<input class="crmButton small cancel" title="{$CMOD.LBL_RECALCULATE_BUTTON}"  type="button" name="recalculate" value="{$CMOD.LBL_RECALCULATE_BUTTON}" onclick="return freezeBackground();">	
+	&nbsp;<input class="crmButton small edit" type="submit" name="Edit" value="{$CMOD.LBL_CHANGE} {$CMOD.LBL_PRIVILEGES}" ></td>
+					</td>
+				</tr>
+				</table>
+				<table cellspacing="0" cellpadding="5" class="listTable" width="100%">
+				{foreach item=module from=$DEFAULT_SHARING}	
+                  <tr>
+                    <td width="20%" class="colHeader small" nowrap>{$APP[$module.0]}</td>
+                    <td width="30%" class="listTableRow small" nowrap>
+			{if $module.1 neq 'Private' && $module.1 neq 'Hide Details'}
+				<img src="{$IMAGE_PATH}public.gif" align="absmiddle">
+			{else}
+				<img src="{$IMAGE_PATH}private.gif" align="absmiddle">
+			{/if}
+				{$CMOD[$module.1]}
+		    </td>
+                    <td width="50%" class="listTableRow small" nowrap>{$module.2}</td>
+                  </tr>
+		  {/foreach}
+		</form>	
+              </table>
+		</div>	
 		  <!-- END OF GLOBAL -->
-		  
-		  
+				<br><br>
 		  <!-- Custom Access Module Display Table -->
 		  <div id="customdiv">
-		  <table border="0" cellpadding="0" cellspacing="0" width="100%">
-		  <tbody>
-		  <tr>
-		  	<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="7"><img src="{$IMAGE_PATH}top_left.jpg" align="top"></td>
-			<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif; height: 6px;" bgcolor="#ebebeb"></td>
-			<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="6" width="8"><img src="{$IMAGE_PATH}top_right.jpg" align="top" height="6" width="8"></td>
-		 </tr>
-		 <tr>
-			<td bgcolor="#ebebeb" width="7"></td>
-			<td bgcolor="#ebebeb">	
-				<table border="0" cellpadding="3" cellspacing="0" width="100%">
-				<tbody>
+			
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
 				<tr>
-					<td class="genHeaderSmall" colspan="2" height="25" valign="middle">Custom Access Privileges</td>
+					<td class="big"><strong>2. {$CMOD.LBL_CUSTOM_ACCESS_PRIVILEGES}</strong></td>
+					<td class="small" align=right>&nbsp;</td>
 				</tr>
-				<tr><td colspan="2"></td></tr>
-				<tr>
-					<td colspan="2" style="padding: 0px 0px 0px 1px;" bgcolor="#ebebeb">
-						
+				</table>
 				<!-- Start of Module Display -->
-						{foreach key=modulename item=details from=$MODSHARING}
-						<div align="right"><a href="#">Go to Top</a></div>
-						{if $details.0 neq ''}
-						<table class="orgTab" cellpadding="0" cellspacing="0">
-						<tbody>
-						<tr bgcolor="#cccccc">
-							<td colspan=3 style="border: 1px solid rgb(204, 204, 204); padding-left: 5px;">
-							<img src="{$IMAGE_PATH}arrow.jpg" align="absmiddle">&nbsp;
-							<b>{$modulename}</b>&nbsp; 
-							</td>
-							<td align="right" colspan=2><input title="New" class="small" type="button" name="Create" value="Add Privileges" onClick="callEditDiv('{$modulename}','create','{$elements.0}')"></td>
-						</tr>
-					  	<tr>
-							<th class="lvtCol" nowrap width="9%">Rule No.</th>
-							<th class="lvtCol" width="20%">{$modulename} of </th>
-							<th class="lvtCol" width="25%">can be accessed by </th>
-							<th class="lvtCol" width="40%">privileges</th>
-							<th class="lvtCol" width="6%">Delete</th>
-						</tr>
-						{foreach key=sno item=elements from=$details}
-						<tr class="prvPrfHoverOut" onmouseover="this.className='prvPrfHoverOn'" onmouseout="this.className='prvPrfHoverOut'">
-							<td>{$sno+1}</td>
-							<td>{$elements.1}</td>
-							<td>{$elements.2}</td>
-							<td>{$elements.3}</td>
-							<td align="center"><a href="javascript:onClick=callEditDiv('{$modulename}','edit','{$elements.0}')"><img src="{$IMAGE_PATH}editfield.gif" align="absmiddle" height="15" width="16" border=0></a>|<a href="index.php?module=Users&action=DeleteSharingRule&shareid={$elements.0}"><img src="{$IMAGE_PATH}delete.gif" align="absmiddle" height="15" width="16" border=0></a></td>
-					    </tr>
-						{/foreach}
-				  		</tbody></table>
-				<!-- End of Module Display -->
-					{else}
-				<!-- Start FOR NO DATA -->
-					<table border="0" cellpadding="3" cellspacing="0" width="100%">
-					<tbody>
-					<tr><td colspan="2"></td></tr>
-					<tr bgcolor="#cccccc">
-					  	<td style="border: 1px solid rgb(204, 204, 204); padding-left: 5px;">
-					  	<img src="{$IMAGE_PATH}arrow.jpg" align="absmiddle">&nbsp;
-						<b>{$modulename}</b>&nbsp;&nbsp; 
-						</td>
-					 	<td align="right"><input title="New" class="small" type="button" name="Create" value="Add Privileges" onClick="callEditDiv('{$modulename}','create','')"></td>
-				  	</tr>
-				  	<tr>
-				  		<td colspan="2" style="padding: 20px;" bgcolor="#ffffff" align="center">
-						No Custom Access Rules defined . 
-						<a href="javascript:onClick=callEditDiv('{$modulename}','create','')">Click here</a>
-						to create a new Rule
-					    </td>
-				  	</tr>
-					</tbody>
-					</table>
-			    <!-- END OF NO DATA -->
-					{/if}
-					<br><br>
-					{/foreach}
-					</td>
-					</tr>
-					</tbody></table>
-				</td>
-				<td bgcolor="#ebebeb" width="8"></td>
-			  </tr>
-			  <tr>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="7"><img src="{$IMAGE_PATH}bottom_left.jpg" align="bottom"></td>
-				<td style="font-size: 1px;" bgcolor="#ebebeb" height="8"></td>
-				<td style="font-size: 1px; font-family: Arial,Helvetica,sans-serif;" height="8" width="8"><img src="{$IMAGE_PATH}bottom_right.jpg" align="bottom"></td>
-			  </tr>
-		  </tbody></table><br>
-			</div>		
-		  		<!-- END OF CUSTOM ACCESS -->
+				{foreach  key=modulename item=details from=$MODSHARING}
+				{assign var="mod_display" value=$APP.$modulename}
+				{if $mod_display eq $APP.Accounts}
+					{assign var="xx" value=$APP.Contacts}
+					{assign var="mod_display" value=$mod_display|cat:" & $xx"}
+				{/if}
+				{if $details.0 neq ''}
+				<table width="100%" border="0" cellpadding="5" cellspacing="0" class="listTableTopButtons">
+                  		<tr>
+		                    <td  style="padding-left:5px;" class="big"><img src="{$IMAGE_PATH}arrow.jpg" width="19" height="21" align="absmiddle" />&nbsp; <b>{$mod_display}</b>&nbsp; </td>
+                		    <td align="right">
+					<input class="crmButton small save" type="button" name="Create" value="{$CMOD.LBL_ADD_PRIVILEGES_BUTTON}" onClick="callEditDiv(this,'{$modulename}','create','')">
+				    </td>
+                  		</tr>
+			  	</table>
+				<table width="100%" cellpadding="5" cellspacing="0" class="listTable" >
+                    		<tr>
+                    		<td width="7%" class="colHeader small" nowrap>{$CMOD.LBL_RULE_NO}</td>
+                          	<td width="20%" class="colHeader small" nowrap>{$mod_display} {$CMOD.LBL_OF}</td>
+                          	<td width="25%" class="colHeader small" nowrap>{$CMOD.LBL_CAN_BE_ACCESSED}</td>
+                          	<td width="40%" class="colHeader small" nowrap>{$CMOD.LBL_PRIVILEGES}</td>
+                          	<td width="8%" class="colHeader small" nowrap>{$APP.Tools}</td>
+                        	</tr>
+                        <tr >
+			  {foreach key=sno item=elements from=$details}
+                          <td class="listTableRow small">{$sno+1}</td>
+                          <td class="listTableRow small">{$elements.1}</td>
+                          <td class="listTableRow small">{$elements.2}</td>
+                          <td class="listTableRow small">{$elements.3}</td>
+                          <td align="center" class="listTableRow small">
+				<a href="javascript:void(0);" onClick="callEditDiv(this,'{$modulename}','edit','{$elements.0}')"><img src="{$IMAGE_PATH}editfield.gif" title='edit' align="absmiddle" border=0 style="padding-top:3px;"></a>&nbsp;|<a href='javascript:confirmdelete("index.php?module=Users&action=DeleteSharingRule&shareid={$elements.0}")'><img src="{$IMAGE_PATH}delete.gif" title='del' align="absmiddle" border=0></a></td>
+                        </tr>
+
+                     {/foreach} 
+                    </table>
+	<!-- End of Module Display -->
+	<!-- Start FOR NO DATA -->
+
+			<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+			<tr><td>&nbsp;</td></tr>
+			</table>
+		    {else}
+                    <table width="100%" cellpadding="0" cellspacing="0" class="listTable"><tr><td>
+		      <table width="100%" border="0" cellpadding="5" cellspacing="0" class="listTableTopButtons">
+                      <tr>
+                        <td  style="padding-left:5px;" class="big"><img src="{$IMAGE_PATH}arrow.jpg" width="19" height="21" align="absmiddle" />&nbsp; <b>{$mod_display}</b>&nbsp; </td>
+                        <td align="right">
+				<input class="crmButton small save" type="button" name="Create" value="{$APP.LBL_ADD_ITEM} {$CMOD.LBL_PRIVILEGES}" onClick="callEditDiv(this,'{$modulename}','create','')">
+			</td>
+                      </tr>
+			<table width="100%" cellpadding="5" cellspacing="0">
+			<tr>
+			<td colspan="2"  style="padding:20px ;" align="center" class="small">
+			   {$CMOD.LBL_CUSTOM_ACCESS_MESG} 
+			   <a href="javascript:void(0);" onClick="callEditDiv(this,'{$modulename}','create','')">{$CMOD.LNK_CLICK_HERE}</a>
+			   {$CMOD.LBL_CREATE_RULE_MESG}
+			</td>
+			</tr>
+		    </table>
+		    </table>	
+			<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+			<tr><td>&nbsp;</td></tr>
+			</table>
+		    {/if}
+		    {/foreach}			
+		   </td></tr></table>
+				<br>
+		   </div>	
+				<!-- Edit Button -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% >
+				<tr><td class="small" ><div align=right><a href="#top">{$MOD.LBL_SCROLL}</a></div></td></tr>				</table>
+		 </td>
+                  </tr>
+				
+                </table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	</table>
+		
+	</div>
+</td>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
+</table>
+<div id="tempdiv" style="display:block;position:absolute;width:400px;"></div>
+
+<!-- For Disabling Window -->
+<div id="confId"  class='veil_new' style="display:none;">
+<table class="options" border="0" cellpadding="18" cellspacing="0">
+<tr>
+	<td class="big" align="center">
+		<h2>{$CMOD.LBL_RECALC_MSG}</h2>
+	</td>
+	<br>
+	<tr>
+		<td align="center"><input type="button" value="{$CMOD.LBL_YES}" onclick="return disableStyle('confId');">&nbsp;&nbsp;<input type="button" value="&nbsp;{$CMOD.LBL_NO}&nbsp;" onclick="$('freeze').style.display='none';$('confId').style.display='none'; "></td>
+	</tr>
+</tr>
+</table>
+</div>
+
+<div id="divId" class="veil_new" style="display:none;top:0px;left:0px;">
+<table class="optioncontainer" border="0" cellpadding="18" cellspacing="0">
+<tbody><tr>
+		<td class="big" align="center">
+		    <img src="{$IMAGE_PATH}plsWaitAnimated.gif">
+		</td>
+	</tr>
+</tbody>
+</table>
+</div>
 
 
-</td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-<div id="tempdiv" style="display:block;position:absolute;left:225px;top:150px;"></div>
-<div id="status" style="display:none;position:absolute;background-color:#bbbbbb;vertical-align:center;left:887px;top:0px;height:17px;">Processing Request...</div>
 <script>
-function ajaxSaveResponse(response)
+function callEditDiv(obj,modulename,mode,id)
 {ldelim}
-	hide("status");
-	document.getElementById("tempdiv").innerHTML=response.responseText;
-{rdelim}
-
-function callEditDiv(modulename,mode,id)
-{ldelim}
-	show("status");
-	var ajaxObj = new Ajax(ajaxSaveResponse);
-	var urlstring = "module=Users&action=UsersAjax&orgajax=true&mode="+mode+"&sharing_module="+modulename+"&shareid="+id;
-	ajaxObj.process("index.php?",urlstring);
+        $("status").style.display="inline";
+        new Ajax.Request(
+                'index.php',
+                {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
+                        method: 'post',
+                        postBody: 'module=Users&action=UsersAjax&orgajax=true&mode='+mode+'&sharing_module='+modulename+'&shareid='+id,
+                        onComplete: function(response) {ldelim}
+                                $("status").style.display="none";
+                                $("tempdiv").innerHTML=response.responseText;
+				fnvshobj(obj,"tempdiv");
+                                if(mode == 'edit')
+                                {ldelim}
+                                        setTimeout("",10000);
+                                        var related = $('rel_module_lists').value;
+                                        fnwriteRules(modulename,related);
+                                {rdelim}
+                        {rdelim}
+                {rdelim}
+        );
 {rdelim}
 
 function fnwriteRules(module,related)
@@ -248,10 +267,45 @@ function fnwriteRules(module,related)
 		var select1 = tagName.options[tagName.selectedIndex].text;
 		var select2 = tagName2.options[tagName2.selectedIndex].text;
 		var select3 = tagName3.options[tagName3.selectedIndex].text;
-		soucre.innerHTML = module +" of <b>\"" + select1 + "\"</b> can be accessed by <b>\"" +select2 + "\"</b> in the permission "+select3;
-		soucre1.innerHTML = "<b>Related Module Rights</b> "+ relatedstring;
+
+		if(module == '{$APP.Accounts}')
+		{ldelim}
+			module = '{$APP.Accounts} & {$APP.Contacts}';	
+		{rdelim}
+
+		soucre.innerHTML = module +" {$APP.LBL_LIST_OF} <b>\"" + select1 + "\"</b> {$CMOD.LBL_CAN_BE_ACCESSED} <b>\"" +select2 + "\"</b> {$CMOD.LBL_IN_PERMISSION} "+select3;
+		soucre1.innerHTML = "<b>{$CMOD.LBL_RELATED_MODULE_RIGHTS}</b> " + relatedstring;
 {rdelim}
 
-</script>
-{include file='SettingsSubMenu.tpl'}
 
+		function confirmdelete(url)
+		{ldelim}
+			if(confirm("Are you sure?"))
+			{ldelim}
+				document.location.href=url;
+			{rdelim}
+		{rdelim}
+	
+	function disableStyle(id)
+	{ldelim}
+			$('orgSharingform').action.value = 'RecalculateSharingRules';
+			$('orgSharingform').submit();
+ 			$(id).style.display = 'none';
+			$('divId').style.display = 'block';
+	{rdelim}
+
+	function freezeBackground()
+	{ldelim}
+	    var oFreezeLayer = document.createElement("DIV");
+	    oFreezeLayer.id = "freeze";
+	    oFreezeLayer.className = "veil";
+
+	     if (browser_ie) oFreezeLayer.style.height = (document.body.offsetHeight + (document.body.scrollHeight - document.body.offsetHeight)) + "px";
+	     else if (browser_nn4 || browser_nn6) oFreezeLayer.style.height = document.body.offsetHeight + "px";
+
+	    oFreezeLayer.style.width = "100%";
+	    document.body.appendChild(oFreezeLayer);
+	    document.getElementById('confId').style.display = 'block';
+	{rdelim}
+
+</script>

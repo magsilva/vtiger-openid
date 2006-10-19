@@ -29,9 +29,53 @@ $focus = new HelpDesk();
 
 setObjectValuesFromRequest(&$focus);
 
+global $adb;
+//Added to update the ticket history
+//Before save we have to construct the update log. 
+$mode = $_REQUEST['mode'];
+$fldvalue = $focus->constructUpdateLog(&$focus, $mode, $_REQUEST['assigned_group_name'], $_REQUEST['assigntype']);
+$fldvalue = from_html($adb->formatString('vtiger_troubletickets','update_log',$fldvalue),($mode == 'edit')?true:false);
+
 $focus->save("HelpDesk");
+
+//After save the record, we should update the log
+$adb->query("update vtiger_troubletickets set update_log=$fldvalue where ticketid=".$focus->id);
+
+//Added to retrieve the existing attachment of the ticket and save it for the new duplicated ticket
+if($_FILES['filename']['name'] == '' && $_REQUEST['mode'] != 'edit' && $_REQUEST['old_id'] != '')
+{
+        $sql = "select vtiger_attachments.* from vtiger_attachments inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid=vtiger_attachments.attachmentsid where vtiger_seattachmentsrel.crmid= ".$_REQUEST['old_id'];
+        $result = $adb->query($sql);
+        if($adb->num_rows($result) != 0)
+	{
+                $attachmentid = $adb->query_result($result,0,'attachmentsid');
+		$filename = $adb->query_result($result,0,'name');
+		$filetype = $adb->query_result($result,0,'type');
+		$filepath = $adb->query_result($result,0,'path');
+
+		$new_attachmentid = $adb->getUniqueID("vtiger_crmentity");
+		$date_var = date('YmdHis');
+
+		$upload_filepath = decideFilePath();
+
+		//Read the old file contents and write it as a new file with new attachment id
+		$handle = @fopen($upload_filepath.$new_attachmentid."_".$filename,'w');
+		fputs($handle, file_get_contents($filepath.$attachmentid."_".$filename));
+		fclose($handle);	
+
+		$adb->query("update vtiger_troubletickets set filename=\"$filename\" where ticketid=$focus->id");	
+		$adb->query("insert into vtiger_crmentity (crmid,setype,createdtime) values('".$new_attachmentid."','HelpDesk Attachment','".$date_var."')");
+
+		$adb->query("insert into vtiger_attachments values(".$new_attachmentid.",'".$filename."','','".$filetype."','".$upload_filepath."')");
+
+		$adb->query("insert into vtiger_seattachmentsrel values('".$focus->id."','".$new_attachmentid."')");
+	}
+}
+
+
 $return_id = $focus->id;
 
+if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
 if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
 else $return_module = "HelpDesk";
 if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
@@ -48,13 +92,13 @@ $bodysubject = ' Ticket ID : '.$focus->id.'<br> Subject : '.$_REQUEST['ticket_ti
 
 $emailoptout = 0;
 
-//To get the emailoptout field value and then decide whether send mail about the tickets or not
+//To get the emailoptout vtiger_field value and then decide whether send mail about the tickets or not
 if($focus->column_fields['parent_id'] != '')
 {
 	$parent_module = getSalesEntityType($focus->column_fields['parent_id']);
 	if($parent_module == 'Contacts')
 	{
-		$result = $adb->query("select * from contactdetails where contactid=".$focus->column_fields['parent_id']);
+		$result = $adb->query("select * from vtiger_contactdetails where contactid=".$focus->column_fields['parent_id']);
 		$emailoptout = $adb->query_result($result,0,'emailoptout');
 		$contactname = $adb->query_result($result,0,'firstname').' '.$adb->query_result($result,0,'lastname');
 		$parentname = $contactname;
@@ -62,16 +106,16 @@ if($focus->column_fields['parent_id'] != '')
 	}
 	if($parent_module == 'Accounts')
 	{
-		$result = $adb->query("select * from account where accountid=".$focus->column_fields['parent_id']);
+		$result = $adb->query("select * from vtiger_account where accountid=".$focus->column_fields['parent_id']);
 		$emailoptout = $adb->query_result($result,0,'emailoptout');
 		$parentname = $adb->query_result($result,0,'accountname');
 	}
 }
 
-//Get the status of the portal user. if the customer is active then send the portal link in the mail
+//Get the status of the vtiger_portal user. if the customer is active then send the vtiger_portal link in the mail
 if($contact_mailid != '')
 {
-	$sql = "select * from portalinfo where user_name='".$contact_mailid."'";
+	$sql = "select * from vtiger_portalinfo where user_name='".$contact_mailid."'";
 	$isactive = $adb->query_result($adb->query($sql),0,'isactive');
 }
 if($isactive == 1)
@@ -97,13 +141,17 @@ else
 	$desc .= '<br><br>Solution : <br>'.$focus->column_fields['solution'];
 	$desc .= getTicketComments($focus->id);
 
+	$desc .= '<br><br><br>';
+	$desc .= '<br><br><br>';
+	$desc .= '<br><br><br>';
+	$desc .= '<br>Regards, HelpDesk Team<br>';
 	$email_body = $desc;
 }
 $_REQUEST['return_id'] = $return_id;
 
 if($_REQUEST['product_id'] != '' && $focus->id != '' && $_REQUEST['mode'] != 'edit')
 {
-        $sql = 'insert into seticketsrel values('.$_REQUEST['product_id'].' , '.$focus->id.')';
+        $sql = 'insert into vtiger_seticketsrel values('.$_REQUEST['product_id'].' , '.$focus->id.')';
         $adb->query($sql);
 
 	if($_REQUEST['return_module'] == 'Products')
@@ -122,7 +170,7 @@ else
 {
 	$mail_status_str = "'".$to_email."'=0&&&";
 }
-//added condition to check the emailoptout(this is for contacts and accounts.)
+//added condition to check the emailoptout(this is for contacts and vtiger_accounts.)
 if($emailoptout == 0)
 {
 	//send mail to parent
@@ -146,14 +194,20 @@ $mail_error_status = getMailErrorString($mail_status_str);
 //code added for returning back to the current view after edit from list view
 if($_REQUEST['return_viewname'] == '') $return_viewname='0';
 if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&$mail_error_status&viewname=$return_viewname");
+header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&$mail_error_status&viewname=$return_viewname");
 
+/**	Function to get all the comments for a troubleticket
+  *	@param int $ticketid -- troubleticket id
+  *	return all the comments as a sequencial string which are related to this ticket
+**/
 function getTicketComments($ticketid)
 {
+	global $log;
+	$log->debug("Entering getTicketComments(".$ticketid.") method ...");
 	global $adb;
 
 	$commentlist = '';
-	$sql = "select * from ticketcomments where ticketid=".$ticketid;
+	$sql = "select * from vtiger_ticketcomments where ticketid=".$ticketid;
 	$result = $adb->query($sql);
 	for($i=0;$i<$adb->num_rows($result);$i++)
 	{
@@ -166,6 +220,8 @@ function getTicketComments($ticketid)
 	if($commentlist != '')
 		$commentlist = '<br><br> The comments are : '.$commentlist;
 
+	$log->debug("Exiting getTicketComments method ...");
 	return $commentlist;
 }
+
 ?>

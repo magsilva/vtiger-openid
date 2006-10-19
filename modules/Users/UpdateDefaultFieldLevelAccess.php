@@ -14,7 +14,7 @@ require_once('include/utils/UserInfoUtil.php');
 require_once('include/utils/utils.php');
 global $adb;
 
-$field_module = Array('Leads','Accounts','Contacts','Potentials','HelpDesk','Products','Notes','Emails','Activities','Events','Vendors','PriceBooks','Quotes','PurchaseOrder','SalesOrder','Invoice');
+$field_module = Array('Leads','Accounts','Contacts','Potentials','HelpDesk','Products','Notes','Emails','Calendar','Events','Vendors','PriceBooks','Quotes','PurchaseOrder','SalesOrder','Invoice','Campaigns','Faq');
 foreach($field_module as $fld_module)
 {
 	$fieldListResult = getDefOrgFieldList($fld_module);
@@ -32,20 +32,20 @@ foreach($field_module as $fld_module)
 		{
 			$visible_value = 1;
 		}
-		//Updating the Mandatory fields
+		//Updating the Mandatory vtiger_fields
 		$uitype = $adb->query_result($fieldListResult,$i,"uitype");
-		if($uitype == 2 || $uitype == 51 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
+		if($uitype == 2 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
 		{
 			$visible_value = 0; 
 		}		
 
 		//Updating the database
-		$update_query = "update def_org_field set visible=".$visible_value." where fieldid='".$fieldid."' and tabid=".$tab_id;
+		$update_query = "update vtiger_def_org_field set visible=".$visible_value." where fieldid='".$fieldid."' and tabid=".$tab_id;
 		$adb->query($update_query);
 
 	}
 }
-$loc = "Location: index.php?action=DefaultFieldPermissions&module=Users&fld_module=".$fld_module;
+$loc = "Location: index.php?action=DefaultFieldPermissions&module=Users&parenttab=Settings&fld_module=".$_REQUEST['fld_module'];
 header($loc);
 
 ?>

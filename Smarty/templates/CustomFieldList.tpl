@@ -8,155 +8,144 @@
  * All Rights Reserved.
 *
  ********************************************************************************/ *}
+<script language="JavaScript" type="text/javascript" src="include/js/customview.js"></script>
 <script language="javascript">
-function ajaxSaveResponse(response)
-{ldelim}
-        document.getElementById("cfList").innerHTML=response.responseText;
-{rdelim}
 function getCustomFieldList(customField)
 {ldelim}
-	var ajaxObj = new Ajax(ajaxSaveResponse);
 	var modulename = customField.options[customField.options.selectedIndex].value;
-	var urlstring ="module=Settings&action=CustomFieldList&fld_module="+modulename+"&parenttab=Settings&ajax=true";
-	ajaxObj.process("index.php?",urlstring);
+	$('module_info').innerHTML = '{$MOD.LBL_CUSTOM_FILED_IN} "'+modulename+'" {$APP.LBL_MODULE}';
+	new Ajax.Request(
+		'index.php',
+		{ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
+			method: 'post',
+			postBody: 'module=Settings&action=SettingsAjax&file=CustomFieldList&fld_module='+modulename+'&parenttab=Settings&ajax=true',
+			onComplete: function(response) {ldelim}
+				$("cfList").innerHTML=response.responseText;
+			{rdelim}
+		{rdelim}
+	);	
 {rdelim}
+
+{literal}
+function deleteCustomField(id, fld_module, colName, uitype)
+{
+        if(confirm("Are you sure?"))
+        {
+                document.form.action="index.php?module=Settings&action=DeleteCustomField&fld_module="+fld_module+"&fld_id="+id+"&colName="+colName+"&uitype="+uitype
+                document.form.submit()
+        }
+}
+
+function getCreateCustomFieldForm(customField,id,tabid,ui)
+{
+        var modulename = customField;
+	new Ajax.Request(
+		'index.php',
+		{queue: {position: 'end', scope: 'command'},
+			method: 'post',
+			postBody: 'module=Settings&action=SettingsAjax&file=CreateCustomField&fld_module='+customField+'&parenttab=Settings&ajax=true&fieldid='+id+'&tabid='+tabid+'&uitype='+ui,
+			onComplete: function(response) {
+				$("createcf").innerHTML=response.responseText;
+				gselected_fieldtype = '';
+			}
+		}
+	);
+
+}
+function makeFieldSelected(oField,fieldid)
+{
+	if(gselected_fieldtype != '')
+	{
+		$(gselected_fieldtype).className = 'customMnu';
+	}
+	oField.className = 'customMnuSelected';	
+	gselected_fieldtype = oField.id;	
+	selFieldType(fieldid)
+	document.getElementById('selectedfieldtype').value = fieldid;
+}
+function CustomFieldMapping()
+{
+        document.form.action="index.php?module=Settings&action=LeadCustomFieldMapping";
+        document.form.submit();
+}
+var gselected_fieldtype = '';
+{/literal}
 </script>
+<div id="createcf" style="display:block;position:absolute;width:500px;"></div>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-        {include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
-<table width="99%" border="0" cellpadding="0" cellspacing="0" align="center">
-	<tr>
-		<td class="showPanelBg" valign="top" style="padding-left:20px; "><br />
-	       	        <span class="lvtHeaderText">{$MOD.LBL_SETTINGS} &gt; {$MOD.LBL_STUDIO} &gt; {$MOD.LBL_CUSTOM_FIELD_SETTINGS} </span>
-        	        <hr noshade="noshade" size="1" />
-		</td>
-	</tr>
-	
-	<tr><td>&nbsp;</td></tr>
-	<tr>
-		<td>
-			<table width="95%" cellpadding="5" cellspacing="0" class="leadTable" align="center">
-				<tr>
-					<td style="padding:5px;border-bottom:2px dotted #CCCCCC;" width="5%" >
-						<img src="images/picklistEditor.gif" align="left" />
-					</td>
-					<td style="padding:5px;border-bottom:2px dotted #AAAAAA;">
-						<span class="genHeaderGrayBig">Custom Filed Settings</span>
-						<br />
-						<span class="big">Feature Explanation......</span>
-					</td>
+	<div align=center>
+			{include file='SetMenu.tpl'}
+			<!-- DISPLAY -->
+			{if $MODE neq 'edit'}
+			<b><font color=red>{$DUPLICATE_ERROR} </font></b>
+			{/if}
+			
+				<table class="settingsSelUITopLine" border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tbody><tr>
+					<td rowspan="2" valign="top" width="50"><img src="{$IMAGE_PATH}custom.gif" alt="Users" title="Users" border="0" height="48" width="48"></td>
+					<td class="heading2" valign="bottom"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> &gt; {$MOD.LBL_CUSTOM_FIELD_SETTINGS}</b></td>
 				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
-				<tr>
-					<td align="right"><img src="images/one.gif" /></td>
-					<td><b class="lvtHeaderText">Select Module</b></td>
-				</tr>
-				<tr>
-					<form name="selectModule">
-					<td>&nbsp;</td>
-					<td>
-						Select the CRM module to show CustomFields :
-						<select name="pick_module" class="importBox" onChange="getCustomFieldList(this)">
-        	                                	{foreach key=sel_value item=value from=$MODULES}
-                	                                	<option value="{$sel_value}">{$value}</option>
-							{/foreach}
-						</select>
-					</td>
-					</form>
-				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
-				<tr>
-					<td align="right"><img src="images/two.gif" width="29" height="31" /></td>
-					<td>
-						<b class="lvtHeaderText">Custom Fields in Leads</b>
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td>
-						<form action="index.php" method="post" name="new" id="form">
-						<input type="hidden" name="fld_module" value="{$MODULE}">
-						<input type="hidden" name="module" value="Settings">
-						<input type="hidden" name="parenttab" value="Settings">
-						<input type="hidden" name="mode">
-						<input type="hidden" name="action" value="CreateCustomField">
-						<table width="95%" border="0" cellpadding="5" cellspacing="0">
-							<tr><td align="right"><input type="button" value=" New Custom Field " onclick="fnvshNrm('orgLay')" class="classBtn"/></td></tr>
-						</table>
-						</form>
-						<div id="cfList">
-						<table style="background-color: rgb(204, 204, 204);" class="small" border="0" cellpadding="5" cellspacing="1" width="95%">
-						<tbody>
-							<tr>
-								<td class="lvtCol" width="5%">#</td>
-							        <td class="lvtCol" width="35%">Field Lable </td>
-							        <td class="lvtCol" width="50%">Field Type </td>
-								<td class="lvtCol" width="10%">Tools</td>
-							</tr>
-							{foreach item=entries key=id from=$CFENTRIES}
-							<tr class="lvtColData" onmouseover="this.className='lvtColDataHover'" onmouseout="this.className='lvtColData'" bgcolor="white">
-								{foreach item=value from=$entries}
-									<td nowrap>{$value}</td>
-								{/foreach}
-							</tr>
-							{/foreach}
-						</tbody>
-						</table><br />
-						{if $MODULE eq 'Leads'}
-						<table width="35%" style="border:1px dashed #CCCCCC;background-color:#FFFFEC;" cellpadding="5" cellspacing="0">
-							<tr>
-								<td style="padding:5px;" width="5%" >
-								<img src="themes/blue/images/mapping.gif" align="absmiddle" /> </td>
-								<td><span  class="genHeaderSmall">Filed Mapping</span><br />
-								Field Mapping allows you to ....
-								</td>
-							</tr>
-							<tr><td colspan="2" align="right"><input type="button" value=" Edit Field Mapping " class="classBtn" /></td></tr>
-						</table> 
-						{/if}
-						</div>
-					</td>
-				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
-			</table>
-		</td>
-	</tr>
-</table>
-<div id="orgLay" style="top:175px;left:275px; ">
-	<table width="100%" border="0" cellpadding="5" cellspacing="0">
-		<tr>
-			<td width="40%" align="left" class="genHeaderSmall">Add Field </td>
-			<td width="60%" align="right"><a href="javascript:fninvsh('orgLay');"><img src="{$IMAGE_PATH}close.gif" border="0"  align="absmiddle" /></a></td>
-		</tr>
-		<tr><td colspan="2"><hr /></td></tr>
-		<tr>
 
-			<td width="30%">
-				<iframe name="fieldLayer" src="index.php?module=Settings&amp;action=fieldtypes" height="170" scrolling="yes" width="150"></iframe>
-			</td>
-			<td width="70%" align="left" valign="top">
-				<table border="0" cellpadding="5" cellspacing="0" width="100%">
-        				<tr> 
-						<td class="dataLabel" nowrap="nowrap" width="30%" align="right"><b>Label : </b></td>
-						<td width="70%" align="left"><input name="fldLabel" value=""  type="text" class="txtBox"></td>
+				<tr>
+					<td class="small" valign="top">{$MOD.LBL_CREATE_AND_MANAGE_USER_DEFINED_FIELDS}</td>
+				</tr>
+				</tbody></table>
+				
+				<br>
+				<table border="0" cellpadding="10" cellspacing="0" width="100%">
+				<tbody><tr>
+				<td>
+
+				<table class="tableHeading" border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tbody><tr>
+					<td class="big" nowrap><strong><span id="module_info">{$MOD.LBL_CUSTOM_FILED_IN} "{$APP.$MODULE}" {$APP.LBL_MODULE}</span></strong> </td>
+					<td class="small" align="right">
+					{$MOD.LBL_SELECT_CF_TEXT}
+		                	<select name="pick_module" class="importBox" onChange="getCustomFieldList(this)">
+                		        {foreach key=sel_value item=value from=$MODULES}
+		                        {if $MODULE eq $sel_value}
+                	                       	{assign var = "selected_val" value="selected"}
+		                        {else}
+                        	                {assign var = "selected_val" value=""}
+                                	{/if}
+	                                <option value="{$sel_value}" {$selected_val}>{$APP.$value}</option>
+        		                {/foreach}
+			                </select>
+					</td>
 					</tr>
+				</tbody>
 				</table>
-			</td>
-		</tr>
-		<tr><td style="border-bottom:1px dashed #CCCCCC;" colspan="2">&nbsp;</td></tr>
-		<tr>
-			<td colspan="2" align="center">
-				<input type="button" name="save" value=" &nbsp;Save&nbsp; " class="classBtn" />&nbsp;&nbsp;
-				<input type="button" name="cancel" value=" Cancel " class="classBtn" onclick="fninvsh('orgLay');" />
-			</td>
+				<div id="cfList">
+                                {include file="CustomFieldEntries.tpl"}
+                </div>	
+			<table border="0" cellpadding="5" cellspacing="0" width="100%">
+			<tr>
 
-		</tr>
-		<tr><td colspan="2" style="border-top:1px dashed #CCCCCC;">&nbsp;</td></tr>
-	</table>
-</div>
-</td>
-</tr>
+		  	<td class="small" align="right" nowrap="nowrap"><a href="#top">{$MOD.LBL_SCROLL}</a></td>
+			</tr>
+			</table>
+			</td>
+			</tr>
+			</table>
+		<!-- End of Display -->
+		
+		</td>
+        </tr>
+        </table>
+        </td>
+        </tr>
+        </table>
+        </div>
+
+        </td>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+        </tr>
+</tbody>
 </table>
-        {include file='SettingsSubMenu.tpl'}
+<br>

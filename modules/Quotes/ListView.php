@@ -37,16 +37,26 @@ $focus = new Quote();
 $smarty = new vtigerCRM_Smarty;
 $other_text = Array();
 
-//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['QUOTES_ORDER_BY'] != '')?($_SESSION['QUOTES_ORDER_BY']):($focus->default_order_by));
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
 
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['QUOTES_SORT_ORDER'] != '')?($_SESSION['QUOTES_SORT_ORDER']):($focus->default_sort_order));
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to Change/Delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
+//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
+$sorder = $focus->getSortOrder();
+$order_by = $focus->getOrderBy();
 
 $_SESSION['QUOTES_ORDER_BY'] = $order_by;
 $_SESSION['QUOTES_SORT_ORDER'] = $sorder;
@@ -54,17 +64,11 @@ $_SESSION['QUOTES_SORT_ORDER'] = $sorder;
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
-
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
 	// we have a query
-	$url_string .="&query=true";
-	
-	if (isset($_REQUEST['subject'])) $subject = $_REQUEST['subject'];
-	if (isset($_REQUEST['potentialname'])) $potentialname = $_REQUEST['potentialname'];
-	if (isset($_REQUEST['quotestage'])) $quotestage = $_REQUEST['quotestage'];
-	if (isset($_REQUEST['accountname'])) $accountname = $_REQUEST['accountname'];
-	
+	$url_string .="&query=true".$ustring;
 	$log->info("Here is the where clause for the list view: $where");
+	$smarty->assign("SEARCH_URL",$url_string);
 
 }
 
@@ -74,13 +78,16 @@ $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
 //<<<<<customview>>>>>
+$smarty->assign("CHANGE_OWNER",getUserslist());
 
-
-if(isPermitted('Quotes',2,'') == 'yes')
+if(isPermitted('Quotes','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
 }
-
+if(isPermitted('Quotes','EditView','') == 'yes')
+{
+        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+}
 if($viewnamedesc['viewname'] == 'All')
 {
 	$smarty->assign("ALL", 'All');
@@ -131,23 +138,17 @@ if(isset($order_by) && $order_by != '')
         }
 }
 
-$list_result = $adb->query($query);
-
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query("select count(*) count ".substr($query, strpos($query,'FROM'),strlen($query)));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-        $start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-        $start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
 
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
@@ -159,6 +160,13 @@ $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
 
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+$list_result = $adb->query($query. " limit ".$limit_start_rec.",".$list_max_entries_per_page);
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
@@ -178,10 +186,19 @@ $smarty->assign("SELECT_SCRIPT", $view_script);
 
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Quotes","index",$viewid);
 $alphabetical = AlphabeticalSearch($currentModule,'index','subject','true','basic',"","","","",$viewid);
+$fieldnames = getAdvSearchfields($module);
+$criteria = getcriteria_options();
+$smarty->assign("CRITERIA", $criteria);
+$smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
+$smarty->assign("CUSTOMVIEW_OPTION",$customviewcombo_html);
+$smarty->assign("VIEWID", $viewid);
+$smarty->assign("BUTTONS", $other_text);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");
 else	

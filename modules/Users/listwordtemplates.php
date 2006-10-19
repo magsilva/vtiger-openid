@@ -13,7 +13,7 @@ require_once('Smarty_setup.php');
 require_once('include/database/PearDatabase.php');
 
    global $adb;
-   $sql = "select templateid, module, description, filename, filesize, filetype from wordtemplates order by filename ASC";
+   $sql = "select templateid, module, description, filename, filesize, filetype from vtiger_wordtemplates order by filename ASC";
    $result = $adb->query($sql);
 
 $edit="Edit  ";
@@ -48,6 +48,7 @@ global $current_language;
 $smod_strings = return_module_language($current_language,'Settings');
 $smarty->assign("MOD", $smod_strings);
 $smarty->assign("UMOD", $mod_strings);
+$smarty->assign("PARENTTAB", $_REQUEST['parenttab']);
 $smarty->assign("IMAGE_PATH",$image_path);
 
 

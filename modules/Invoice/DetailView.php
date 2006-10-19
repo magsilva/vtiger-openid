@@ -26,7 +26,8 @@ require_once('modules/Invoice/Invoice.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
-global $mod_strings,$app_strings,$currentModule,$theme;
+require_once('user_privileges/default_module_view.php');
+global $mod_strings,$app_strings,$currentModule,$theme,$singlepane_view;
 $focus = new Invoice();
 
 if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) {
@@ -59,31 +60,44 @@ $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_st
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
-$smarty->assign("BLOCKS", getBlocks("Invoice","detail_view",'',$focus->column_fields)); 
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields)); 
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
-$smarty->assign("SINGLE_MOD", "Invoice");
+$smarty->assign("SINGLE_MOD", 'Invoice');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Invoice",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Invoice","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
 $smarty->assign("CREATEPDF","permitted");
 
-if(isPermitted("Invoice",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Invoice","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
-
-//Security check for related list
-global $profile_id;
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
 
 //Get the associated Products and then display above Terms and Conditions
 $smarty->assign("ASSOCIATED_PRODUCTS",getDetailAssociatedProducts('Invoice',$focus));
 
-$smarty->display("DetailView.tpl");
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+$tabid = getTabid("Invoice");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
+$smarty->display("Inventory/InventoryDetailView.tpl");
 
 ?>

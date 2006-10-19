@@ -25,7 +25,7 @@ require_once('modules/Contacts/Contact.php');
 require_once('modules/Accounts/Account.php');
 require_once('modules/Campaigns/Campaign.php');
 require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Activities/Activity.php');
+require_once('modules/Calendar/Activity.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
 require_once('include/language/en_us.lang.php');
@@ -42,6 +42,7 @@ require_once('modules/SalesOrder/SalesOrder.php');
 require_once('modules/PurchaseOrder/PurchaseOrder.php');
 require_once('modules/Invoice/Invoice.php');
 require_once('modules/Emails/Email.php');
+require_once('include/utils/InventoryUtils.php'); //Included to save inventory related products in demo data
 
 global $first_name_array;
 global $first_name_count;
@@ -54,6 +55,7 @@ global $street_address_count;
 global $city_array;
 global $city_array_count;
 global $campaign_name_array,$campaign_type_array,$campaign_status_array;
+global $adb;
  $db = new PearDatabase();
 
 function add_digits($quantity, &$string, $min = 0, $max = 9)
@@ -81,9 +83,9 @@ function create_date()
 {
 	$date = "";
 	$date .= "2006";
-	$date .= "/";
+	$date .= "-";
 	$date .= rand(1,9);
-	$date .= "/";
+	$date .= "-";
 	$date .= rand(1,28);
 	
 	return $date;
@@ -120,8 +122,9 @@ $assigned_user_id = $seed_user->retrieve_user_id($assigned_user_name);
 global $current_user;
 
 $current_user = new User();
-$result = $current_user->retrieve($assigned_user_id);
+$result = $current_user->retrieve_entity_info($assigned_user_id,'Users');
 
+$tagkey = 1;
 
 // Get _dom arrays
 $comboFieldNames = Array('leadsource'=>'leadsource_dom'
@@ -135,6 +138,8 @@ $comboFieldArray = getComboArray($comboFieldNames);
 //$adb->println("PSD assignid=".$assigned_user_id);
 $adb->println("company_name_array");
 $adb->println($company_name_array);
+
+$cloudtag = Array ('SO_vendtl', 'X-CEED', 'X-CEED', 'vtiger_50usr');
 
 for($i = 0; $i < $company_name_count; $i++)
 {
@@ -174,6 +179,18 @@ for($i = 0; $i < $company_name_count; $i++)
 	$account->save("Accounts");
 	
 	$account_ids[] = $account->id;
+	
+	if ($i > 3)
+	{
+		$freetag = $adb->getUniqueId('vtiger_freetags');
+		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[1]', '$cloudtag[1]')";
+		$res = $adb->query($query);
+
+		$date = $adb->formatDate(date('YmdHis')); 
+		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$account->id.", $date, 'Accounts')";
+		$result = $adb->query($query_tag);
+	}
+
 
 //	$adb->println("PSD Account [".$account->id."] - ".$account_name);
 
@@ -192,8 +209,9 @@ for($i = 0; $i < $company_name_count; $i++)
 
 //      $key = array_rand($app_list_strings['sales_stage_dom']);
 //      $opp->sales_stage = $app_list_strings['sales_stage_dom'][$key];
-	$key = array_rand($comboFieldArray['sales_stage_dom']);
-	$opp->column_fields["sales_stage"] = $comboFieldArray['sales_stage_dom'][$key];
+	$comboSalesStageArray = Array ("Closed Won");
+	$key = array_rand($comboSalesStageArray);
+	$opp->column_fields["sales_stage"] = $comboSalesStageArray[$key];
 	
 //      $key = array_rand($app_list_strings['opportunity_type_dom']);
 //      $opp->opportunity_type = $app_list_strings['opportunity_type_dom'][$key];
@@ -265,12 +283,22 @@ for($i=0; $i<10; $i++)
 	$contact_ids[] = $contact->id;
 
 	
+	if ($i > 8)
+	{
+		$freetag = $adb->getUniqueId('vtiger_freetags');
+		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[2]', '$cloudtag[2]')";
+		$res1 = $adb->query($query);
+
+		$date = $adb->formatDate(date('YmdHis')); 
+		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$contact->id.", $date, 'Contacts')";
+		$result1 = $adb->query($query_tag);
+	}
 	// This assumes that there will be one opportunity per company in the seed data.
 	$opportunity_key = array_rand($opportunity_ids);
 	//$query = "insert into opportunities_contacts set id='".create_guid()."', contact_id='$contact->id', contact_role='".$app_list_strings['opportunity_relationship_type_default_key']."', opportunity_id='".$opportunity_ids[$opportunity_key]."'";
 	//$db->query($query, true, "unable to create seed links between opportunities and contacts");
 
-	$query = "insert into contpotentialrel ( contactid, potentialid ) values (".$contact->id.",".$opportunity_ids[$opportunity_key].")";
+	$query = "insert into vtiger_contpotentialrel ( contactid, potentialid ) values (".$contact->id.",".$opportunity_ids[$opportunity_key].")";
 	$db->query($query);
 
 //	$adb->println("PSD Contact [".$contact->id."] - account[".$account_ids[$account_key]."] - potential[".$opportunity_ids[$opportunity_key]."]");
@@ -326,6 +354,7 @@ for($i=0; $i<10; $i++)
 	// Fill in a bogus address
 	$key = array_rand($street_address_array);
 	//$lead->address_street = $street_address_array[$key];
+	$lead->column_fields["lane"] = $street_address_array[$key];
 	$key = array_rand($city_array);
 	$lead->column_fields["city"] = $city_array[$key];
 	$lead->column_fields["state"] = "CA";
@@ -387,7 +416,7 @@ for($i=0; $i<10; $i++)
 
 	
 	// Fill in a bogus address
-	$vendor->column_fields["treet"] = $street_address_array[rand(0,$street_address_count-1)]; 
+	$vendor->column_fields["street"] = $street_address_array[rand(0,$street_address_count-1)]; 
 	$key = array_rand($city_array);
 	$vendor->column_fields["city"] = $city_array[$key];
 	$vendor->column_fields["state"] = "CA";
@@ -425,7 +454,7 @@ for($i=0; $i<10; $i++)
 		$category 	= 	"Hardware";		
 		$website 	=	"";
 		$manufacturer	= 	"";
-		$commission_rate=	rand(10,99);
+		$commission_rate=	rand(10,20);
 		$unit_price	=	rand(100,999);
 		$product_image_name = '';
 	}
@@ -434,13 +463,13 @@ for($i=0; $i<10; $i++)
 		$account_key = array_rand($account_ids);
 		$product->column_fields["parent_id"]=$account_ids[$account_key];
 
-		$usageunit	=	"";
-		$qty_per_unit	=	"";
-		$qty_in_stock	=	"";
+		$usageunit	=	"Each";
+		$qty_per_unit	=	1;
+		$qty_in_stock	=	rand(10000, 99999);
 		$category 	= 	"Software";	
 		$website 	=	"www.vtiger.com";
 		$manufacturer	= 	"vtiger";
-		$commission_rate=	0;
+		$commission_rate=	rand(1,10);
 		$unit_price	=	$subscription_rate[$i];
 		$product_image_name = $product_image_array[$i];
 	}
@@ -546,10 +575,8 @@ for($i=0;$i<12;$i++)
 
 $sub_array = array ("Prod_Quote", "Cont_Quote", "SO_Quote", "PO_Quote", "Vendor_Quote");
 $stage_array = array ("Created", "Reviewed", "Delivered", "Accepted" , "Rejected");
-$total_array = array ("2085.014", "7985.257", "5748.981", "1245.478", "410.530");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
-$invmgr_array = array ("admin", "user");
-
+$validtill_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
 for($i=0;$i<5;$i++)
 {
 	$quote = new Quote();
@@ -564,21 +591,64 @@ for($i=0;$i<5;$i++)
 	$rand = array_rand($num_array);
 	$quote->column_fields["subject"] = $sub_array[$i];
 	$quote->column_fields["quotestage"] = $stage_array[$i];	
-	$quote->column_fields["hdnGrandTotal"] = $total_array[$i];
 	$quote->column_fields["carrier"] = $carrier_array[$i];
-	$quote->column_fields["inventorymanager"] = $invmgr_array[$i];
+	$quote->column_fields["validtill"] = $validtill_array[$i];
 
+	$quote->column_fields["bill_street"] = $street_address_array[rand(0,$street_address_count-1)];
+	$quote->column_fields["bill_city"] = $city_array[rand(0,$city_array_count-1)];
+	$quote->column_fields["bill_state"] = "CA";
+	$quote->column_fields["bill_code"] = rand(10000, 99999);
+	$quote->column_fields["bill_country"] = 'USA';	
+
+	$quote->column_fields["ship_street"] = $account->column_fields["bill_street"];
+	$quote->column_fields["ship_city"] = $account->column_fields["bill_city"];
+	$quote->column_fields["ship_state"] = $account->column_fields["bill_state"];
+	$quote->column_fields["ship_code"] = $account->column_fields["bill_code"];
+	$quote->column_fields["ship_country"] = $account->column_fields["bill_country"];	
+
+	
 	$quote->save("Quotes");
 
 	$quote_ids[] = $quote->id;
+
+	$product_key = array_rand($product_ids); 
+	$productid = $product_ids[$product_key];
+
+	//set the inventory product details in request then just call the saveInventoryProductDetails function 
+	$_REQUEST['totalProductCount']	 = 1;
+
+	$_REQUEST['hdnProductId1'] = $productid;
+	$_REQUEST['qty1'] = $qty = 1;
+	$_REQUEST['listPrice1'] = $listprice = 130;
+	$_REQUEST['comment1'] = "This is test comment for product of Quotes";
+	
+	$_REQUEST['deleted1'] = 0;
+	$_REQUEST['discount_type1'] = 'amount';
+	$_REQUEST['discount_amount1'] = $discount_amount = '20';
+
+	$_REQUEST['taxtype'] = $taxtype = 'individual';
+	$_REQUEST['subtotal'] = $subtotal = $qty*$listprice-$discount_amount;
+	$_REQUEST['discount_type_final'] = 'amount';
+	$_REQUEST['discount_amount_final'] = $discount_amount_final = '10';
+	
+	$_REQUEST['shipping_handling_charge'] = $shipping_handling_charge = '50';
+	$_REQUEST['adjustmenttype'] = '+';
+	$_REQUEST['adjustment'] = $adjustment = '10';
+
+	$_REQUEST['total'] = $subtotal-$discount_amount_final+$shipping_handling_charge+$adjustment;
+
+	//Upto this added to set the request values which will be used to save the inventory product details
+
+	//Now call the saveInventoryProductDetails function
+	saveInventoryProductDetails(&$quote, 'Quotes');
 }
 
 //Populate SalesOrder Data
 
 $subj_array = array ("SO_vtiger", "SO_zoho", "SO_vtiger5usrp", "SO_vt100usrpk", "SO_vendtl");
-$status_array = array ("Created",  "Delivered", "Approved" , "Cancelled");
-$sototal_array = array ("2085.014", "7985.257", "5748.981", "1245.478", "410.530");
+$status_array = array ("Created",  "Delivered", "Approved" , "Cancelled" , "Created");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
+$duedate_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
 
 for($i=0;$i<5;$i++)
 {
@@ -596,10 +666,57 @@ for($i=0;$i<5;$i++)
 	$so->column_fields["sostatus"] = $status_array[$i];	
 	$so->column_fields["hdnGrandTotal"] = $sototal_array[$i];
 	$so->column_fields["carrier"] = $carrier_array[$i];
+	$so->column_fields["duedate"] = $duedate_array[$i];
 
+	$so->column_fields["bill_street"] = $street_address_array[rand(0,$street_address_count-1)];
+	$so->column_fields["bill_city"] = $city_array[rand(0,$city_array_count-1)];
+	$so->column_fields["bill_state"] = "CA";
+	$so->column_fields["bill_code"] = rand(10000, 99999);
+	$so->column_fields["bill_country"] = 'USA';	
+
+	$so->column_fields["ship_street"] = $account->column_fields["bill_street"];
+	$so->column_fields["ship_city"] = $account->column_fields["bill_city"];
+	$so->column_fields["ship_state"] = $account->column_fields["bill_state"];
+	$so->column_fields["ship_code"] = $account->column_fields["bill_code"];
+	$so->column_fields["ship_country"] = $account->column_fields["bill_country"];	
+
+	
 	$so->save("SalesOrder");
 
 	$salesorder_ids[] = $so->id;
+
+	$product_key = array_rand($product_ids); 
+	$productid = $product_ids[$product_key];
+
+	//set the inventory product details in request then just call the saveInventoryProductDetails function 
+	$_REQUEST['totalProductCount']	 = 1;
+
+	$_REQUEST['hdnProductId1'] = $productid;
+	$_REQUEST['qty1'] = $qty = 1;
+	$_REQUEST['listPrice1'] = $listprice = 1230;
+	$_REQUEST['comment1'] = "This is test comment for product of SalesOrder";
+	
+	$_REQUEST['deleted1'] = 0;
+	$_REQUEST['discount_type1'] = 'amount';
+	$_REQUEST['discount_amount1'] = $discount_amount = '200';
+
+	$_REQUEST['taxtype'] = $taxtype = 'individual';
+	$_REQUEST['subtotal'] = $subtotal = $qty*$listprice-$discount_amount;
+	$_REQUEST['discount_type_final'] = 'amount';
+	$_REQUEST['discount_amount_final'] = $discount_amount_final = '100';
+	
+	$_REQUEST['shipping_handling_charge'] = $shipping_handling_charge = '50';
+	$_REQUEST['adjustmenttype'] = '+';
+	$_REQUEST['adjustment'] = $adjustment = '100';
+
+	$_REQUEST['total'] = $subtotal-$discount_amount_final+$shipping_handling_charge+$adjustment;
+
+	//Upto this added to set the request values which will be used to save the inventory product details
+
+	//Now call the saveInventoryProductDetails function
+	saveInventoryProductDetails(&$so, 'SalesOrder');
+
+
 }
 
 
@@ -607,9 +724,9 @@ for($i=0;$i<5;$i++)
 
 $psubj_array = array ("PO_vtiger", "PO_zoho", "PO_vtiger5usrp", "PO_vt100usrpk", "PO_vendtl");
 $pstatus_array = array ("Created",  "Delivered", "Approved" , "Cancelled", "Recieved Shipment");
-$pototal_array = array ("2085.014", "7985.257", "5748.981", "1245.478", "410.530");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
 $trkno_array = array ("po1425", "po2587", "po7974", "po7979", "po6411"); 
+$duedate_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
 
 for($i=0;$i<5;$i++)
 {
@@ -623,20 +740,66 @@ for($i=0;$i<5;$i++)
 	$rand = array_rand($num_array);
 	$po->column_fields["subject"] = $psubj_array[$i];
 	$po->column_fields["postatus"] = $pstatus_array[$i];	
-	$po->column_fields["hdnGrandTotal"] = $pototal_array[$i];
 	$po->column_fields["carrier"] = $carrier_array[$i];
 	$po->column_fields["tracking_no"] = $trkno_array[$i];
+	$po->column_fields["duedate"] = $duedate_array[$i];
+
+	$po->column_fields["bill_street"] = $street_address_array[rand(0,$street_address_count-1)];
+	$po->column_fields["bill_city"] = $city_array[rand(0,$city_array_count-1)];
+	$po->column_fields["bill_state"] = "CA";
+	$po->column_fields["bill_code"] = rand(10000, 99999);
+	$po->column_fields["bill_country"] = 'USA';	
+
+	$po->column_fields["ship_street"] = $account->column_fields["bill_street"];
+	$po->column_fields["ship_city"] = $account->column_fields["bill_city"];
+	$po->column_fields["ship_state"] = $account->column_fields["bill_state"];
+	$po->column_fields["ship_code"] = $account->column_fields["bill_code"];
+	$po->column_fields["ship_country"] = $account->column_fields["bill_country"];	
+		
 	
 	$po->save("PurchaseOrder");
 
 	$purchaseorder_ids[] = $po->id;
+
+	$product_key = array_rand($product_ids); 
+	$productid = $product_ids[$product_key];
+
+	//set the inventory product details in request then just call the saveInventoryProductDetails function 
+	$_REQUEST['totalProductCount']	 = 1;
+
+	$_REQUEST['hdnProductId1'] = $productid;
+	$_REQUEST['qty1'] = $qty = 1;
+	$_REQUEST['listPrice1'] = $listprice = 2200;
+	$_REQUEST['comment1'] = "This is test comment for product of PurchaseOrder";
+	
+	$_REQUEST['deleted1'] = 0;
+	$_REQUEST['discount_type1'] = 'amount';
+	$_REQUEST['discount_amount1'] = $discount_amount = '200';
+
+	$_REQUEST['taxtype'] = $taxtype = 'individual';
+	$_REQUEST['subtotal'] = $subtotal = $qty*$listprice-$discount_amount;
+	$_REQUEST['discount_type_final'] = 'amount';
+	$_REQUEST['discount_amount_final'] = $discount_amount_final = '100';
+	
+	$_REQUEST['shipping_handling_charge'] = $shipping_handling_charge = '50';
+	$_REQUEST['adjustmenttype'] = '+';
+	$_REQUEST['adjustment'] = $adjustment = '100';
+
+	$_REQUEST['total'] = $subtotal-$discount_amount_final+$shipping_handling_charge+$adjustment;
+
+	//Upto this added to set the request values which will be used to save the inventory product details
+
+	//Now call the saveInventoryProductDetails function
+	saveInventoryProductDetails(&$po, 'PurchaseOrder');
+
+
 }
 
 //Populate Invoice Data
 
 $isubj_array = array ("vtiger_invoice201", "zoho_inv7841", "vtiger5usrp_invoice71134", "vt100usrpk_inv113", "vendtl_inv214");
 $istatus_array = array ("Created",  "Sent", "Approved" , "Credit Invoice", "Paid");
-$itotal_array = array ("2085.014", "7985.257", "5748.981", "1245.478", "410.530");
+$itotal_array = array ("4842.000", "4842.000", "4842.000", "4842.000", "4842.000");
 
 for($i=0;$i<5;$i++)
 {
@@ -644,7 +807,7 @@ for($i=0;$i<5;$i++)
 	
 	$invoice->column_fields["assigned_user_id"] = $assigned_user_id;
 	$account_key = array_rand($account_ids);
-	$invoice->column_fields["accountid"] = $account_ids[$account_key];
+	$invoice->column_fields["account_id"] = $account_ids[$account_key];
 	$so_key = array_rand($salesorder_ids);
 	$invoice->column_fields["salesorder_id"] = $salesorder_ids[$so_key];
 	$contact_key = array_rand($contact_ids);
@@ -653,10 +816,65 @@ for($i=0;$i<5;$i++)
 	$invoice->column_fields["subject"] = $isubj_array[$i];
 	$invoice->column_fields["invoicestatus"] = $istatus_array[$i];	
 	$invoice->column_fields["hdnGrandTotal"] = $itotal_array[$i];
+
+	$invoice->column_fields["bill_street"] = $street_address_array[rand(0,$street_address_count-1)];
+	$invoice->column_fields["bill_city"] = $city_array[rand(0,$city_array_count-1)];
+	$invoice->column_fields["bill_state"] = "CA";
+	$invoice->column_fields["bill_code"] = rand(10000, 99999);
+	$invoice->column_fields["bill_country"] = 'USA';	
+
+	$invoice->column_fields["ship_street"] = $account->column_fields["bill_street"];
+	$invoice->column_fields["ship_city"] = $account->column_fields["bill_city"];
+	$invoice->column_fields["ship_state"] = $account->column_fields["bill_state"];
+	$invoice->column_fields["ship_code"] = $account->column_fields["bill_code"];
+	$invoice->column_fields["ship_country"] = $account->column_fields["bill_country"];	
+	
 	
 	$invoice->save("Invoice");
 
 	$invoice_ids[] = $invoice->id;
+	if ($i > 3)
+	{
+		$freetag = $adb->getUniqueId('vtiger_freetags');
+		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[0]', '$cloudtag[0]')";
+		$res_inv = $adb->query($query);
+
+		$date = $adb->formatDate(date('YmdHis')); 
+		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$invoice->id.", $date, 'Invoice')";
+		$result_inv = $adb->query($query_tag);
+	}
+
+	$product_key = array_rand($product_ids); 
+	$productid = $product_ids[$product_key];
+
+	//set the inventory product details in request then just call the saveInventoryProductDetails function 
+	$_REQUEST['totalProductCount']	 = 1;
+
+	$_REQUEST['hdnProductId1'] = $productid;
+	$_REQUEST['qty1'] = $qty = 1;
+	$_REQUEST['listPrice1'] = $listprice = 4300;
+	$_REQUEST['comment1'] = "This is test comment for product of Invoice";
+	
+	$_REQUEST['deleted1'] = 0;
+	$_REQUEST['discount_type1'] = 'amount';
+	$_REQUEST['discount_amount1'] = $discount_amount = '300';
+
+	$_REQUEST['taxtype'] = $taxtype = 'individual';
+	$_REQUEST['subtotal'] = $subtotal = $qty*$listprice-$discount_amount;
+	$_REQUEST['discount_type_final'] = 'amount';
+	$_REQUEST['discount_amount_final'] = $discount_amount_final = '100';
+	
+	$_REQUEST['shipping_handling_charge'] = $shipping_handling_charge = '50';
+	$_REQUEST['adjustmenttype'] = '+';
+	$_REQUEST['adjustment'] = $adjustment = '100';
+
+	$_REQUEST['total'] = $subtotal-$discount_amount_final+$shipping_handling_charge+$adjustment;
+
+	//Upto this added to set the request values which will be used to save the inventory product details
+
+	//Now call the saveInventoryProductDetails function
+	saveInventoryProductDetails(&$invoice, 'Invoice');
+
 }
 
 //Populate RSS Data
@@ -666,9 +884,15 @@ for($i=0;$i<5;$i++)
 
 //Populate Email Data
 
-$esubj_array =  array ("Vtiger Releases 5.0 Alpha4", "Try Zoho Writer", "Hi There!!!", "Welcome to Open Source", "SOS Vtiger");
+$esubj_array =  array ("Vtiger 5 Released", "Try vtigercrm!", "Hi There!!!", "Welcome to Open Source", "Help needed in customization of Vtiger");
 $startdate_array =  array ("2006-1-2","2003-3-4","2003-4-5","2001-2-1","2005-8-8");
 $filename_array = array ("vtiger5alpha.tar.gz", "zohowriter.zip", "hi.doc", "welcome.pps", "sos.doc");
+
+$to_array = array("a@a.com","b@b.com", "tester@testvtiger.com","xanth@yaz.com","violet@bing.com");
+$cc_array = array("andrewa@a.com","casterb@b.com", "indomine@variancevtiger.com","becker@nosbest.com","electra@violet.com");
+$bcc_array = array("nathan@nathantests.com","jeff@karl1.com", "isotope@uranium.com","bunny@bugs.com","explosive@dud.com");
+$from_array = array("harvest@zss.com","rain@sunshine.com", "gloom@rainyday.com");
+$body_array = array("This is a good product! Have a go at it! ","Nice to have you visit us, very nice of you. Stay for sometime and have a look at our product. I am sure you will like it", "This will take some time to fix. Can you provide me more details please?","What a cool tool! I wish I had found it earlier. Oh it has a lot of my friends name in it too! I too can contribute. But how?","Urgent. I need this done last week! Guys, you are the ones I am depending on. Do something!");
 
 for($i=0;$i<5;$i++)
 {
@@ -682,11 +906,12 @@ for($i=0;$i<5;$i++)
 	$email->column_fields["date_start"] = $startdate_array[$i];
 	$email->column_fields["semodule"] = 'Tasks';
 	$email->column_fields["activitytype"] = 'Emails';
-	
+	$email->column_fields["description"] = $body_array[$i];	
 	$email->save("Emails");
-
 	$email_ids[] = $email->id;
 	
+	$query = "insert into vtiger_emaildetails(emailid,from_email,to_email,cc_email,bcc_email) values (".$email->id.", '".$from_array[$i]."', '".$to_array[$i]."','".$cc_array[$i]."','".$bcc_array[$i] ."')";
+		$res = $adb->query($query);
 }
 
 
@@ -708,24 +933,27 @@ for($i=0;$i<12;$i++)
 	$pricebook_ids[] = $pricebook ->id;
 }
 
+
 //Populate Notes Data
 
-$notes_array = array ("Cont_Notes", "Prod_Notes", "PB_Notes", "Vendor_Notes", "Invoice_Notes", "Task_Notes", "Event_Notes", "Email_Notes", "Rss_Notes", "Qt_Notes", "Notes_Customer", "Notes_PO");
-$att_array = array ("cont.doc", "prod.txt", "pb.doc", "vendor.xls", "invoice.xls", "task.doc", "ev.xls", "em.txt", "rss.txt", "qt.txt", "cust.doc", "PO.doc");
+$notes_array = array ("Cont_Notes", "Prod_Notes", "Vendor_Notes", "Invoice_Notes", "Task_Notes", "Event_Notes", "Email_Notes");
 
-for($i=0;$i<12;$i++)
+for($i=0;$i<7;$i++)
 {
 	$notes = new Note();
 
 	$rand = array_rand($num_array);
 	$contact_key = array_rand($contact_ids);
         $notes->column_fields["contact_id"] 	= 	$contact_ids[$contact_key];
-	$notes->column_fields["title"]		=	$notes_array[$i];
-	$notes->column_fields["filename"]       =	$att_array[$i];
+	$notes->column_fields["notes_title"]		=	$notes_array[$i];
 
 	$notes->save("Notes");
 	$notes_ids[] = $notes ->id;
 	
+	$product_key = array_rand($product_ids);
+        $query = "insert into vtiger_senotesrel (crmid, notesid) values (".$product_ids[$product_key].", ".$notes->id.")";
+	$db->query($query);
+		
 }
 
 
@@ -757,19 +985,28 @@ for($i=0;$i<5;$i++)
 	//$rand_key = array_rand($s);$contact_key = array_rand($contact_ids);
         $notes->column_fields["contact_id"] 	= 	$contact_ids[$contact_key];
 	$helpdesk->column_fields["ticket_title"]	= $ticket_title_array[$i];
-	
-        $helpdesk->column_fields["assigned_user_id"] = $contact_key = array_rand($contact_ids);
-        $notes->column_fields["contact_id"] 	= 	$contact_ids[$contact_key];$assigned_user_id;
-
+        $helpdesk->column_fields["assigned_user_id"] = $assigned_user_id;
 	
 	$helpdesk->save("HelpDesk");
 	$helpdesk_ids[] = $helpdesk->id;
+	
+	if ($i > 3)
+	{
+		$freetag = $adb->getUniqueId('vtiger_freetags');
+		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[3]', '$cloudtag[3]')";
+		$res_tkt = $adb->query($query);
+
+		$date = $adb->formatDate(date('YmdHis')); 
+		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$helpdesk->id.", $date, 'HelpDesk')";
+		$result_tkt = $adb->query($query_tag);
+	}
+
 }
 
 // Populate Activities Data
 $task_array=array("Tele Conference","Call user - John","Send Fax to Mary Smith");
 $event_array=array("","","Call Smith","Team Meeting","Call Richie","Meeting with Don");
-$task_status_array=array("Not Started","In Progress","Completed");
+$task_status_array=array("Planned","In Progress","Completed");
 $task_priority_array=array("High","Medium","Low");
 $visibility=array("","","Private","Public","Private","Public");
 
@@ -780,7 +1017,7 @@ for($i=0;$i<6;$i++)
 	$rand_num=array_rand($num_array);
 
 	$rand_date = & create_date();
-	$en=explode("/",$rand_date);
+	$en=explode("-",$rand_date);
 	if($en[1]<10)
 		$en[1]="0".$en[1];
 	if($en[2]<10)
@@ -791,11 +1028,17 @@ for($i=0;$i<6;$i++)
 
 	$start_time_hr=rand(00,23);
 	$start_time_min=rand(00,59);
+	$end_time_hr=rand(00,23);
+	$end_time_min=rand(00,59);
 	if($start_time_hr<10)
 		$start_time_hr="0".$start_time_hr;
 	if($start_time_min<10)
 		$start_time_min="0".$start_time_min;
-
+	if($end_time_hr<10)
+		$end_time_hr="0".$end_time_hr;
+	if($end_time_min<10)
+		$end_time_min="0".$end_time_min;
+	$end_time=$end_time_hr.":".$end_time_min;
 	$start_time=$start_time_hr.":".$start_time_min;
 	if($i<2)
 	{
@@ -818,22 +1061,26 @@ for($i=0;$i<6;$i++)
 		$event->column_fields["duration_hours"]	= rand(0,3);	
 		$event->column_fields["duration_minutes"]= rand(0,59);	
 		$event->column_fields["eventstatus"]	= "Planned";	
+		$event->column_fields["time_end"]     = $end_time;
 	}
 	$event->column_fields["date_start"]	= $rand_date;	
+	$_REQUEST["date_start"] = $rand_date;
 	$event->column_fields["time_start"]	= $start_time;	
 	$event->column_fields["due_date"]	= $rand_date;	
-	
+	$_REQUEST["due_date"] = $rand_date;
 	$contact_key = array_rand($contact_ids);
         $event->column_fields["contact_id"]	= 	$contact_ids[$contact_key];
 	if($i==4)
 	{
         	$event->column_fields["recurringtype"] 	= "Daily";
+		$_REQUEST["recurringtype"]  = "Daily";
 		$event->column_fields["activitytype"]	= "Meeting";	
 		$event->column_fields["due_date"]	= $recur_daily_date;	
 	}
 	elseif($i==5)
 	{	
         	$event->column_fields["recurringtype"] 	= "Weekly";
+		$_REQUEST["recurringtype"]  = "Weekly";
 		$event->column_fields["activitytype"]	= "Meeting";	
 		$event->column_fields["due_date"]	= $recur_week_date;	
 	}
@@ -842,23 +1089,33 @@ for($i=0;$i<6;$i++)
 		$event->column_fields["activitytype"]	= "Call";	
 	}
 	$event->column_fields["assigned_user_id"] = $assigned_user_id;
-	$event->save("Activities");
+	$event->save("Calendar");
         $event_ids[] = $event->id;
 
 }
 
 
-$adb->query("update crmentity set crmentity.smcreatorid=".$assigned_user_id);
+$adb->query("update vtiger_crmentity set smcreatorid=".$assigned_user_id);
 
-$expected_revenue = Array("$250,000","$750,000","$500,000");
-$budget_cost = Array("$25,000","$50,000","$90,000");
-$actual_cost = Array("$23,500","$45,000","$80,000");
+$expected_revenue = Array("250000","750000","500000");
+$budget_cost = Array("25000","50000","90000");
+$actual_cost = Array("23500","45000","80000");
 $num_sent = Array("2000","2500","3000");
 $clo_date = Array('2003-1-2','2004-2-3','2005-4-12');
 
+$expected_response_count = Array("2500","7500","5000");
+$expected_sales_count = Array("25000","50000","90000");
+$expected_roi = Array("23","45","82");
 
+$actual_response_count = Array("250","750","1500");
+$actual_sales_count = Array("1250","5200","2390");
+$actual_roi = Array("21","14","12");
 
-$expected_response = Array(null,null,null);
+$sponsor = Array("Finace","Marketing","Sales");
+$targetsize = Array("210000","13390","187424");
+$targetaudience = Array("Managers","CEOs","Rookies");
+
+//$expected_response = Array(null,null,null);
 for($i=0;$i<count($campaign_name_array);$i++)
 {
 	$campaign = new Campaign();
@@ -873,7 +1130,42 @@ for($i=0;$i<count($campaign_name_array);$i++)
 	$campaign->column_fields["closingdate"] = $clo_date[$i];
 	$campaign->column_fields["expectedresponse"] = $expected_response[$i];
 	$campaign->column_fields["assigned_user_id"] = $assigned_user_id;
+	
+	$campaign->column_fields["expectedresponsecount"] = $expected_response_count[$i];
+	$campaign->column_fields["expectedsalescount"] = $expected_sales_count[$i];
+	$campaign->column_fields["expectedroi"] = $expected_roi[$i];
+	$campaign->column_fields["actualresponsecount"] = $actual_response_count[$i];
+	$campaign->column_fields["actualsalescount"] = $actual_sales_count[$i];
+	$campaign->column_fields["actualroi"] = $actual_roi[$i];
+	$campaign->column_fields["sponsor"] = $sponsor[$i];
+	$campaign->column_fields["targetsize"] = $targetsize[$i];
+	$campaign->column_fields["targetaudience"] = $targetaudience[$i];
+
+
+	
 	$campaign->save("Campaigns");
 }
 
+//Populate My Sites Data 
+
+$portalname = array ("Vtiger", "Vtiger Blogs", "Vtiger Forums", "VtigerForge", "Vtiger Docs");
+$portalurl = array ("http://vtiger.com", "http://blogs.vtiger.com", "http://forums.vtiger.com", "http://vtigerforge.com", "http://wiki.vtiger.com");
+
+for($i=0;$i<5;$i++)
+{
+	$portalid = $adb->getUniqueId('vtiger_portal');
+	$portal_qry = "insert into vtiger_portal values (".$portalid.", '".$portalname[$i]."','".$portalurl[$i]."',0)";
+	$result_qry = $adb->query($portal_qry);
+}
+
+//Populate RSS Data
+$rssname = array("vtiger - Forums","vtiger development - Active Tickets");
+$rssurl = array("http://forums.vtiger.com/rss.php?name=forums&file=rss","http://vtiger.fosslabs.com/cgi-bin/trac.cgi/report/1?format=rss&USER=anonymous");
+
+for($i=0;$i<2;$i++)
+{
+	$rssid = $adb->getUniqueId('vtiger_rss');
+	$rss_qry = "insert into vtiger_rss values (".$rssid.", '".$rssurl[$i]."','".$rssname[$i]."',0,0)";
+	$result_qry = $adb->query($rss_qry);
+}
 ?>

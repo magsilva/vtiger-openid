@@ -1,3 +1,14 @@
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr>
         {include file='SettingsMenu.tpl'}
@@ -14,7 +25,7 @@
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=HelpDesk">{$MOD.EDITHELPDESKPICKLISTVALUES}</a></td><td>
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=Products">{$MOD.EDITPRODUCTPICKLISTVALUES}</a></td></tr><tr><td>
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=Events">{$MOD.EDITEVENTPICKLISTVALUES}</a></td><td>
-<a href="index.php?module=Settings&action=ComboFieldList&fld_module=Activities">{$MOD.EDITTASKPICKLISTVALUES}</a></td></tr><tr><td>
+<a href="index.php?module=Settings&action=ComboFieldList&fld_module=Calendar">{$MOD.EDITTASKPICKLISTVALUES}</a></td></tr><tr><td>
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=Vendor">{$MOD.EDITVENDORPICKLISTVALUES}</a></td><td>
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=PriceBook">{$MOD.EDITPBPICKLISTVALUES}</a></td></tr><tr><td>
 <a href="index.php?module=Settings&action=ComboFieldList&fld_module=Orders">{$MOD.EDITPOPICKLISTVALUES}</a></td><td>

@@ -23,14 +23,13 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Potentials/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/FormValidationUtil.php');
 global $app_strings;
 global $mod_strings;
-
+global $currentModule;
 $focus = new Potential();
 $smarty = new vtigerCRM_Smarty();
 
@@ -52,17 +51,16 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Potentials",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Potentials",$disp_view,$mode,$focus->column_fields,'BAS'));
-	$smarty->assign("ADVBLOCKS",getBlocks("Potentials",$disp_view,$mode,$focus->column_fields,'ADV'));
+	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
 }
 $smarty->assign("OP_MODE",$disp_view);
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-//needed when creating a new opportunity with a default account value passed in
+//needed when creating a new opportunity with a default vtiger_account value passed in
 if (isset($_REQUEST['accountname']) && is_null($focus->accountname)) {
 	$focus->accountname = $_REQUEST['accountname'];
 	
@@ -105,7 +103,7 @@ if($focus->mode == 'edit')
 
 
 
-// Unimplemented until jscalendar language files are fixed
+// Unimplemented until jscalendar language vtiger_files are fixed
 $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
@@ -119,20 +117,22 @@ if (isset($_REQUEST['return_viewname']))
 $smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
 $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 $smarty->assign("ID", $focus->id);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Potential");
+$smarty->assign("SINGLE_MOD",$app_strings['Potential']);
 
 
- $potential_tables = Array('potential','crmentity','potentialscf'); 
  $tabid = getTabid("Potentials");
- $validationData = getDBValidationData($potential_tables,$tabid);
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);
 
  $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
  $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
  $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if($focus->mode == 'edit')
 $smarty->display("salesEditView.tpl");
 else

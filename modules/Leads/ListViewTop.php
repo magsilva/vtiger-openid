@@ -20,9 +20,13 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
+/** Function to get the 5 New Leads 
+ *return array $values - array with the title, header and entries like  Array('Title'=>$title,'Header'=>$listview_header,'Entries'=>$listview_entries) where as listview_header and listview_entries are arrays of header and entity values which are returned from function getListViewHeader and getListViewEntries
+*/
 function getNewLeads()
 {
-	require_once('XTemplate/xtpl.php');
+	global $log;
+	$log->debug("Entering getNewLeads() method ...");
 	require_once("data/Tracker.php");
 	require_once("include/utils/utils.php");
 
@@ -42,7 +46,7 @@ function getNewLeads()
 	require_once($theme_path.'layout_utils.php');
 	if($_REQUEST['lead_view']=='')
 	{	
-		$query = "select lead_view from users where id ='$current_user->id'";
+		$query = "select lead_view from vtiger_users where id ='$current_user->id'";
 		$result=$adb->query($query);
 		$lead_view=$adb->query_result($result,0,'lead_view');
 	}
@@ -64,13 +68,13 @@ function getNewLeads()
 		$start_date = date("Y-m-d", strtotime("-1 week"));
 	}	
 
-	$list_query = 'select leaddetails.*,crmentity.createdtime,crmentity.description from leaddetails inner join crmentity on leaddetails.leadid = crmentity.crmid where crmentity.deleted =0 AND leaddetails.converted =0 AND crmentity.createdtime >='.$start_date.' AND crmentity.smownerid = '.$current_user->id; 
+	$list_query = 'select vtiger_leaddetails.*,vtiger_crmentity.createdtime,vtiger_crmentity.description from vtiger_leaddetails inner join vtiger_crmentity on vtiger_leaddetails.leadid = vtiger_crmentity.crmid where vtiger_crmentity.deleted =0 AND vtiger_leaddetails.converted =0 AND vtiger_crmentity.createdtime >='.$start_date.' AND vtiger_crmentity.smownerid = '.$current_user->id; 
 	
 	$list_result = $adb->query($list_query);
 	$noofrows = $adb->num_rows($list_result);
 	$open_lead_list =array();
-	if (count($list_result)>0)
-		for($i=0;$i<$noofrows;$i++) 
+	if ($noofrows > 0)
+		for($i=0;$i<$noofrows && $i<5;$i++) 
 		{
 			$open_lead_list[] = Array('leadname' => $adb->query_result($list_result,$i,'firstname').' '.$adb->query_result($list_result,$i,'lastname'),
 					'company' => $adb->query_result($list_result,$i,'company'),
@@ -119,10 +123,18 @@ function getNewLeads()
 		$entries[$lead_fields['LEAD_ID']]=$value;
 	}
 	$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
+	$log->debug("Exiting getNewLeads method ...");
+	if (($display_empty_home_blocks && count($entries) == 0 ) || (count($entries)>0))
 		return $values;
 }
+/** Function to get the Lead View from the Combo List
+ *  @param string $lead_view - (eg today, last 2 days)
+ *  Returns the Lead view select option
+*/
 function getLeadView($lead_view)	
 {	
+	global $log;
+	$log->debug("Entering getLeadView(".$lead_view.") method ...");
 	$today = date("Y-m-d", time());
 
 	if($lead_view == 'Today')
@@ -150,6 +162,7 @@ function getLeadView($lead_view)
 	$LEAD_VIEW_SELECT_OPTION .= '</option>';
 	$LEAD_VIEW_SELECT_OPTION .= '</select>';
 	
+	$log->debug("Exiting getLeadView method ...");
 	return $LEAD_VIEW_SELECT_OPTION;
 }
 ?>

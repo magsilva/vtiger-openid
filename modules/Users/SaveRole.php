@@ -11,10 +11,33 @@
 
 require_once('include/database/PearDatabase.php');
 global $adb;
-
 $rolename = $_REQUEST['roleName'];
-$parentRoleId=$_REQUEST['parent'];
+$mode = $_REQUEST['mode'];
+if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check']!='')
+{
+	if($mode != 'edit')
+	{
+		$query = 'select rolename from vtiger_role where rolename="'.$rolename.'"';
+	}
+	else
+	{
+		$roleid=$_REQUEST['roleid'];
+		$query = 'select rolename from vtiger_role where rolename="'.$rolename.'" and roleid !="'.$roleid.'"';
 
+	}
+	$result = $adb->query($query);
+	if($adb->num_rows($result) > 0)
+	{
+		echo 'Role name already exists';
+		die;
+	}else
+	{
+		echo 'SUCESS';
+		die;
+	}
+
+}
+$parentRoleId=$_REQUEST['parent'];
 //Inserting values into Role Table
 if(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'edit')
 {
@@ -28,11 +51,11 @@ elseif(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'create')
 {
 	$selected_col_string = 	$_REQUEST['selectedColumnsString'];
 	$profile_array = explode(';',$selected_col_string);
-	//Inserting into role Table
+	//Inserting into vtiger_role Table
 	$roleId = createRole($rolename,$parentRoleId,$profile_array);
 	 	
 }
 
-$loc = "Location: index.php?action=listroles&module=Users";
+$loc = "Location: index.php?action=listroles&module=Users&parenttab=Settings";
 header($loc);
 ?>

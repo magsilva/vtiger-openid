@@ -25,7 +25,7 @@ function massMerge(module)
                 else
                 {
                 			
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 }
         }
@@ -47,15 +47,20 @@ function massMerge(module)
                else
                 {
                 			
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 }
         }
         
         if(getObj('selectall').checked == true)
-				{
-						getObj('idlist').value = getObj('allids').value;
-				}
+	{
+		getObj('idlist').value = getObj('allids').value
+	}
 	
+	if(getObj('mergefile').value == '')
+	{
+	         alert("Please select a template to merge");
+           	 return false;   
+        }
         document.massdelete.action="index.php?module="+module+"&action=Merge&return_module="+module+"&return_action=index";
 }

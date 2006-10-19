@@ -32,55 +32,39 @@ class Note extends CRMEntity {
 	var $log;
 	var $db;
 
-	// Stored fields
-	var $id;
-        var $mode;
-
-	var $notesid;
-	var $description;
-	var $name;
-	var $filename;
-	var $parent_type;
-	var $parent_id;
-	var $contact_id;
-
-	var $parent_name;
-	var $contact_name;
-	var $contact_phone;
-	var $contact_email;
 	var $required_fields =  array("name"=>1);
-	var $default_note_name_dom = array('Meeting notes', 'Reminder');
+	var $default_note_name_dom = array('Meeting vtiger_notes', 'Reminder');
 
 	var $table_name = "notes";
-	var $tab_name = Array('crmentity','notes','senotesrel');
-        var $tab_name_index = Array('crmentity'=>'crmid','notes'=>'notesid','senotesrel'=>'notesid');
+	var $tab_name = Array('vtiger_crmentity','vtiger_notes','vtiger_senotesrel','vtiger_attachments');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_notes'=>'notesid','vtiger_senotesrel'=>'notesid','vtiger_attachments'=>'attachmentsid');
 
   	var $module_id = "notesid";
 	var $object_name = "Note";
 
 	var $column_fields = Array();
 
-        var $sortby_fields = Array('title','modifiedtime');		  
+        var $sortby_fields = Array('notes_title','modifiedtime','contact_id','filename');		  
 
-	// This is used to retrieve related fields from form posts.
+	// This is used to retrieve related vtiger_fields from form posts.
 	var $additional_column_fields = Array('', '', '', '');
 
-	// This is the list of fields that are in the lists.
+	// This is the list of vtiger_fields that are in the lists.
 	var $list_fields = Array(
-				'Subject'=>Array('notes'=>'title'),
+				'Subject'=>Array('notes'=>'notes_title'),
 				'Contact Name'=>Array('notes'=>'contact_id'),
 				'Related to'=>Array('senotesrel'=>'crmid'),
 				'File'=>Array('notes'=>'filename'),
 				'Last Modified'=>Array('crmentity'=>'modifiedtime')
 				);
 	var $list_fields_name = Array(
-					'Subject'=>'title',
+					'Subject'=>'notes_title',
 					'Contact Name'=>'contact_id',
 					'Related to'=>'crmid',
 					'File'=>'filename',
 					'Last Modified'=>'modifiedtime'
 				     );	
-	var $list_link_field= 'title';
+	var $list_link_field= 'notes_title';
 
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'modifiedtime';
@@ -88,20 +72,30 @@ class Note extends CRMEntity {
 
 	function Note() {
 		$this->log = LoggerManager::getLogger('notes');
+		$this->log->debug("Entering Note() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Notes');
+		$this->log->debug("Exiting Note method ...");
 	}
 
 	var $new_schema = true;
 
-        function create_export_query(&$order_by, &$where)
-        {
+	/** Function to export the notes in CSV Format
+	* @param reference variable - order by is passed when the query is executed
+	* @param reference variable - where condition is passed when the query is executed
+	* Returns Export Notes Query.
+	*/
+	function create_export_query(&$order_by, &$where)
+	{
+		global $log;
+		$log->debug("Entering create_export_query(".$order_by.",". $where.") method ...");
              $query = "SELECT
-                                        notes.*,
-                                        contactdetails.firstname,
-                                        contactdetails.lastname
-                                        FROM notes
-                                        LEFT JOIN contactdetails ON notes.contact_id=contactdetails.contactid inner join crmentity on crmentity.crmid=notes.notesid and crmentity.deleted=0 ";
+                                        vtiger_notes.*,
+                                        vtiger_contactdetails.firstname,
+                                        vtiger_contactdetails.lastname
+                                        FROM vtiger_notes
+                                        LEFT JOIN vtiger_contactdetails ON vtiger_notes.contact_id=vtiger_contactdetails.contactid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_notes.notesid and vtiger_crmentity.deleted=0 ";
+		$log->debug("Exiting create_export_query method ...");
                 return $query;
         }
 

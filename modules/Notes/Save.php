@@ -40,7 +40,40 @@ if($_FILES["filename"]["size"] == 0 && $_FILES["filename"]["name"] != '')
 
 if (!isset($_REQUEST['date_due_flag'])) $focus->date_due_flag = 'off';
 
+//Save the Note
 $focus->save("Notes");
+
+//Added to retrieve the existing attachment of the notes and save it for the new duplicated note
+if($_FILES['filename']['name'] == '' && $_REQUEST['mode'] != 'edit' && $_REQUEST['old_id'] != '')
+{
+        $sql = "select vtiger_attachments.* from vtiger_attachments inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid=vtiger_attachments.attachmentsid where vtiger_seattachmentsrel.crmid= ".$_REQUEST['old_id'];
+        $result = $adb->query($sql);
+        if($adb->num_rows($result) != 0)
+	{
+                $attachmentid = $adb->query_result($result,0,'attachmentsid');
+		$filename = $adb->query_result($result,0,'name');
+		$filetype = $adb->query_result($result,0,'type');
+		$filepath = $adb->query_result($result,0,'path');
+
+		$new_attachmentid = $adb->getUniqueID("vtiger_crmentity");
+		$date_var = $adb->formatDate(date('YmdHis'));	
+
+		$upload_filepath = decideFilePath();
+
+		//Read the old file contents and write it as a new file with new attachment id
+		$handle = @fopen($upload_filepath.$new_attachmentid."_".$filename,'w');
+		fputs($handle, file_get_contents($filepath.$attachmentid."_".$filename));
+		fclose($handle);	
+
+		$adb->query("update vtiger_notes set filename=\"$filename\" where notesid=$focus->id");	
+		$adb->query("insert into vtiger_crmentity (crmid,setype,createdtime) values('".$new_attachmentid."','Notes Attachment','".$date_var."')");
+
+		$adb->query("insert into vtiger_attachments values(".$new_attachmentid.",'".$filename."','','".$filetype."','".$upload_filepath."')");
+
+		$adb->query("insert into vtiger_seattachmentsrel values('".$focus->id."','".$new_attachmentid."')");
+	}
+}
+
 
 $return_id = $focus->id;
 $note_id = $return_id;
@@ -60,7 +93,7 @@ if($_REQUEST['mode'] != 'edit' && (($_REQUEST['return_module']=='Emails') ||($_R
 		$crmid = $_REQUEST['ticket_id'];
 	if($crmid != $_REQUEST['parent_id'])
 	{
-		$sql = "insert into senotesrel (notesid, crmid) values('".$focus->id."','".$crmid."')";
+		$sql = "insert into vtiger_senotesrel (notesid, crmid) values('".$focus->id."','".$crmid."')";
 		$adb->query($sql);
 	}
 }

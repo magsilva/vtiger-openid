@@ -35,22 +35,20 @@ class Email extends CRMEntity {
 	var $log;
 	var $db;
 
-	// Stored fields
-	var $id;
-	var $mode;
+	// Stored vtiger_fields
+  var $module_id="emailid";
+  // added to check email save from plugin or not
+  var $plugin_save = false;
 
-	var $emailid;
-	var $description;
-	var $name;
-	var $date_start;
-	var $time_start;
-  	var $module_id="emailid";
+	var $rel_users_table = "vtiger_salesmanactivityrel";
+	var $rel_contacts_table = "vtiger_cntactivityrel";
+	var $rel_serel_table = "vtiger_seactivityrel";
 
 	var $table_name = "activity";
-	var $tab_name = Array('crmentity','activity','seactivityrel','cntactivityrel');
-        var $tab_name_index = Array('crmentity'=>'crmid','activity'=>'activityid','seactivityrel'=>'activityid','cntactivityrel'=>'activityid','attachments'=>'attachmentsid');
+	var $tab_name = Array('vtiger_crmentity','vtiger_activity','vtiger_seactivityrel','vtiger_cntactivityrel','vtiger_attachments');
+        var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_activity'=>'activityid','vtiger_seactivityrel'=>'activityid','vtiger_cntactivityrel'=>'activityid','vtiger_attachments'=>'attachmentsid');
 
-	// This is the list of fields that are in the lists.
+	// This is the list of vtiger_fields that are in the lists.
         var $list_fields = Array(
 				       'Subject'=>Array('activity'=>'subject'),
 				       'Related to'=>Array('seactivityrel'=>'activityid'),
@@ -71,16 +69,22 @@ class Email extends CRMEntity {
 
 	var $column_fields = Array();
 
-	var $sortby_fields = Array('subject');
+	var $sortby_fields = Array('subject','date_start','smownerid');
 
 	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'subject';
+	var $default_order_by = 'date_start';
 	var $default_sort_order = 'ASC';
+
+	/** This function will set the columnfields for Email module 
+	*/
 
 	function Email() {
 		$this->log = LoggerManager::getLogger('email');
+		$this->log->debug("Entering Email() method ...");
+		$this->log = LoggerManager::getLogger('email');
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Emails');
+		$this->log->debug("Exiting Email method ...");
 	}
 
 	var $new_schema = true;
@@ -92,34 +96,77 @@ class Email extends CRMEntity {
 	*/
 	function get_contacts($id)
 	{
-		global $log;
+		global $log,$adb;
+		$log->debug("Entering get_contacts(".$id.") method ...");
 		global $mod_strings;
 		global $app_strings;
 
 		$focus = new Contact();
 
 		$button = '';
-		$returnset = '&return_module=Emails&return_action=DetailView&return_id='.$id;
+		$returnset = '&return_module=Emails&return_action=CallRelatedList&return_id='.$id;
 
-		$query = 'select contactdetails.accountid, contactdetails.contactid, contactdetails.firstname,contactdetails.lastname, contactdetails.department, contactdetails.title, contactdetails.email, contactdetails.phone, contactdetails.emailoptout, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from contactdetails inner join cntactivityrel on cntactivityrel.contactid=contactdetails.contactid inner join crmentity on crmentity.crmid = contactdetails.contactid left join contactgrouprelation on contactdetails.contactid=contactgrouprelation.contactid left join groups on groups.groupname=contactgrouprelation.groupname where cntactivityrel.activityid='.PearDatabase::quote($id).' and crmentity.deleted=0';
+		$query = 'select vtiger_contactdetails.accountid, vtiger_contactdetails.contactid, vtiger_contactdetails.firstname,vtiger_contactdetails.lastname, vtiger_contactdetails.department, vtiger_contactdetails.title, vtiger_contactdetails.email, vtiger_contactdetails.phone, vtiger_contactdetails.emailoptout, vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime from vtiger_contactdetails inner join vtiger_cntactivityrel on vtiger_cntactivityrel.contactid=vtiger_contactdetails.contactid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_contactdetails.contactid left join vtiger_contactgrouprelation on vtiger_contactdetails.contactid=vtiger_contactgrouprelation.contactid left join vtiger_groups on vtiger_groups.groupname=vtiger_contactgrouprelation.groupname where vtiger_cntactivityrel.activityid='.$adb->quote($id).' and vtiger_crmentity.deleted=0';
 		$log->info("Contact Related List for Email is Displayed");
+		$log->debug("Exiting get_contacts method ...");
 		return GetRelatedList('Emails','Contacts',$focus,$query,$button,$returnset);
 	}
 	
-	/** Returns a list of the associated users
+	/** Returns the column name that needs to be sorted
+	 * Portions created by vtigerCRM are Copyright (C) vtigerCRM.
+	 * All Rights Reserved..
+	 * Contributor(s): Mike Crowe
+	*/
+
+	function getSortOrder()
+	{	
+		global $log;
+		$log->debug("Entering getSortOrder() method ...");
+		if(isset($_REQUEST['sorder'])) 
+			$sorder = $_REQUEST['sorder'];
+		else
+			$sorder = (($_SESSION['EMAILS_SORT_ORDER'] != '')?($_SESSION['EMAILS_SORT_ORDER']):($this->default_sort_order));
+
+		$log->debug("Exiting getSortOrder method ...");
+		return $sorder;
+	}
+
+	/** Returns the order in which the records need to be sorted
+	 * Portions created by vtigerCRM are Copyright (C) vtigerCRM.
+	 * All Rights Reserved..
+	 * Contributor(s): Mike Crowe
+	*/
+
+	function getOrderBy()
+	{
+		global $log;
+		$log->debug("Entering getOrderBy() method ...");
+		if (isset($_REQUEST['order_by'])) 
+			$order_by = $_REQUEST['order_by'];
+		else
+			$order_by = (($_SESSION['EMAILS_ORDER_BY'] != '')?($_SESSION['EMAILS_ORDER_BY']):($this->default_order_by));
+
+		$log->debug("Exiting getOrderBy method ...");
+		return $order_by;
+	}	
+	// Mike Crowe Mod --------------------------------------------------------
+
+	/** Returns a list of the associated vtiger_users
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	*/
 	function get_users($id)
 	{
+		global $log;
+		$log->debug("Entering get_users(".$id.") method ...");
 		global $adb;
 		global $mod_strings;
 		global $app_strings;
 
 		$id = $_REQUEST['record'];
 
-		$query = 'SELECT users.id, users.first_name,users.last_name, users.user_name, users.email1, users.email2, users.yahoo_id, users.phone_home, users.phone_work, users.phone_mobile, users.phone_other, users.phone_fax from users inner join salesmanactivityrel on salesmanactivityrel.smid=users.id and salesmanactivityrel.activityid='.PearDatabase::quote($id);
+		$query = 'SELECT vtiger_users.id, vtiger_users.first_name,vtiger_users.last_name, vtiger_users.user_name, vtiger_users.email1, vtiger_users.email2, vtiger_users.yahoo_id, vtiger_users.phone_home, vtiger_users.phone_work, vtiger_users.phone_mobile, vtiger_users.phone_other, vtiger_users.phone_fax from vtiger_users inner join vtiger_salesmanactivityrel on vtiger_salesmanactivityrel.smid=vtiger_users.id and vtiger_salesmanactivityrel.activityid='.$adb->quote($id);
 		$result=$adb->query($query);   
 
 		$noofrows = $adb->num_rows($result);
@@ -164,40 +211,43 @@ class Email extends CRMEntity {
 
 		if($entries_list != '')
 			$return_data = array("header"=>$header, "entries"=>$entries);
+		$log->debug("Exiting get_users method ...");
 		return $return_data;
 	}
 
 	/**
-	  * Returns a list of the associated attachments and notes of the Email
+	  * Returns a list of the associated vtiger_attachments and vtiger_notes of the Email
 	  */
 	function get_attachments($id)
 	{
-		global $log;
-		$query = "select notes.title,'Notes      '  ActivityType, notes.filename,
-			attachments.type  FileType,crm2.modifiedtime lastmodified,
-			seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid,
-			crm2.createdtime, notes.notecontent description, users.user_name
-		from notes
-			inner join senotesrel on senotesrel.notesid= notes.notesid
-			inner join crmentity on crmentity.crmid= senotesrel.crmid
-			inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0
-			left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid
-			left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".PearDatabase::quote($id);
+		global $log,$adb;
+		$log->debug("Entering get_attachments(".$id.") method ...");
+		$query = "select vtiger_notes.title,'Notes      '  ActivityType, vtiger_notes.filename,
+		vtiger_attachments.type  FileType,crm2.modifiedtime lastmodified,
+		vtiger_seattachmentsrel.attachmentsid attachmentsid, vtiger_notes.notesid crmid,
+			crm2.createdtime, vtiger_notes.notecontent description, vtiger_users.user_name
+		from vtiger_notes
+			inner join vtiger_senotesrel on vtiger_senotesrel.notesid= vtiger_notes.notesid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_senotesrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_notes.notesid and crm2.deleted=0
+			left join vtiger_seattachmentsrel  on vtiger_seattachmentsrel.crmid =vtiger_notes.notesid
+			left join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
+			inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$adb->quote($id);
 		$query .= ' union all ';
-		$query .= "select attachments.description title ,'Attachments'  ActivityType,
-			attachments.name filename, attachments.type FileType,crm2.modifiedtime lastmodified,
-			attachments.attachmentsid  attachmentsid,	seattachmentsrel.attachmentsid crmid,
-			crm2.createdtime, attachments.description, users.user_name
-		from attachments
-			inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid
-			inner join crmentity on crmentity.crmid= seattachmentsrel.crmid
-			inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".PearDatabase::quote($id);
+		$query .= "select vtiger_attachments.description title ,'Attachments'  ActivityType,
+		vtiger_attachments.name filename, vtiger_attachments.type FileType,crm2.modifiedtime lastmodified,
+		vtiger_attachments.attachmentsid  attachmentsid,vtiger_seattachmentsrel.attachmentsid crmid,
+			crm2.createdtime, vtiger_attachments.description, vtiger_users.user_name
+		from vtiger_attachments
+			inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid= vtiger_attachments.attachmentsid
+			inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_seattachmentsrel.crmid
+			inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_attachments.attachmentsid
+			inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
+		where vtiger_crmentity.crmid=".$adb->quote($id);
 		
 		$log->info("Notes&Attachments Related List for Email is Displayed");
+		$log->debug("Exiting get_attachments method ...");
 		return getAttachmentsAndNotes('Emails',$query,$id);
 	}
 
@@ -205,9 +255,12 @@ class Email extends CRMEntity {
           * Returns a list of the Emails to be exported
           */
 	function create_export_query(&$order_by, &$where)
-        {
-		$query = 'SELECT activity.activityid, activity.subject, activity.activitytype, attachments.name as filename, crmentity.description as email_content FROM activity inner join crmentity on crmentity.crmid=activity.activityid left join seattachmentsrel on activity.activityid=seattachmentsrel.crmid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where activity.activitytype="Emails" and crmentity.deleted=0';
+	{
+		global $log;
+		$log->debug("Entering create_export_query(".$order_by.",".$where.") method ...");
+		$query = 'SELECT vtiger_activity.activityid, vtiger_activity.subject, vtiger_activity.activitytype, vtiger_attachments.name as filename, vtiger_crmentity.description as email_content FROM vtiger_activity inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid left join vtiger_seattachmentsrel on vtiger_activity.activityid=vtiger_seattachmentsrel.crmid left join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid where vtiger_activity.activitytype="Emails" and vtiger_crmentity.deleted=0';
 
+		$log->debug("Exiting create_export_query method ...");
                 return $query;
         }
         
@@ -216,8 +269,11 @@ class Email extends CRMEntity {
 	*/  
 	function set_emails_contact_invitee_relationship($email_id, $contact_id)
 	{
+		global $log;
+		$log->debug("Entering set_emails_contact_invitee_relationship(".$email_id.",". $contact_id.") method ...");
 		$query = "insert into $this->rel_contacts_table (contactid,activityid) values('$contact_id','$email_id')";
 		$this->db->query($query,true,"Error setting email to contact relationship: "."<BR>$query");
+		$log->debug("Exiting set_emails_contact_invitee_relationship method ...");
 	}
      
 	/**
@@ -225,8 +281,11 @@ class Email extends CRMEntity {
 	*/
 	function set_emails_se_invitee_relationship($email_id, $contact_id)
 	{
+		global $log;
+		$log->debug("Entering set_emails_se_invitee_relationship(".$email_id.",". $contact_id.") method ...");
 		$query = "insert into $this->rel_serel_table (crmid,activityid) values('$contact_id','$email_id')";
 		$this->db->query($query,true,"Error setting email to contact relationship: "."<BR>$query");
+		$log->debug("Exiting set_emails_se_invitee_relationship method ...");
 	}
      
 	/**
@@ -234,10 +293,62 @@ class Email extends CRMEntity {
 	*/    
 	function set_emails_user_invitee_relationship($email_id, $user_id)
 	{
+		global $log;
+		$log->debug("Entering set_emails_user_invitee_relationship(".$email_id.",". $user_id.") method ...");
 		$query = "insert into $this->rel_users_table (smid,activityid) values ('$user_id', '$email_id')";
 		$this->db->query($query,true,"Error setting email to user relationship: "."<BR>$query");
+		$log->debug("Exiting set_emails_user_invitee_relationship method ...");
 	}        
 
 
+}
+/** Function to get the emailids for the given ids form the request parameters 
+ *  It returns an array which contains the mailids and the parentidlists
+*/
+
+function get_to_emailids($module)
+{
+	global $adb;
+	$query = 'select columnname,fieldid from vtiger_field where fieldid in('.ereg_replace(':',',',$_REQUEST["field_lists"]).')';
+    $result = $adb->query($query);
+	$columns = Array();
+	$idlists = '';
+	$mailids = '';
+	while($row = $adb->fetch_array($result))
+    {
+		$columns[]=$row['columnname'];
+		$fieldid[]=$row['fieldid'];
+	}
+	$columnlists = implode(',',$columns);
+	$crmids = ereg_replace(':',',',$_REQUEST["idlist"]);
+	switch($module)
+	{
+		case 'Leads':
+			$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_leaddetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_leaddetails.leadid left join vtiger_leadscf on vtiger_leadscf.leadid = vtiger_leaddetails.leadid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
+			break;
+		case 'Contacts':
+			$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_contactdetails.contactid left join vtiger_contactscf on vtiger_contactscf.contactid = vtiger_contactdetails.contactid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
+			break;
+		case 'Accounts':
+			$query = 'select crmid,accountname as entityname,'.$columnlists.' from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid left join vtiger_accountscf on vtiger_accountscf.accountid = vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
+			break;
+	}	
+	$result = $adb->query($query);
+	while($row = $adb->fetch_array($result))
+	{
+		$name = $row['entityname'];
+		for($i=0;$i<count($columns);$i++)
+		{
+			if($row[$columns[$i]] != NULL && $row[$columns[$i]] !='')
+			{
+				$idlists .= $row['crmid'].'@'.$fieldid[$i].'|'; 
+				$mailids .= $name.'<'.$row[$columns[$i]].'>,';	
+			}
+		}
+	}
+
+	$return_data = Array('idlists'=>$idlists,'mailds'=>$mailids);
+	return $return_data;
+		
 }
 ?>

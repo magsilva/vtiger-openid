@@ -1,3 +1,14 @@
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr>
         {include file='SettingsMenu.tpl'}
@@ -16,7 +27,7 @@
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=Products">{$MOD.LBL_PRODUCT_FIELD_ACCESS}</a></td></tr><tr><td>
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=Notes">{$MOD.LBL_NOTE_FIELD_ACCESS}</a></td><td>
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=Emails">{$MOD.LBL_EMAIL_FIELD_ACCESS}</a></td></tr><tr><td>
-<a href="index.php?module=Users&action=ListFldProfiles&fld_module=Activities">{$MOD.LBL_TASK_FIELD_ACCESS}</a></td><td>
+<a href="index.php?module=Users&action=ListFldProfiles&fld_module=Calendar">{$MOD.LBL_TASK_FIELD_ACCESS}</a></td><td>
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=Events">{$MOD.LBL_EVENT_FIELD_ACCESS}</a></td></tr><tr><td>
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=Vendor">{$MOD.LBL_VENDOR_FIELD_ACCESS}</a></td><td>
 <a href="index.php?module=Users&action=ListFldProfiles&fld_module=PriceBook">{$MOD.LBL_PB_FIELD_ACCESS}</a></td></tr><tr><td>

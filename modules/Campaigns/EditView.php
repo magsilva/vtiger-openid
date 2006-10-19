@@ -24,7 +24,7 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] !='')
 	$focus->id = $_REQUEST['record'];
 	$focus->mode = 'edit'; 	
 	$focus->retrieve_entity_info($_REQUEST['record'],"Campaigns");
-	$focus->name=$focus->column_fields['ticket_title'];		
+	$focus->name=$focus->column_fields['campaignname'];		
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') 
 {
@@ -38,16 +38,16 @@ require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Campaigns",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Campaigns",$disp_view,$mode,$focus->column_fields,'BAS'));
+	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
 }
 	
 $smarty->assign("OP_MODE",$disp_view);
 
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Campaign");
+$smarty->assign("SINGLE_MOD",$app_strings['Campaign']);
 
 
 $category = getParentTab();
@@ -71,6 +71,7 @@ if($focus->mode == 'edit')
 {
         $smarty->assign("MODE", $focus->mode);
         $smarty->assign("OLDSMOWNERID", $focus->column_fields['assigned_user_id']);
+	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
 }
 
 if(isset($_REQUEST['return_module'])) 
@@ -88,14 +89,17 @@ $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
-$campaign_tables = Array('campaign','crmentity');
 $tabid = getTabid("Campaigns");
-$validationData = getDBValidationData($campaign_tables,$tabid);
+$validationData = getDBValidationData($focus->tab_name,$tabid);
 $data = split_validationdataArray($validationData);
 
 $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
 $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
 $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if($focus->mode == 'edit')
 	$smarty->display("salesEditView.tpl");
 else

@@ -1,253 +1,357 @@
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
 <script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/js/ColorPicker2.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/prototype.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/slider.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/prototype_fade.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/effectspack.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
+<script language="javascript" type="text/javascript" src="include/js/general.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/js/dtlviewajax.js"></script>
+<script src="include/scriptaculous/scriptaculous.js" type="text/javascript"></script>
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
+<span id="crmspanid" style="display:none;position:absolute;"  onmouseover="show('crmspanid');">
+   <a class="link"  align="right" href="javascript:;">{$APP.LBL_EDIT_BUTTON}</a>
+</span>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
+<br>
+<!-- Shadow table -->
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
 <tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
-<table width="100%"  border="0" cellspacing="0" cellpadding="0">
-	<tr><td class="detailedViewHeader" align="left"><b>{$MOD.LBL_USER_MANAGEMENT}</b></td></tr>
-	
-	<tr><td class="padTab" align="left">
-		<table width="100%" border="0" cellpadding="0" cellspacing="0">
-		<form name="DetailView" method="POST" action="index.php" ENCTYPE="multipart/form-data" id="form">
-			<input type="hidden" name="module" value="Users">
-			<input type="hidden" name="record" value="{$ID}">
-			<input type="hidden" name="isDuplicate" value=false>
-			<input type="hidden" name="action">
-			<input type="hidden" name="user_name" value="{$USER_NAME}">
-			<input type="hidden" name="old_password">
-			<input type="hidden" name="new_password">
-			<input type="hidden" name="return_module">
-			<input type="hidden" name="return_action">
-			<input type="hidden" name="return_id">
-			<input type="hidden" name="forumDisplay">
+    <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+    <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+    <br>
+    <div align=center>
+		{if $CATEGORY eq 'Settings'}
+			{include file='SetMenu.tpl'}
+		{/if}
+				<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+				<tr>
+					<td class="padTab" align="left">
+						<form name="DetailView" method="POST" action="index.php" ENCTYPE="multipart/form-data" id="form" style="margin:0px">
+							<input type="hidden" name="module" value="Users" style="margin:0px">
+							<input type="hidden" name="record" id="userid" value="{$ID}" style="margin:0px">
+							<input type="hidden" name="isDuplicate" value=false style="margin:0px">
+							<input type="hidden" name="action" style="margin:0px">
+							<input type="hidden" name="changepassword" style="margin:0px">
+							{if $CATEGORY neq 'Settings'}
+								<input type="hidden" name="modechk" value="prefview" style="margin:0px">
+							{/if}
+							<input type="hidden" name="old_password" style="margin:0px">
+							<input type="hidden" name="new_password" style="margin:0px">
+							<input type="hidden" name="return_module" value="Users" style="margin:0px">
+							<input type="hidden" name="return_action" value="ListView"  style="margin:0px">
+							<input type="hidden" name="return_id" style="margin:0px">
+							<input type="hidden" name="forumDisplay" style="margin:0px">
+							{if $CATEGORY eq 'Settings'}
+							<input type="hidden" name="parenttab" value="{$PARENTTAB}" style="margin:0px">
+							{/if}	
+							<table width="100%" border="0" cellpadding="0" cellspacing="0" >
+							<tr>
+								<td colspan=2>
+									<!-- Heading and Icons -->
+									<table width="100%" cellpadding="5" cellspacing="0" border="0" class="settingsSelUITopLine">
+									<tr>
+										<td width=50 rowspan="2"><img src="{$IMAGE_PATH}ico-users.gif" align="absmiddle"></td>	
+										<td>
+											{if $CATEGORY eq 'Settings'}
+											<span class="heading2">
+											<b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> &gt; <a href="index.php?module=Administration&action=index&parenttab=Settings"> {$MOD.LBL_USERS} </a>&gt;"{$USERNAME}" </b></span>
+											{else}
+											<span class="heading2">	
+											<b>{$APP.LBL_MY_PREFERENCES}</b>
+											</span>
+											{/if}
+											<span id="vtbusy_info" style="display:none;" valign="bottom"><img src="{$IMAGE_PATH}vtbusy.gif" border="0"></span>					
+										</td>
+										
+									</tr>
+									<tr>
+										<td>{$UMOD.LBL_USERDETAIL_INFO} "{$USERNAME}"</td>
+									</tr>
+									</table>
+								</td>
+							</tr>
+							<tr><td colspan="2">&nbsp;</td></tr>
+							<tr>
+								<td colspan="2" nowrap align="right">
+									{if $IS_ADMIN eq 'true'}
+									<input type="button" onclick="showAuditTrail();" value="{$MOD.LBL_VIEW_AUDIT_TRAIL}" class="crmButton small save"></input>
+									{/if}
+									{if $CATEGORY eq 'Settings'}
+														{$DUPLICATE_BUTTON}
+												{/if}
+									{$EDIT_BUTTON}
+									{if $CATEGORY eq 'Settings' && $ID neq 1 && $ID neq 2 & $ID neq $CURRENT_USERID}
+									<input type="button" onclick="deleteUser({$ID});" class="crmButton small cancel" value="{$UMOD.LBL_DELETE}"></input>
+									{/if}
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" align=left>
+								<!-- User detail blocks -->
+								<table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+								<tr>
+								<td align="left" valign="top">
+									{foreach key=header name=blockforeach item=detail from=$BLOCKS}
+									<br>
+									<table class="tableHeading" border="0" cellpadding="5" cellspacing="0" width="100%">
+									<tr>
+										{strip}
+										 <td class="big">	
+										<strong>{$smarty.foreach.blockforeach.iteration}. {$header}</strong>
+										 </td>
+										 <td class="small" align="right">&nbsp;</td>	
+										{/strip}
+									</tr>
+									</table>
+									
+									<table border="0" cellpadding="5" cellspacing="0" width="100%">
+									{foreach item=detail from=$detail}
+									<tr >
+										{foreach key=label item=data from=$detail}
+										   {assign var=keyid value=$data.ui}
+										   {assign var=keyval value=$data.value}
+										   {assign var=keytblname value=$data.tablename}
+										   {assign var=keyfldname value=$data.fldname}
+										   {assign var=keyoptions value=$data.options}
+										   {assign var=keysecid value=$data.secid}
+										   {assign var=keyseclink value=$data.link}
+										   {assign var=keycursymb value=$data.cursymb}
+										   {assign var=keysalut value=$data.salut}
+										   {assign var=keycntimage value=$data.cntimage}
+										   {assign var=keyadmin value=$data.isadmin}
+										   
+										   {if $label ne ''}
+										   <td class="dvtCellLabel" align=right width=25%><input type="hidden" id="hdtxt_IsAdmin" value={$keyadmin}></input>{$label}</td>
+											{include file="DetailViewUI.tpl"}
+										   {else}
+										   <td class="dvtCellLabel" align=right>&nbsp;</td>
+										   <td class="dvtCellInfo" align=left >&nbsp;</td>
+										   {/if}	
+										{/foreach}
+									</tr>
+									{/foreach}
+									</table>
+									{/foreach}
+									
+									<br>
+									<!-- Home page components -->
+									<table class="tableHeading" border="0" cellpadding="5" cellspacing="0" width="100%">
+									<tr>
+										 <td class="big">	
+										<strong>5. {$UMOD.LBL_HOME_PAGE_COMP}</strong>
+										 </td>
+										 <td class="small" align="right"><img src="{$IMAGE_PATH}showDown.gif" alt="{$APP.LBL_EXPAND_COLLAPSE}" title="{$APP.LBL_EXPAND_COLLAPSE}" onClick="ShowHidefn('home_comp');"></td>	
+									</tr>
+									</table>
+									
+									<div style="float: none; display: none;" id="home_comp">	
+									<table border="0" cellpadding="5" cellspacing="0" width="100%">
+									{foreach item=homeitems key=values from=$HOMEORDER}
+										<tr><td class="dvtCellLabel" align="right" width="30%">{$UMOD.$values}</td>
+											{if $homeitems neq ''}
+												<td class="dvtCellInfo" align="center" width="5%">
+												<img src="{$IMAGE_PATH}prvPrfSelectedTick.gif" alt="{$UMOD.LBL_SHOWN}" height="12" width="12"></td><td class="dvtCellInfo" align="left">{$UMOD.LBL_SHOWN}</td> 		
+												{else}	
+												<td class="dvtCellInfo" align="center" width="5%">
+												<img src="{$IMAGE_PATH}no.gif" alt="{$UMOD.LBL_HIDDEN}" height="12" width="12"></td><td class="dvtCellInfo" align="left">{$UMOD.LBL_HIDDEN}</td> 		
+											{/if}	
+										</tr>			
+									{/foreach}
+									</table>	
+									</div>
+								
+									<br>
+									<!-- My Groups -->
+									<table class="tableHeading" border="0" cellpadding="5" cellspacing="0" width="100%">
+									<tr>
+										<td class="big">	
+										<strong>6. {$UMOD.LBL_MY_GROUPS}</strong>
+										 </td>
+										 <td class="small" align="right">
+										{if $GROUP_COUNT > 0}
+										<img src="{$IMAGE_PATH}showDown.gif" alt="{$APP.LBL_EXPAND_COLLAPSE}" title="{$APP.LBL_EXPAND_COLLAPSE}" onClick="fetchGroups_js({$ID});">
+										{else}
+											&nbsp;
+										{/if}
+										</td>	
+									</tr>
+									</table>
+									
+									<table border="0" cellpadding="5" cellspacing="0" width="100%">
+									<tr><td align="left"><div id="user_group_cont" style="display:none;"></div></td></tr>	
+									</table>	
+									<br>
+									<!-- Login History -->
+									{if $IS_ADMIN eq 'true'}
+									<table class="tableHeading" border="0" cellpadding="5" cellspacing="0" width="100%">
+										<tr>
+										 <td class="big">	
+										<strong>7. {$UMOD.LBL_LOGIN_HISTORY}</strong>
+										 </td>
+										 <td class="small" align="right"><img src="{$IMAGE_PATH}showDown.gif" alt="{$APP.LBL_EXPAND_COLLAPSE}" title="{$APP.LBL_EXPAND_COLLAPSE}" onClick="fetchlogin_js({$ID});"></td>	
+										</tr>
+									</table>
 
-			<tr valign="center">
-		            <td class="small" valign="center">
-				{$USER_IMAGE}
-				{$EDIT_BUTTON}
-				{$CHANGE_PW_BUTTON}
-				{$LOGIN_HISTORY_BUTTON}
-				{$LIST_MAILSERVER_BUTTON}
-				{$DUPLICATE_BUTTON}
-				{$TABCUSTOMIZE_BUTTON}
-				{$DELETE_BUTTON}
-				{$LISTROLES_BUTTON}
-				{$CHANGE_HOMEPAGE_BUTTON}
-	</td></tr>
-
-		<tr><td colspan="2">&nbsp;</td></tr>
-		<tr><td colspan="2">
-	
-		<div id="contents">
-		<div id="fadedtabs">
-		<table align="center" border="0" cellpadding="0" cellspacing="0" width="99%">
-		  
-		  <tr>
-			<td>
-			  <table class="small" border="0" cellpadding="3" cellspacing="0" width="100%">
-			  <tr id="tabs">
-			     <td class="dvtTabCache" width="10" nowrap="nowrap">&nbsp;</td>
-			        <td id="prof" width="25%" align="center" nowrap="nowrap" class="dvtSelectedCell"><a onclick="new EffectPack.TabToggle(this);" href="#tab1" id="current"><b>{$UMOD.LBL_USER_LOGIN_ROLE}</b></a></td>
-				    <td id="more" width="25%" align="center" nowrap="nowrap" class="dvtUnSelectedCell"><a onclick="new EffectPack.TabToggle(this);" href="#tab2"><b>{$UMOD.LBL_USER_MORE_INFN}</b></a></td>
-				    <td id="addr" width="25%" align="center" nowrap="nowrap" class="dvtUnSelectedCell"><a onclick="new EffectPack.TabToggle(this);" href="#tab3"><b>{$UMOD.LBL_USER_ADDR_INFN}</b></a></td>
-				    <td class="dvtTabCache" nowrap="nowrap" width="10">&nbsp;</td>
-			  </tr>
-			  </table>
-			</td>
-		  </tr>
-		  <tr>
-		  	<td align="left" valign="top">
-			<div id="tab1" class="tabset_content">
-				<table class="dvtContentSpace" border="0" cellpadding="0" cellspacing="0" width="100%">
-				<tr><td height="35">&nbsp;</td></tr>
-				<tr><td align="left">
-				<table width="99%"  border="0" cellspacing="0" cellpadding="5" align="center">
-  		    	<tr>
-				<td colspan="4" class="detailedViewHeader"><b>{$UMOD.LBL_USER_INFORMATION}</b></td>
-				</tr>  
-				<tr>
-				<td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_USER_NAME} </td>
-				<td class="dvtCellInfo">{$USER_NAME}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_ADMIN} </td>
-        	    <td class="dvtCellInfo"><input type="checkbox" name="is_admin" DISABLED {$IS_ADMIN}/></td>
-				</tr>
-				{if $MODE eq 'edit'}
-				<tr>
-				<td class="dvtCellLabel" align="right" width="20%"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_PASSWORD} </td>
-			    <td class="dvtCellInfo" width="20%"><input type="text" name="new_password" type="password" class="detailedViewTextBox"  onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'" /></td>
-			    <td class="dvtCellLabel" width="20%" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_CONFIRM_PASSWORD} </td>
-			    <td class="dvtCellInfo" width="20%"><input type="text" name="confirm_new_password" type="password" class="detailedViewTextBox"  onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'" /></td>
-			    </tr>
-				{/if}	
-			    <tr>
-			    <td class="dvtCellLabel" align="right">{$UMOD.LBL_FIRST_NAME} </td>
-			    <td class="dvtCellInfo">{$FIRST_NAME}</td>
-			    <td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_LAST_NAME}</td>
-			    <td class="dvtCellInfo">{$LAST_NAME}</td>
-			 	</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_USER_ROLE}</td>
-				<td class="dvtCellInfo">{$ROLEASSIGNED}</td>							      <td class="dvtCellLabel" align="right">{$UMOD.LBL_GROUP_NAME}</td>
-				<td class="dvtCellInfo">{$GROUPASSIGNED}</td>
-			    </tr>
-				<tr>
-				<td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_EMAIL}</td>
-				<td class="dvtCellInfo">{$EMAIL1}</td>
-				<td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_STATUS}</td>
-
-				<td class="dvtCellInfo">{$STATUS}</td>
-				</tr>
-				<tr><td colspan="4" class="dvtCellInfo" height="30">&nbsp;</td></tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_ACTIVITY_VIEW}</td>
-				<td class="dvtCellInfo">{$ACTIVITY_VIEW}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_LEAD_VIEW}</td>
-				<td span class="dvtCellInfo">{$LEAD_VIEW}</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right"><span class="style1"><font color='red'>*</font></span>{$UMOD.LBL_COLOR}</td>
-				<td class="dvtCellInfo">{$COLORASSIGNED}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_CURRENCY_NAME}</td>
-                <td span class="dvtCellInfo">{$CURRENCY_NAME}</td>
-				</tr>
-				<tr><td colspan="4" height="30">&nbsp;</td></tr>
-				</table>
-				</td></tr>
-				</table>
-			</div>
-			<div id="tab2" class="tabset_content">
-			  	<table class="dvtContentSpace" border="0" cellpadding="0" cellspacing="0" width="100%">
-				<tr><td height="35">&nbsp;</td></tr>
-				<tr><td align="left">
-				<table width="99%"  border="0" cellspacing="0" cellpadding="5" align="center">
-				<tr>
-				<td colspan="4" class="detailedViewHeader"><b>{$UMOD.LBL_USER_MORE_INFN}</b></td>
-				</tr>  
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_TITLE}</td>
-				<td class="dvtCellInfo">{$TITLE}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_OFFICE_PHONE}</td>
-         		<td class="dvtCellInfo">{$PHONE_WORK}</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right" width="20%">{$UMOD.LBL_DEPARTMENT}</td>
-				<td class="dvtCellInfo" width="20%">{$DEPARTMENT}</td>
-				<td class="dvtCellLabel" width="20%" align="right">{$UMOD.LBL_MOBILE_PHONE}</td>
-				<td class="dvtCellInfo" width="20%">{$PHONE_MOBILE}</td>
-			    </tr>
-			    <tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_REPORTS_TO}</td>
-				<td class="dvtCellInfo" width="20%">{$REPORTS_TO_NAME}{$REPORTS_TO_ID}&nbsp;</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_OTHER_PHONE}</td>
-				<td class="dvtCellInfo">{$PHONE_OTHER}</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_OTHER_EMAIL}</td>
-				<td class="dvtCellInfo">{$EMAIL2}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_FAX}</td>
-				<td class="dvtCellInfo">{$PHONE_FAX}</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_YAHOO_ID}</td>
-				<td class="dvtCellInfo">{$YAHOO_ID}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_HOME_PHONE}</td>
-				<td class="dvtCellInfo">{$PHONE_HOME}</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_DATE_FORMAT}</td>
-				<td class="dvtCellInfo" width="30%">{$DATE_FORMAT}</td>
-				<td class="dvtCellLabel" align="right">&nbsp;</td>
-				<td class="dvtCellInfo">&nbsp;</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_SIGNATURE}</td>
-				<td class="dvtCellInfo">{$SIGNATURE}</td>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_NOTES}</td>
-				<td span class="dvtCellInfo">{$DESCRIPTION}
-				</td>
-				</tr>
-				<tr><td colspan="4" height="30">&nbsp;</td></tr>
-				</table>
-				</td></tr>
-				</table>
-			</div>
-		  	<div id="tab3" class="tabset_content">
- 			    <table class="dvtContentSpace" border="0" cellpadding="0" cellspacing="0" width="100%">
-			    <tr><td height="35">&nbsp;</td></tr>
-			    <tr><td align="left">
-				<table width="99%"  border="0" cellspacing="0" cellpadding="5" align="center">
-				<tr>
-				<td colspan="4" class="detailedViewHeader"><b>{$UMOD.LBL_USER_ADDR_INFN}</b></td>
-				</tr>  
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_ADDRESS}</td>
-				<td class="dvtCellInfo">{$ADDRESS_STREET}</td>
-				<td class="dvtCellInfo" >&nbsp;</td>
-				<td class="dvtCellInfo">&nbsp;</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right" width="20%">{$UMOD.LBL_CITY}</td>
-				<td class="dvtCellInfo" width="20%">{$ADDRESS_CITY}</td>
-				<td class="dvtCellInfo" width="20%">&nbsp;</td>
-				<td class="dvtCellInfo" width="20%">&nbsp;</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_STATE}</td>
-				<td class="dvtCellInfo">{$ADDRESS_STATE}</td>
-				<td class="dvtCellInfo">&nbsp;</td>
-				<td class="dvtCellInfo">&nbsp;</td>
-				</tr>
-				<tr>
-				<td class="dvtCellLabel" align="right">{$UMOD.LBL_POSTAL_CODE}</td>
-				<td class="dvtCellInfo">{$ADDRESS_POSTALCODE}</td>
-			    <td class="dvtCellInfo">&nbsp;</td>
-			    <td class="dvtCellInfo">&nbsp;</td>
-				</tr>
-				<tr>
-			    <td class="dvtCellLabel" align="right">{$UMOD.LBL_COUNTRY}</td>
-			    <td class="dvtCellInfo">{$ADDRESS_COUNTRY}</td>
-			    <td class="dvtCellInfo" >&nbsp;</td>
-			    <td class="dvtCellInfo">&nbsp;</td>
-			    </tr>
-			    <tr><td colspan="4" height="30">&nbsp;</td></tr>
-				</table>
-				</td></tr>
-				</table>
-			</div>
-			</td>
-			</tr>
+									<table border="0" cellpadding="5" cellspacing="0" width="100%">
+									<tr><td align="left"><div id="login_history_cont" style="display:none;"></div></td></tr>	
+									</table>	
+									<br>	
+									{/if}	
+								</td>
+								</tr>
+								</table>
+								<!-- User detail blocks ends -->
+								
+								</td>
+							</tr>
+							<tr>
+								<td colspan=2 class="small"><div align="right"><a href="#top">{$MOD.LBL_SCROLL}</a></div></td>
+							</tr>
+							</table>
+							
+						</form>
 			
-	        <tr><td>&nbsp;</td></tr>
-			
-	  </table>
-</div>
-<script type="text/javascript">
-contents = document.getElementsByClassName('tabset_content');
-for(var i = 1; i < contents.length; i++)
-{ldelim}
-	contents[i].style.display = 'none';
-{rdelim}
-//to set the slider to the default size
-document.getElementById('handle1').style.left='45px';
-</script>
-</div>
-</td></tr>
-</table>
-</form>
-</td></tr>
-</table>
-</td></tr>
-</table>
-</td>
+					</td>
+				</tr>
+				</table>
+
+		
+	</div>
+	</td>
+	
 </tr>
 </table>
+			
+			</td>
+			</tr>
+			</table>
+			
+			</td>
+			<td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>			
+			</tr>
+			</table>
+			
 
+
+
+<br>
 {$JAVASCRIPT}
-	{include file='SettingsSubMenu.tpl'}
+<div id="tempdiv" style="display:block;position:absolute;left:350px;top:200px;"></div>
+<!-- added for validation -->
+<script language="javascript">
+  var fieldname = new Array({$VALIDATION_DATA_FIELDNAME});
+  var fieldlabel = new Array({$VALIDATION_DATA_FIELDLABEL});
+  var fielddatatype = new Array({$VALIDATION_DATA_FIELDDATATYPE});
+function ShowHidefn(divid)
+{ldelim}
+	if($(divid).style.display != 'none')
+		Effect.Fade(divid);
+	else
+		Effect.Appear(divid);
+{rdelim}
+{literal}
+function fetchlogin_js(id)
+{
+	if($('login_history_cont').style.display != 'none')
+		Effect.Fade('login_history_cont');
+	else
+		fetchLoginHistory(id);
+
+}
+function fetchLoginHistory(id)
+{
+        $("status").style.display="inline";
+        new Ajax.Request(
+                'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                        method: 'post',
+                        postBody: 'module=Users&action=UsersAjax&file=ShowHistory&ajax=true&record='+id,
+                        onComplete: function(response) {
+                                $("status").style.display="none";
+                                $("login_history_cont").innerHTML= response.responseText;
+				Effect.Appear('login_history_cont');
+                        }
+                }
+        );
+
+}
+function fetchGroups_js(id)
+{
+	if($('user_group_cont').style.display != 'none')
+		Effect.Fade('user_group_cont');
+	else
+		fetchUserGroups(id);
+}
+function fetchUserGroups(id)
+{
+        $("status").style.display="inline";
+        new Ajax.Request(
+                'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                        method: 'post',
+                        postBody: 'module=Users&action=UsersAjax&file=UserGroups&ajax=true&record='+id,
+                        onComplete: function(response) {
+                                $("status").style.display="none";
+                                $("user_group_cont").innerHTML= response.responseText;
+				Effect.Appear('user_group_cont');
+                        }
+                }
+        );
+
+}
+
+function showAuditTrail()
+{
+	var userid =  document.getElementById('userid').value;
+	window.open("index.php?module=Users&action=UsersAjax&file=ShowAuditTrail&userid="+userid,"","width=650,height=800,resizable=0,scrollbars=1,left=100");
+}
+
+function deleteUser(userid)
+{
+        $("status").style.display="inline";
+        new Ajax.Request(
+                'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                        method: 'post',
+                        postBody: 'action=UsersAjax&file=UserDeleteStep1&return_action=ListView&return_module=Users&module=Users&parenttab=Settings&record='+userid,
+                        onComplete: function(response) {
+                                $("status").style.display="none";
+                                $("tempdiv").innerHTML= response.responseText;
+                        }
+                }
+        );
+}
+function transferUser(del_userid)
+{
+        $("status").style.display="inline";
+        $("DeleteLay").style.display="none";
+        var trans_userid=$('transfer_user_id').options[$('transfer_user_id').options.selectedIndex].value;
+	window.document.location.href = 'index.php?module=Users&action=DeleteUser&ajax_delete=false&delete_user_id='+del_userid+'&transfer_user_id='+trans_userid;
+}
+{/literal}
+</script>
+<script>
+function getListViewEntries_js(module,url)
+{ldelim}
+	$("status").style.display="inline";
+        new Ajax.Request(
+        	'index.php',
+                {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
+                	method: 'post',
+                        postBody:"module="+module+"&action="+module+"Ajax&file=ShowHistory&record={$ID}&ajax=true&"+url,
+			onComplete: function(response) {ldelim}
+                        	$("status").style.display="none";
+                                $("login_history_cont").innerHTML= response.responseText;
+                  	{rdelim}
+                {rdelim}
+        );
+{rdelim}
+</script>
+

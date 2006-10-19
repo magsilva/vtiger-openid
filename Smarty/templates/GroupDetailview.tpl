@@ -1,92 +1,129 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<form action="index.php" method="post" name="new" id="form">
-<input type="hidden" name="module" value="Users">
-<input type="hidden" name="action" value="createnewgroup">
-<input type="hidden" name="groupId" value="{$GROUPID}">
-<input type="hidden" name="mode" value="edit">
-<input type="hidden" name="parenttab" value="Settings">
-<tr>
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br/>
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$CMOD.LBL_GROUP_MEMBERS_LIST}</b></span>
-<hr noshade="noshade" size="1" />
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
-	
-	<table align="center" border="0" cellpadding="5" cellspacing="0" width="75%">
-	<tbody><tr><td colspan="2" style="border-bottom: 1px dashed rgb(204, 204, 204);">&nbsp;</td></tr>
-	<tr>
-	<td style="padding-right: 10px;" align="center"></td>
-	<td align="left">
-	<input title="Back" accessKey="C" class="button" onclick="window.history.back();" type="button" name="New" value=" <  Back " >
-	<input value="   Edit   " title="Edit" accessKey="E" class="button" type="submit" name="Edit" >&nbsp;&nbsp;
-	<input value=" Delete " title="Delete" accessKey="D" class="button" type="button" name="Delete" onClick="deletegroup('{$GROUPID}','{$GROUP_NAME}')";>&nbsp;&nbsp;
-	</td>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
+
+	<div align=center>
+			{include file='SetMenu.tpl'}
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<form action="index.php" method="post" name="new" id="form">
+				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="action" value="createnewgroup">
+				<input type="hidden" name="groupId" value="{$GROUPID}">
+				<input type="hidden" name="mode" value="edit">
+				<input type="hidden" name="parenttab" value="Settings">
+				<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ico-groups.gif" width="48" height="48" border=0 ></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listgroups&parenttab=Settings">{$CMOD.LBL_GROUPS}</a> &gt; {$CMOD.LBL_VIEWING} &quot;{$GROUPINFO.0.groupname}&quot; </b></td>
+				</tr>
+				<tr>
+					<td valign=top class="small">{$CMOD.LBL_VIEWING} {$CMOD.LBL_PROPERTIES} &quot;{$GROUPINFO.0.groupname}`&quot; {$CMOD.LBL_GROUP_NAME} </td>
+				</tr>
+				</table>
+				
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
+				<tr>
+				<td valign=top>
+					
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						<td class="big"><strong>{$CMOD.LBL_PROPERTIES} &quot;{$GROUPINFO.0.groupname}&quot; </strong></td>
+						<td><div align="right">
+					 	    <input value="   {$APP.LBL_EDIT_BUTTON_LABEL}   " title="{$APP.LBL_EDIT_BUTTON_TITLE}" accessKey="{$APP.LBL_EDIT_BUTTON_KEY}" class="crmButton small edit" type="submit" name="Edit" >
+						</div></td>
+					  </tr>
+					</table>
+					<table width="100%"  border="0" cellspacing="0" cellpadding="5">
+                      <tr class="small">
+                        <td width="15%" class="small cellLabel"><strong>{$CMOD.LBL_GROUP_NAME}</strong></td>
+                        <td width="85%" class="cellText" >{$GROUPINFO.0.groupname}</td>
+                      </tr>
+                      <tr class="small">
+                        <td class="small cellLabel"><strong>{$CMOD.LBL_DESCRIPTION}</strong></td>
+                        <td class="cellText">{$GROUPINFO.0.description}</td>
+                      </tr>
+                      <tr class="small">
+                        <td valign=top class="cellLabel"><strong>{$CMOD.LBL_MEMBER}</strong></td>
+                        <td class="cellText">
+						<table width="70%"  border="0" cellspacing="0" cellpadding="5">
+                          <tr class="small">
+                  		{foreach key=type item=details from=$GROUPINFO.1} 
+				{if $details.0 neq ''}		
+					{if $type == "User"}
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$MOD.LBL_USERS}</strong></div>
+					</td>
+					{/if}	
+					{if $type == "Role"}
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$MOD.LBL_ROLES}</strong></div>
+					</td>
+					{/if}	
+					{if $type == "Role and Subordinates"}
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$type}</strong></div>
+					</td>
+					{/if}	
+					{if $type == "Group"}
+                            		<td colspan="2" class="cellBottomDotLine">
+						<div align="left"><strong>{$CMOD.LBL_GROUPS}</strong></div>
+					</td>
+					{/if}	
+                            </tr>
+                          <tr class="small">
+
+                            <td width="16"><div align="center"></div></td>
+                            <td>
+					{foreach item=element from=$details}
+						<a href="index.php?module=Users&action={$element.memberaction}&{$element.actionparameter}={$element.memberid}">{$element.membername}</a><br />
+					{/foreach}
+			    </td>  	 
+                          </tr>
+				{/if}
+				{/foreach}
+                        </table></td>
+                      </tr>
+                    </table>
+					<br>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr><td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+					</table>
+					
+					
+				</td>
+				</tr>
+				</table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
+		</td>
 	</tr>
-	<tr><td colspan="2" style="border-top: 1px dashed rgb(204, 204, 204);">&nbsp;</td></tr>
-	<tr>
-	<td style="padding-right: 10px;" align="right" width="30%"><b>Group Name : </b></td>
-	<td align="left" width="70%">{$GROUPINFO.0.groupname}</td>
-	</tr>
-	<tr>
-	
-	<td style="padding-right: 10px;" align="right"><b>Description : </b></td>
-	<td>{$GROUPINFO.0.description}</td>
-	</tr>
-	<tr>
-	<td style="padding-right: 10px;" align="right">&nbsp;</td>
-	<td>&nbsp;</td>
-	</tr>
-	
-	<tr>
-	
-	<td style="border-bottom: 1px solid rgb(204, 204, 204); padding-right: 10px;" align="right" valign="top"><b>Member List : </b></td>
-	<td style="border-bottom: 1px solid rgb(204, 204, 204); text-align: left;">
-	<div style="overflow: auto; position: relative; left: 10px; top: 0px; width: 100%; height: 225px; text-align: left;">
-	
-	{foreach key=type item=details from=$GROUPINFO.1} 
-		{if $details.0 neq ''}		
-		<li><b style="margin: 0pt; padding: 0pt; font-weight: bold;">{$type}</b>
-		<ul style="list-style-type: none;">
-		{foreach item=element from=$details}
-			<li><a href="index.php?module=Users&action={$element.memberaction}&{$element.actionparameter}={$element.memberid}">{$element.membername}</a></li>
-		{/foreach}
-		</ul>
-		</li>
-		{/if}
-	{/foreach}	
-	
+	</form>
+	</table>
+		
 	</div>
-	</td>
-	</tr>
-	</tbody></table>
-	
 </td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-<script>
-function deletegroup(id,groupname)
-{ldelim}
-		if(confirm("Are you sure you want to delete the group "+groupname+" ?"))
-			document.location.href="index.php?module=Users&action=DeleteGroup&groupId="+id;	
-		else
-			return false;
-{rdelim}
-</script>
-	{include file='SettingsSubMenu.tpl'}
-

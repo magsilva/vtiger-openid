@@ -10,7 +10,8 @@
  ********************************************************************************/
 
 require_once('include/database/PearDatabase.php');
-global $adb;
+require_once('user_privileges/default_module_view.php');
+global $adb, $singlepane_view;
 $idlist = $_REQUEST['idlist'];
 $returnmodule = $_REQUEST['return_module'];
 if(isset($_REQUEST['idlist']) && $_REQUEST['idlist'] != '')
@@ -21,21 +22,27 @@ if(isset($_REQUEST['idlist']) && $_REQUEST['idlist'] != '')
 	{
 		if($id != '')
 		{
-		$sql = "insert into contpotentialrel values (".$id.",".$_REQUEST["parentid"] .")";
+		$sql = "insert into vtiger_contpotentialrel values (".$id.",".$_REQUEST["parentid"] .")";
 		$adb->query($sql);
-		$sql = "insert into seproductsrel values (". $_REQUEST["parentid"] .",".$id.")";
+		$sql = "insert into vtiger_seproductsrel values (". $_REQUEST["parentid"] .",".$id.")";
 		$adb->query($sql);
 		}
 	}
+	if($singlepane_view == 'true')
+		header("Location: index.php?action=DetailView&module=Potentials&record=".$_REQUEST["parentid"]);
+	else
  		header("Location: index.php?action=CallRelatedList&module=Potentials&record=".$_REQUEST["parentid"]);
 }
 elseif(isset($_REQUEST['entityid']) && $_REQUEST['entityid'] != '')
 {
-		$sql = "insert into contpotentialrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
+		$sql = "insert into vtiger_contpotentialrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
 		$adb->query($sql);
-		$sql = "insert into seproductsrel values (". $_REQUEST["parid"] .",".$_REQUEST["entityid"] .")";
+		$sql = "insert into vtiger_seproductsrel values (". $_REQUEST["parid"] .",".$_REQUEST["entityid"] .")";
 		$adb->query($sql);
- 		header("Location: index.php?action=CallRelatedList&module=Potentials&record=".$_REQUEST["parid"]);
+		if($singlepane_view == 'true')
+			header("Location: index.php?action=DetailView&module=Potentials&record=".$_REQUEST["parid"]);
+		else
+ 			header("Location: index.php?action=CallRelatedList&module=Potentials&record=".$_REQUEST["parid"]);
 }
 
 ?>

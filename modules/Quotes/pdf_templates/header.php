@@ -1,4 +1,14 @@
 <?php
+/*********************************************************************************
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ *
+ ********************************************************************************/
+
 
 // ************** Begin company information *****************
 $imageBlock=array("10","3","0","0");
@@ -52,7 +62,7 @@ $pdf->addRecBlock($account_name, "Customer Name", $termBlock);
 $dueBlock=array("80","65");
 $pdf->addRecBlock($valid_till, "Valid Till",$dueBlock);
 
-// invoice number block
+// vtiger_invoice number block
 $invBlock=array("147","65");
 $pdf->addRecBlock($quote_id, "Quote Number",$invBlock);
 

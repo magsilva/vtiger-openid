@@ -35,7 +35,7 @@ if($focus->column_fields["assigned_user_id"]==0 && $_REQUEST['assigned_group_nam
 	$grp_obj = new GetGroupUsers();
 	$grp_obj->getAllUsersInGroup(getGrpId($_REQUEST['assigned_group_name']));
 	$users_list = constructList($grp_obj->group_users,'INTEGER');
-	$sql = "select first_name, last_name, email1, email2, yahoo_id from users where id in ".$users_list;
+	$sql = "select first_name, last_name, email1, email2, yahoo_id from vtiger_users where id in ".$users_list;
 	$res = $adb->query($sql);
 	$user_email = '';
 	while ($user_info = $adb->fetch_array($res))
@@ -72,6 +72,9 @@ if($to_email == '' && $cc == '' && $bcc == '')
 else
 {
 	$mail_status = send_mail('Emails',$to_email,$current_user->user_name,'',$_REQUEST['subject'],$_REQUEST['description'],$cc,$bcc,'all',$focus->id);
+	
+	$query = 'update vtiger_emaildetails set email_flag ="SENT" where emailid='.$focus->id;
+	$adb->query($query);
 	//set the errorheader1 to 1 if the mail has not been sent to the assigned to user
 	if($mail_status != 1)//when mail send fails
 	{
@@ -80,6 +83,7 @@ else
 	}
 	elseif($mail_status == 1 && $to_email == '')//Mail send success only for CC and BCC but the 'to' email is empty 
 	{
+		$adb->query($query);
 		$errorheader1 = 1;
 		$mail_status_str = "cc_success=0&&&";
 	}
@@ -93,52 +97,72 @@ else
 //Added code from mysendmail.php which is contributed by Raju(rdhital)
 $parentid= $_REQUEST['parent_id'];
 $myids=explode("|",$parentid);
+$all_to_emailids = Array();
 for ($i=0;$i<(count($myids)-1);$i++)
 {
 	$realid=explode("@",$myids[$i]);
 	$nemail=count($realid);
 	$mycrmid=$realid[0];
-	$pmodule=getSalesEntityType($mycrmid);
-	for ($j=1;$j<$nemail;$j++)
+	if($realid[1] == -1)
 	{
-		$temp=$realid[$j];
-		//$myquery='Select columnname from field where fieldid='.$temp;
-		$myquery='Select columnname from field where fieldid='.PearDatabase::quote($temp);
-		$fresult=$adb->query($myquery);			
-		if ($pmodule=='Contacts')
+		//handle the mail send to vtiger_users
+		$emailadd = $adb->query_result($adb->query("select email1 from vtiger_users where id=$mycrmid"),0,'email1');
+		$pmodule = 'Users';
+		$description = getMergedDescription($focus->column_fields['description'],$mycrmid,$pmodule);
+		$mail_status = send_mail('Emails',$emailadd,$current_user->user_name,'',$focus->column_fields['subject'],$description,'','','all',$focus->id);
+		$all_to_emailids []= $emailadd;
+		$mail_status_str .= $emailadd."=".$mail_status."&&&";
+	}
+	else
+	{
+		//Send mail to vtiger_account or lead or contact based on their ids
+		$pmodule=getSalesEntityType($mycrmid);
+		for ($j=1;$j<$nemail;$j++)
 		{
-			require_once('modules/Contacts/Contact.php');
-			$myfocus = new Contact();
-			$myfocus->retrieve_entity_info($mycrmid,"Contacts");
-		}
-		elseif ($pmodule=='Accounts')
-		{
-			require_once('modules/Accounts/Account.php');
-			$myfocus = new Account();
-			$myfocus->retrieve_entity_info($mycrmid,"Accounts");
-		} 
-		elseif ($pmodule=='Leads')
-		{
-			require_once('modules/Leads/Lead.php');
-			$myfocus = new Lead();
-			$myfocus->retrieve_entity_info($mycrmid,"Leads");
-		}
-		$fldname=$adb->query_result($fresult,0,"columnname");
-		$emailadd=br2nl($myfocus->column_fields[$fldname]);
-
-		if($emailadd != '')
-		{
-			$mail_status = send_mail('Emails',$emailadd,$current_user->user_name,'',$focus->column_fields['subject'],$focus->column_fields['description'],'','','all',$focus->id);
-			$mail_status_str .= $emailadd."=".$mail_status."&&&";
-			//added to get remain the EditView page if an error occurs in mail sending
-			if($mail_status != 1)
+			$temp=$realid[$j];
+			$myquery='Select columnname from vtiger_field where fieldid='.$adb->quote($temp);
+			$fresult=$adb->query($myquery);			
+			if ($pmodule=='Contacts')
 			{
-				$errorheader2 = 1;
+				require_once('modules/Contacts/Contact.php');
+				$myfocus = new Contact();
+				$myfocus->retrieve_entity_info($mycrmid,"Contacts");
 			}
-		}
-	}	
-}
+			elseif ($pmodule=='Accounts')
+			{
+				require_once('modules/Accounts/Account.php');
+				$myfocus = new Account();
+				$myfocus->retrieve_entity_info($mycrmid,"Accounts");
+			} 
+			elseif ($pmodule=='Leads')
+			{
+				require_once('modules/Leads/Lead.php');
+				$myfocus = new Lead();
+				$myfocus->retrieve_entity_info($mycrmid,"Leads");
+			}
+			$fldname=$adb->query_result($fresult,0,"columnname");
+			$emailadd=br2nl($myfocus->column_fields[$fldname]);
 
+			if($emailadd != '')
+			{
+				$description = getMergedDescription($focus->column_fields['description'],$mycrmid,$pmodule);
+				if(isPermitted($pmodule,'DetailView',$mycrmid) == 'yes')
+				{
+					$mail_status = send_mail('Emails',$emailadd,$current_user->user_name,'',$focus->column_fields['subject'],$description,'','','all',$focus->id);
+				}	
+
+				$all_to_emailids []= $emailadd;
+				$mail_status_str .= $emailadd."=".$mail_status."&&&";
+				//added to get remain the EditView page if an error occurs in mail sending
+				if($mail_status != 1)
+				{
+					$errorheader2 = 1;
+				}
+			}
+		}	
+	}
+
+}
 //Added to redirect the page to Emails/EditView if there is an error in mail sending
 if($errorheader1 == 1 || $errorheader2 == 1)
 {
@@ -155,12 +179,23 @@ if($errorheader1 == 1 || $errorheader2 == 1)
 		$returnid = $_REQUEST['currentid'];
 	}
 }
-
+else
+{
+	global $adb;
+	$date_var = date('Ymd');
+	$query = 'update vtiger_activity set date_start ='.$date_var.' where activityid = '.$returnid;
+	$adb->query($query);
+}
 //The following function call is used to parse and form a encoded error message and then pass to result page
 $mail_error_str = getMailErrorString($mail_status_str);
 $adb->println("Mail Sending Process has been finished.\n\n");
-
-header("Location:index.php?module=$returnmodule&action=$returnaction&record=$returnid&$returnset&$mail_error_str");
+if(isset($_REQUEST['popupaction']) && $_REQUEST['popupaction'] != '')
+{
+	//this will fix #1211
+	$inputs="<script>window.opener.location.href=window.opener.location.href;window.self.close();</script>";
+	echo $inputs;
+}
+//header("Location:index.php?module=$returnmodule&action=$returnaction&record=$returnid&$returnset&$mail_error_str");
 
 
 ?>

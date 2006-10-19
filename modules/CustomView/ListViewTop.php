@@ -20,6 +20,32 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
+      /** to get the details of a KeyMetrics on Home page 
+        * @returns  $customviewlist Array in the following format
+	* $values = Array('Title'=>Array(0=>'image name',
+	*				 1=>'Key Metrics',
+	*			 	 2=>'home_metrics'
+	*			 	),
+	*		  'Header'=>Array(0=>'Metrics',
+	*	  			  1=>'Count'
+	*			  	),
+	*		  'Entries'=>Array($cvid=>Array(
+	*			  			0=>$customview name,
+	*						1=>$no of records for the view
+	*					       ),
+	*				   $cvid=>Array(
+        *                                               0=>$customview name,
+        *                                               1=>$no of records for the view
+        *                                              ),
+	*					|
+	*					|
+        *				   $cvid=>Array(
+        *                                               0=>$customview name,
+        *                                               1=>$no of records for the view
+        *                                              )	
+	*				  )
+	*
+       */
 function getKeyMetrics()
 {
 	require_once("data/Tracker.php");
@@ -89,11 +115,20 @@ function getKeyMetrics()
 		return $values;
 
 }
+	
+	/** to get the details of a customview Entries
+	  * @returns  $metriclists Array in the following format
+	  * $customviewlist []= Array('id'=>custom view id,
+	  *                         'name'=>custom view name,
+	  *                         'module'=>modulename,
+	  			    'count'=>''
+			           )	
+	 */
 function getMetricList()
 {
 	global $adb;
-	$ssql = "select customview.* from customview inner join tab on tab.name = customview.entitytype";
-	$ssql .= " where customview.setmetrics = 1 order by customview.entitytype";
+	$ssql = "select vtiger_customview.* from vtiger_customview inner join vtiger_tab on vtiger_tab.name = vtiger_customview.entitytype";
+	$ssql .= " where vtiger_customview.setmetrics = 1 order by vtiger_customview.entitytype";
 	$result = $adb->query($ssql);
 	while($cvrow=$adb->fetch_array($result))
 	{
@@ -103,8 +138,8 @@ function getMetricList()
 		$metricslist['name'] = $cvrow['viewname'];
 		$metricslist['module'] = $cvrow['entitytype'];
 		$metricslist['count'] = '';
-
-		$metriclists[] = $metricslist;
+		if(isPermitted($cvrow['entitytype'],"index") == "yes")
+			$metriclists[] = $metricslist;
 	}
 
 	return $metriclists;

@@ -27,68 +27,7 @@ require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
-
-$submenu = array('LBL_EMAILS_TITLE'=>'index.php?module=Emails&action=ListView.php','LBL_WEBMAILS_TITLE'=>'index.php?module=Webmails&action=index&parenttab=My Home Page');
-
-$sec_arr = array('index.php?module=Emails&action=ListView.php'=>'Emails','index.php?module=Webmails&action=index&parenttab=parenttab=My Home Page'=>'Emails'); 
-
-if($_REQUEST['ajax'] == '')
-{
-echo '<br>';
-
-?>
-<table width="100%" border="0" cellspacing="0" cellpadding="0">
- <tr>
-   <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
-   <tr>
-     <td class="tabStart">&nbsp;&nbsp;</td>
-<?
-	if(isset($_REQUEST['smodule']) && $_REQUEST['smodule'] != '')
-	{
-		$classname = "tabOff";
-	}
-	else
-	{
-		$classname = "tabOn";
-	}
-	$listView = "ListView.php";
-	foreach($submenu as $label=>$filename)
-	{
-		$cur_mod = $sec_arr[$filename];
-		$cur_tabid = getTabid($cur_mod);
-
-		if($tab_per_Data[$cur_tabid] == 0)
-		{
-			list($lbl,$sname,$title)=split("_",$label);
-			if(stristr($label,"EMAILS"))
-			{
-				echo '<td class="tabOn" nowrap><a href="index.php?module=Emails&action=ListView" class="tabLink">'.$mod_strings[$label].'</a>&nbsp;&nbsp;&nbsp;</td>';
-				$listView = $filename;
-				$classname = "tabOff";
-			}
-			elseif(stristr($label,$_REQUEST['smodule']))
-			{
-				echo '<td class="tabOn" nowrap><a href="index.php?module=Webmails&action=index&smodule='.$_REQUEST['smodule'].'&parenttab=My Home Page" class="tabLink">'.$mod_strings[$label].'</a></td>';	
-				$listView = $filename;
-				$classname = "tabOff";
-			}
-			else
-			{
-				echo '<td class="'.$classname.'" nowrap><a href="index.php?module=Webmails&action=index&smodule='.$sname.'&parenttab=My Home Page" class="tabLink">'.$mod_strings[$label].'</a></td>';	
-			}
-			$classname = "tabOff";
-		}
-
-	}
-?>
-     <td width="100%" class="tabEnd">&nbsp;</td>
-   </tr>
- </table></td>
- </tr>
- </table>
- <br>
-<?
-}
+global $current_user;
 global $app_strings;
 global $mod_strings;
 
@@ -131,10 +70,11 @@ $oCustomView = new CustomView("Emails");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
 //<<<<<customview>>>>>
 
 // Buttons and View options
-if(isPermitted('Emails',2,'') == 'yes')
+if(isPermitted('Emails','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
 }
@@ -144,21 +84,20 @@ if($viewnamedesc['viewname'] == 'All')
 	$smarty->assign("ALL", 'All');
 }
 
-if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
-{
-	$where=Search($currentModule);
-	// we have a query
-	$url_string .="&query=true";
-	if (isset($_REQUEST['subject'])) $name = $_REQUEST['subject'];
-	if (isset($_REQUEST['contactname'])) $contactname = $_REQUEST['contactname'];
-	if(isset($_REQUEST['current_user_only'])) $current_user_only = $_REQUEST['current_user_only'];
-
-	$log->info("Here is the where clause for the list view: $where");
-}
-
 global $email_title;
 $display_title = $mod_strings['LBL_LIST_FORM_TITLE'];
 if($email_title)$display_title = $email_title;
+
+//to get the search vtiger_field if exists
+if(isset($_REQUEST['search']) && $_REQUEST['search'] != '' && $_REQUEST['search_text'] != '')
+{
+	$url_string .= "&search=".$_REQUEST['search']."&search_field=".$_REQUEST['search_field']."&search_text=".$_REQUEST['search_text'];
+	if($_REQUEST['search_field'] != 'join')
+		$where = $_REQUEST['search_field']." like '%".$_REQUEST['search_text']."%'";	
+	else
+		$where = "(subject like '%".$_REQUEST['search_text']."%' OR vtiger_users.user_name like '%".$_REQUEST['search_text']."%')";	
+}
+
 
 //Retreive the list from Database
 //<<<<<<<<<customview>>>>>>>>>
@@ -173,19 +112,37 @@ else
 }
 //<<<<<<<<customview>>>>>>>>>
 
-
 if(isset($where) && $where != '')
 {
 	$list_query .= " AND " .$where;
 }
-
+if($_REQUEST['folderid'] =='2')
+{
+	$list_query .= "AND vtiger_seactivityrel.crmid in (select contactid from vtiger_contactdetails) AND vtiger_emaildetails.email_flag !='WEBMAIL'";
+}
+if($_REQUEST['folderid'] =='3')
+{
+	$list_query .= "AND vtiger_seactivityrel.crmid in (select accountid from vtiger_account)";	
+}
+if($_REQUEST['folderid'] =='4')
+{
+	$list_query .= "AND vtiger_seactivityrel.crmid in (select leadid from vtiger_leaddetails)";	
+}
+if($_REQUEST['folderid'] =='5')
+{
+	$list_query .= "AND vtiger_salesmanactivityrel.smid in (select id from vtiger_users)";	
+}
+if($_REQUEST['folderid'] =='6')
+{
+	$list_query .= "AND vtiger_emaildetails.email_flag ='WEBMAIL'";	
+}
 if(isset($order_by) && $order_by != '')
 {
 	$tablename = getTableNameForField('Emails',$order_by);
 	$tablename = (($tablename != '')?($tablename."."):'');
-
-        $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
+    $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 }
+
 $list_result = $adb->query($list_query);
 
 //Constructing the list view
@@ -203,51 +160,28 @@ $smarty->assign("CATEGORY",$category);
 //Retreiving the no of rows
 $noofrows = $adb->num_rows($list_result);
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
-{
-	$start = $_REQUEST['start'];
-
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-	$start = 1;
-}
 //Retreive the Navigation array
-$navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
-
-// Setting the record count string
-//modified by rdhital
-$start_rec = $navigation_array['start'];
-$end_rec = $navigation_array['end_val']; 
-//By Raju Ends
-
-$record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
+$_REQUEST['allflag'] = 'All';
+$navigation_array = getNavigationValues(1, $noofrows, $noofrows);
 
 //Retreive the List View Table Header
 if($viewid !='')
 	$url_string .="&viewname=".$viewid;
-
+if(isset($_REQUEST['folderid']) && $_REQUEST['folderid'] != '')
+	$url_string .= "&folderid=".$_REQUEST['folderid'];
 $listview_header = getListViewHeader($focus,"Emails",$url_string,$sorder,$order_by,"",$oCustomView);
 $smarty->assign("LISTHEADER", $listview_header);
 
-$listview_header = getSearchListHeaderValues($focus,"Emails",$url_string,$sorder,$order_by,"",$oCustomView);
-$smarty->assign("SEARCHLISTHEADER",$listview_header_search);
-
 $listview_entries = getListViewEntries($focus,"Emails",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
-$smarty->assign("LISTENTITY", $listview_entries);                                                                          $smarty->assign("SELECT_SCRIPT", $view_script);
+$smarty->assign("LISTENTITY", $listview_entries);                                                  
+$smarty->assign("SELECT_SCRIPT", $view_script);
 
-$navigationOutput = getTableHeaderNavigation($navigation_array,$url_string,"Emails","index",$viewid);
-$alphabetical = AlphabeticalSearch($currentModule,'index','subject','true','basic',"","","","",$viewid);
-$smarty->assign("ALPHABETICAL", $alphabetical);
-$smarty->assign("NAVIGATION", $navigationOutput);
-$smarty->assign("RECORD_COUNTS", $record_string);
+$smarty->assign("USERID", $current_user->id);
 
-
-if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
-	$smarty->display("ListViewEntries.tpl");
-else	
-	$smarty->display("ListView.tpl");
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+if($_REQUEST['ajax'] != '')
+	$smarty->display("EmailContents.tpl");
+else
+	$smarty->display("Emails.tpl");
 ?>

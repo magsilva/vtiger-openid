@@ -43,6 +43,8 @@ class ImportLead extends Lead {
 
 	var $importable_fields = Array();
 
+	/**	function used to set the assigned_user_id value in the column_fields when we map the username during import
+	 */
 	function assign_user()
 	{
 		global $current_user;
@@ -53,7 +55,8 @@ class ImportLead extends Lead {
 		{
 			$this->db->println("searching and assigning ".$ass_user);
 
-			$result = $this->db->query("select id from users where user_name = '".$ass_user."'");
+			//$result = $this->db->query("select id from vtiger_users where user_name = '".$ass_user."'");
+			$result = $this->db->query("select id from vtiger_users where id = '".$ass_user."'");
 			if($this->db->num_rows($result)!=1)
 			{
 				$this->db->println("not exact records setting current userid");
@@ -77,6 +80,8 @@ class ImportLead extends Lead {
 		}
 	}
 
+	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
+	 */
 	function ImportLead() {
 		
 		$this->log = LoggerManager::getLogger('import_lead');

@@ -10,21 +10,35 @@
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
 global $adb;
-$sharedid = $_REQUEST['sharedid'];
-if(isset($_REQUEST['sharedid']) && $_REQUEST['sharedid'] != '')
+
+if(isset($_REQUEST['hour_format']) && $_REQUEST['hour_format'] != '')
+	$hour_format = $_REQUEST['hour_format'];
+else
+	$hour_format = 'am/pm';
+$delquery = "delete from vtiger_sharedcalendar where userid=".$_REQUEST["current_userid"];
+$adb->query($delquery);
+$sharedid = $_REQUEST['user'];
+if(isset($sharedid) && $sharedid != null)
 {
-        //split the string and store in an array
-        $storearray = explode (";",$sharedid);
-        foreach($storearray as $sid)
+        foreach($sharedid as $sid)
         {
                 if($sid != '')
                 {
-			$sql = "insert into sharedcalendar values (".$_REQUEST["current_userid"].",".$sid.")";
+			$sql = "insert into vtiger_sharedcalendar values (".$_REQUEST["current_userid"].",".$sid.")";
 		        $adb->query($sql);
                 }
         }
-        header("Location: index.php?action=calendar_share&module=Calendar");
 }
+if(isset($_REQUEST['start_hour']) && $_REQUEST['start_hour'] != '')
+{
+	$sql = "update vtiger_users set start_hour='".$_REQUEST['start_hour']."' where id=".$current_user->id;
+        $adb->query($sql);
+}
+
+$sql = "update vtiger_users set hour_format='".$hour_format."' where id=".$current_user->id;
+$adb->query($sql);
+RecalculateSharingRules();
+header("Location: index.php?action=index&module=Calendar&view=".$_REQUEST['view']."&hour=".$_REQUEST['hour']."&day=".$_REQUEST['day']."&month=".$_REQUEST['month']."&year=".$_REQUEST['year']."&viewOption=".$_REQUEST['viewOption']."&subtab=".$_REQUEST['subtab']."&parenttab=".$_REQUEST['parenttab']);
 
 ?>
 

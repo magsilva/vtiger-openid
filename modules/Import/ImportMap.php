@@ -29,7 +29,7 @@ class ImportMap extends SugarBean
 	var $log;
 	var $db;
 
-	// Stored fields
+	// Stored vtiger_fields
 	var $id;
 	var $name;
 	var $module;
@@ -41,7 +41,7 @@ class ImportMap extends SugarBean
 	var $assigned_user_id;
 	var $is_published;
 
-	var $table_name = "import_maps";
+	var $table_name = "vtiger_import_maps";
 	var $object_name = "ImportMap";
 	var $module_id="id";
 	
@@ -60,23 +60,35 @@ class ImportMap extends SugarBean
 		,"is_published"
 		);
 
-
+	/**	Constructor
+	 */
 	function ImportMap() 
 	{
 		$this->log = LoggerManager::getLogger('file');
 		$this->db = new PearDatabase();
 	}
 
+	/**	function used to get the id, name, module and content as string
+	 *	@return string Object:ImportMap id=$this->id name=$this->name module=$this->module content=$this->content
+	 */
 	function toString()
 	{
 		return "Object:ImportMap id=$this->id name=$this->name module=$this->module content=$this->content";
 	}
 
+	/**	function used to save the mapping 
+	 *	@param int $owner_id - user id who is the owner for this mapping
+	 *	@param string $name - name of the mapping
+	 *	@param string $module - module name in which we have saved the mapping
+	 *	@param string $has_header - has_header value
+	 *	@param string $content - all fields which are concatenated with & symbol
+	 *	@return int $result - return 1 if the mapping contents updated
+	 */
         function save_map( $owner_id, $name, $module, $has_header,$content )
         {
 		$query_arr = array('assigned_user_id'=>$owner_id,'name'=>$name);
 
-		$this->retrieve_by_string_fields($query_arr, false);
+		//$this->retrieve_by_string_fields($query_arr, false);
 
                 $result = 1;
                 $this->assigned_user_id = $owner_id;
@@ -94,6 +106,11 @@ class ImportMap extends SugarBean
                 return $result;
         }
 
+	/**	function used to publish or unpublish the mapping
+	 *	@param int $user_id - user id who is publishing the map
+	 *	@param string $flag - yes or no
+	 *	@return value - if flag is yes then update the db and return 1 otherwise return -1
+	 */
         function mark_published($user_id,$flag)
         {
 		$other_map = new ImportMap();
@@ -129,6 +146,10 @@ class ImportMap extends SugarBean
         }
 
 
+	/**	function to retrieve all the column fields and set as properties
+	 *	@param array $fields_array - fields array of the corresponding module
+	 *	@return array $obj_arr - return an array which contains the retrieved column_field values as properties
+	 */
 	function retrieve_all_by_string_fields($fields_array) 
 	{ 
 		$where_clause = $this->get_where($fields_array);
@@ -151,6 +172,43 @@ class ImportMap extends SugarBean
 			array_push($obj_arr,$focus);
 		}
 		return $obj_arr;
+	}
+
+	/**	function used to get the list of saved mappings
+	 *	@param string $module - module name which we currently importing
+	 *	@return array $map_lists - return the list of mappings in the format of [id]=>name
+	 */
+	function getSavedMappingsList($module)
+	{
+		$query = "SELECT * FROM $this->table_name where module='".$module."'";
+		$result = $this->db->query($query,true," Error: ");
+		$map_lists = array();
+
+		while ($row = $this->db->fetchByAssoc($result,-1,FALSE) )
+		{	
+			$map_lists[$row['id']] = $row['name'];
+		}
+		return $map_lists;
+	}
+
+	/**	function used to retrieve the mapping content for the passed mapid
+	 *	@param int $mapid - mapid for the selected map
+	 *	@return array $mapping_arr - return the array which contains the mapping_arr[name]=value from the content of the map
+	 */
+	function getSavedMappingContent($mapid)
+	{
+		$query = "SELECT * FROM $this->table_name where id='".$mapid."'";
+		$result = $this->db->query($query,true," Error: ");
+		$mapping_arr = array();
+
+		$pairs = split("&",$this->db->query_result($result,0,'content'));
+		foreach ($pairs as $pair)
+		{
+			list($name,$value) = split("=",$pair);
+			$mapping_arr["$name"] = $value;
+		}
+
+		return $mapping_arr;
 	}
 
 }

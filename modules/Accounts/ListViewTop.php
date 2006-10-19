@@ -19,8 +19,14 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
+
+/**Function to get the top 5 Accounts order by Amount in Descending Order
+ *return array $values - array with the title, header and entries like  Array('Title'=>$title,'Header'=>$listview_header,'Entries'=>$listview_entries) where as listview_header and listview_entries are arrays of header and entity values which are returned from function getListViewHeader and getListViewEntries
+*/
 function getTopAccounts()
 {
+	$log = LoggerManager::getLogger('top accounts_list');
+	$log->debug("Entering getTopAccounts() method ...");
 	require_once("data/Tracker.php");
 	require_once('modules/Potentials/Opportunity.php');
 	require_once('include/logging.php');
@@ -30,12 +36,11 @@ function getTopAccounts()
 	global $current_language;
 	global $current_user;
 	$current_module_strings = return_module_language($current_language, "Accounts");
-	$log = LoggerManager::getLogger('top accounts_list');
 
-	$list_query = 'select account.accountid, account.accountname, account.tickersymbol, sum(potential.amount) as amount from potential inner join crmentity on (potential.potentialid=crmentity.crmid) inner join account on (potential.accountid=account.accountid) where crmentity.deleted=0 AND crmentity.smownerid="'.$current_user->id.'" and potential.sales_stage <> "'.$app_strings['LBL_CLOSE_WON'].'" and potential.sales_stage <> "'.$app_strings['LBL_CLOSE_LOST'].'" group by account.accountname order by 3 desc;';
+	$list_query = "select vtiger_account.accountid, vtiger_account.accountname, vtiger_account.tickersymbol, sum(vtiger_potential.amount) as amount from vtiger_potential inner join vtiger_crmentity on (vtiger_potential.potentialid=vtiger_crmentity.crmid) inner join vtiger_account on (vtiger_potential.accountid=vtiger_account.accountid) where vtiger_crmentity.deleted=0 AND vtiger_crmentity.smownerid='".$current_user->id."' and vtiger_potential.sales_stage <> '".$app_strings['LBL_CLOSE_WON']."' and vtiger_potential.sales_stage <> '".$app_strings['LBL_CLOSE_LOST']."' group by vtiger_account.accountid, vtiger_account.accountname, vtiger_account.tickersymbol order by amount desc;";
 	$list_result=$adb->query($list_query);
 	$open_accounts_list = array();
-	$noofrows = min($adb->num_rows($list_result),7);
+	$noofrows = min($adb->num_rows($list_result),5);
 	if (count($list_result)>0)
 		for($i=0;$i<$noofrows;$i++) 
 		{
@@ -54,8 +59,9 @@ function getTopAccounts()
 	$header=array();
 	$header[]=$current_module_strings['LBL_LIST_ACCOUNT_NAME'];
 	$currencyid=fetchCurrency($current_user->id);
-        $curr_symbol=getCurrencySymbol($currencyid);
-        $rate = getConversionRate($currencyid,$curr_symbol);
+	$rate_symbol = getCurrencySymbolandCRate($currencyid);
+	$rate = $rate_symbol['rate'];
+	$curr_symbol = $rate_symbol['symbol'];
         $header[]=$current_module_strings['LBL_LIST_AMOUNT'].'('.$curr_symbol.')';
 	
 	$entries=array();
@@ -68,12 +74,13 @@ function getTopAccounts()
 				'AMOUNT' => ($account['amount']),
 				);
 
-		$value[]='<a href="index.php?action=DetailView&module=Accounts&record='.$account['accountid'].'" onMouseOver=getHeadLines("'.$account['tickersymbol'].'")>'.$account['accountname'].'</a>';
+		$value[]='<a href="index.php?action=DetailView&module=Accounts&record='.$account['accountid'].'">'.$account['accountname'].'</a>';
 		$value[]=convertFromDollar($account['amount'],$rate);
 		$entries[$account['accountid']]=$value;	
 	}
 	$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
-	if ( ($display_empty_home_blocks && count($open_accounts_list) == 0 ) || (count($open_accounts_list)>0) )
+	$log->debug("Exiting getTopAccounts method ...");
+	if (($display_empty_home_blocks && count($entries) == 0 ) || (count($entries)>0))
 		return $values;
 }
 ?>

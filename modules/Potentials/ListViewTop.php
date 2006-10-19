@@ -19,8 +19,14 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
+
+/**Function to get the top 5 Potentials order by Amount in Descending Order
+ *return array $values - array with the title, header and entries like  Array('Title'=>$title,'Header'=>$listview_header,'Entries'=>$listview_entries) where as listview_header and listview_entries are arrays of header and entity values which are returned from function getListViewHeader and getListViewEntries
+*/
 function getTopPotentials()
 {
+	$log = LoggerManager::getLogger('top opportunity_list');
+	$log->debug("Entering getTopPotentials() method ...");
 	require_once("data/Tracker.php");
 	require_once('modules/Potentials/Opportunity.php');
 	require_once('include/logging.php');
@@ -31,19 +37,19 @@ function getTopPotentials()
 	global $current_language;
 	global $current_user;
 	$current_module_strings = return_module_language($current_language, "Potentials");
-	$log = LoggerManager::getLogger('top opportunity_list');
 
 	$title=array();
 	$title[]='myTopOpenPotentials.gif';
 	$title[]=$current_module_strings['LBL_TOP_OPPORTUNITIES'];
 	$title[]='home_mypot';
-	$where = "AND potential.sales_stage <> '".$app_strings['LBL_CLOSE_WON']."' AND potential.sales_stage <> '".$app_strings['LBL_CLOSE_LOST']."' AND crmentity.smownerid='".$current_user->id."' ORDER BY amount DESC";
+	$where = "AND vtiger_potential.sales_stage <> '".$app_strings['LBL_CLOSE_WON']."' AND vtiger_potential.sales_stage <> '".$app_strings['LBL_CLOSE_LOST']."' AND vtiger_crmentity.smownerid='".$current_user->id."' ORDER BY amount DESC";
 	$header=array();
 	$header[]=$current_module_strings['LBL_LIST_OPPORTUNITY_NAME'];
 	$header[]=$current_module_strings['LBL_LIST_ACCOUNT_NAME'];
 	$currencyid=fetchCurrency($current_user->id);
-        $curr_symbol=getCurrencySymbol($currencyid);
-        $rate = getConversionRate($currencyid,$curr_symbol);
+	$rate_symbol = getCurrencySymbolandCRate($currencyid);
+	$rate = $rate_symbol['rate'];
+	$curr_symbol = $rate_symbol['symbol'];
         $header[]=$current_module_strings['LBL_LIST_AMOUNT'].'('.$curr_symbol.')';
 	$header[]=$current_module_strings['LBL_LIST_DATE_CLOSED'];
 	$list_query = getListQuery("Potentials",$where);
@@ -72,6 +78,9 @@ function getTopPotentials()
 	$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
 
 	if ( ($display_empty_home_blocks && count($open_potentials_list) == 0 ) || (count($open_potentials_list)>0) )
+	{
+		$log->debug("Exiting getTopPotentials method ...");
 		return $values;		
+	}
 }
 ?>

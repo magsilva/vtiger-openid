@@ -12,6 +12,15 @@
 
 require_once('Smarty_setup.php');
 require_once('modules/Quotes/Quote.php');
+//Redirecting Header for single page layout
+require_once('user_privileges/default_module_view.php');
+global $singlepane_view;
+if($singlepane_view == 'true' && $_REQUEST['action'] == 'CallRelatedList' )
+{
+	header("Location:index.php?action=DetailView&module=".$_REQUEST['module']."&record=".$_REQUEST['record']."&parenttab=".$_REQUEST['parenttab']);
+}
+else
+{
 $focus = new Quote();
 $currentmodule = $_REQUEST['module'];
 $RECORD = $_REQUEST['record'];
@@ -23,17 +32,34 @@ $log->debug("id is ".$focus->id);
 $log->debug("name is ".$focus->name);
 }
 
+global $mod_strings,$currentModule;
+global $app_strings;
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+require_once($theme_path.'layout_utils.php');
+
 $smarty = new vtigerCRM_Smarty;
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
-$related_array=getRelatedLists("Quotes",$focus);
+$related_array=getRelatedLists($currentModule,$focus);
 $smarty->assign("RELATEDLISTS", $related_array);
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
-
-$smarty->assign("id",$focus->id);
-$smarty->assign("ID",$RECORD );
+if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
+	$smarty->assign("OP_MODE",$_REQUEST['mode']);
+}
+$smarty->assign("ID",$focus->id);
 $smarty->assign("MODULE",$currentmodule);
-$smarty->assign("SINGLE_MOD","Quote");
+$smarty->assign("SINGLE_MOD",$app_strings['Quote']);
+$smarty->assign("UPDATEINFO",updateInfo($focus->id));
+$smarty->assign("MOD",$mod_strings);
+$smarty->assign("APP",$app_strings);
+$smarty->assign("THEME", $theme);
+$smarty->assign("IMAGE_PATH", $image_path);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 $smarty->display("RelatedLists.tpl");
+}
 ?>

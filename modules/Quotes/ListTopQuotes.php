@@ -12,6 +12,10 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  ********************************************************************************/
+
+/**	function used to get the top 5 quotes from the ListView query
+ *	@return array $values - array with the title, header and entries like  Array('Title'=>$title,'Header'=>$listview_header,'Entries'=>$listview_entries) where as listview_header and listview_entries are arrays of header and entity values which are returned from function getListViewHeader and getListViewEntries
+ */
 function getTopQuotes()
 {
 	require_once("data/Tracker.php");
@@ -56,7 +60,7 @@ function getTopQuotes()
 	//<<<<<<<<<customview>>>>>>>>>
 	$date_var = date('Y-m-d');
 
-	$where = ' and crmentity.smownerid='.$current_user->id.' and  quotes.validtill >= \''.$date_var.'\' ORDER BY total DESC';
+	$where = ' and vtiger_crmentity.smownerid='.$current_user->id.' and  vtiger_quotes.validtill >= \''.$date_var.'\' ORDER BY total DESC';
 	$query = getListQuery("Quotes",$where);
 
 	//<<<<<<<<customview>>>>>>>>>

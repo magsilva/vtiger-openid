@@ -29,7 +29,6 @@ include("modules/Emails/mail.php");
 $local_log =& LoggerManager::getLogger('index');
 
 $focus = new SalesOrder();
-
 setObjectValuesFromRequest(&$focus);
 
 $focus->save("SalesOrder");
@@ -38,49 +37,14 @@ $focus->save("SalesOrder");
 if($focus->column_fields["quote_id"] != '')
 {
         $qt_id = $focus->column_fields["quote_id"];
-        $query1 = "update quotes set quotestage='Accepted' where quoteid=".$qt_id;
+        $query1 = "update vtiger_quotes set quotestage='Accepted' where quoteid=".$qt_id;
         $adb->query($query1);
 }
 
-$ext_prod_arr = Array();
-if($focus->mode == 'edit')
-{
-	$query2  = "select * from soproductrel where salesorderid=".$focus->id;
-        $result2 = $adb->query($query2);
-        $num_rows = $adb->num_rows($result2);
-        for($i=0; $i<$num_rows;$i++)
-        {
-                $pro_id = $adb->query_result($result2,$i,"productid");
-                $pro_qty = $adb->query_result($result2,$i,"quantity");
-                $ext_prod_arr[$pro_id] = $pro_qty;
-        }
+//Based on the total Number of rows we will save the product relationship with this entity
+saveInventoryProductDetails(&$focus, 'SalesOrder');
 
-	
-        $query1 = "delete from soproductrel where salesorderid=".$focus->id;
-        $adb->query($query1);
 
-}
-//Printing the total Number of rows
-$tot_no_prod = $_REQUEST['totalProductCount'];
-for($i=1; $i<=$tot_no_prod; $i++)
-{
-        $product_id_var = 'hdnProductId'.$i;
-        $status_var = 'hdnRowStatus'.$i;
-        $qty_var = 'txtQty'.$i;
-        $list_price_var = 'txtListPrice'.$i;
-
-        $prod_id = $_REQUEST[$product_id_var];
-        $prod_status = $_REQUEST[$status_var];
-        $qty = $_REQUEST[$qty_var];
-        $listprice = $_REQUEST[$list_price_var];
-        if($prod_status != 'D')
-        {
-
-                $query ="insert into soproductrel values(".$focus->id.",".$prod_id.",".$qty.",".$listprice.")";
-                $adb->query($query);
-		updateStk($prod_id,$qty,$focus->mode,$ext_prod_arr,'SalesOrder');
-        }
-}
 $return_id = $focus->id;
 
 if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];

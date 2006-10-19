@@ -39,9 +39,9 @@ foreach($defSharingPermissionData as $tab_id => $def_perr)
 	$access_privileges[] = $entity_name;
 	$access_privileges[] = $entity_perr;
 	if($entity_perr != 'Private')	
-		$access_privileges[] = 'Users can '.str_replace('Public:','',$entity_perr).' other users '.$entity_name;
+		$access_privileges[] = $mod_strings['LBL_USR_CAN_ACCESS'] .str_replace('Public:','',$mod_strings[$entity_perr]). $mod_strings['LBL_USR_OTHERS'] . $app_strings[$entity_name];
 	else
-		$access_privileges[] = 'Users cannot access other users '.$entity_name;
+	        $access_privileges[] = $mod_strings['LBL_USR_CANNOT_ACCESS'] . $app_strings[$entity_name];
 	$row++;
 }
 $access_privileges=array_chunk($access_privileges,3);
@@ -61,7 +61,10 @@ $custom_access['Potentials'] = getSharingRuleList('Potentials');
 $custom_access['HelpDesk'] = getSharingRuleList('HelpDesk');
 
 //Email Sharing
-$custom_access['Emails'] = getSharingRuleList('Emails');
+//$custom_access['Emails'] = getSharingRuleList('Emails');
+
+//Campaign Sharing
+$custom_access['Campaigns'] = getSharingRuleList('Campaigns');
 
 //Quotes Sharing
 $custom_access['Quotes'] = getSharingRuleList('Quotes');
@@ -75,8 +78,15 @@ $custom_access['SalesOrder'] = getSharingRuleList('SalesOrder');
 //Invoice Sharing
 $custom_access['Invoice'] = getSharingRuleList('Invoice');
 
+
+
 $smarty->assign("MODSHARING", $custom_access);
 
+/** returns the list of sharing rules for the specified module
+  * @param $module -- Module Name:: Type varchar
+  * @returns $access_permission -- sharing rules list info array:: Type array
+  *
+ */
 function getSharingRuleList($module)
 {
 	global $adb;
@@ -90,7 +100,7 @@ function getSharingRuleList($module)
 	{
 
 		$colNameArr=explode("::",$colName);
-		$query = "select ".$table_name.".* from ".$table_name." inner join datashare_module_rel on ".$table_name.".shareid=datashare_module_rel.shareid where datashare_module_rel.tabid=".$tabid;
+		$query = "select ".$table_name.".* from ".$table_name." inner join vtiger_datashare_module_rel on ".$table_name.".shareid=vtiger_datashare_module_rel.shareid where vtiger_datashare_module_rel.tabid=".$tabid;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 
@@ -116,7 +126,7 @@ function getSharingRuleList($module)
 			}
 			elseif($permission == 1)
 			{
-				$perr_out = 'Read Write';
+				$perr_out = 'Read / Write';
 			}
 
 			$access_permission [] = $shareid;

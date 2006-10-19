@@ -16,10 +16,10 @@ $id=$_REQUEST['id'];
 
 if($id !='')
 {
-	$sql="update convertleadmapping set accountfid ='NULL',contactfid='NULL',potentialfid='NULL' where cfmid=".$id;
+	$sql="update vtiger_convertleadmapping set accountfid ='NULL',contactfid='NULL',potentialfid='NULL' where cfmid=".$id;
 	$result = $adb->query($sql);
 }
 
 
-header("Location: index.php?module=Settings&action=ListLeadCustomFieldMapping");
+header("Location: index.php?module=Settings&action=ListLeadCustomFieldMapping&parenttab=Settings");
 ?>

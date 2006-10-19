@@ -8,18 +8,17 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-
  $idlist = $_REQUEST['idlist'];
  $id_array=explode(';', $idlist);
 
  for($i=0; $i < count($id_array)-1; $i++)
  {
 
-	         $sql = "delete from wordtemplates where templateid=".$id_array[$i];
+	         $sql = "delete from vtiger_wordtemplates where templateid=".$id_array[$i];
 	         $adb->query($sql);
 
  }
- header("Location:index.php?module=Users&action=listwordtemplates");
+ header("Location:index.php?module=Users&action=listwordtemplates&parenttab=Settings");
  			 
 
 ?>

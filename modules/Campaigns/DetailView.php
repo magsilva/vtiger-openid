@@ -12,21 +12,24 @@
 require_once('include/database/PearDatabase.php');
 require_once('Smarty_setup.php');
 require_once('modules/Campaigns/Campaign.php');
+require_once('modules/CustomView/CustomView.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 
 $focus = new Campaign();
 
-if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) 
+if(isset($_REQUEST['record']) && $_REQUEST['record']!= null ) 
 {
     $focus->retrieve_entity_info($_REQUEST['record'],"Campaigns");
     $focus->name=$focus->column_fields['campaignname'];
+    $focus->id = $_REQUEST['record'];
 }
 
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') 
 {
         $focus->id = "";
 }
-global $app_strings,$mod_strings,$theme,$profile_id;;
+global $app_strings,$mod_strings,$theme,$currentModule,$default_module_view;
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -38,29 +41,55 @@ $smarty->assign("APP", $app_strings);
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
-$smarty->assign("BLOCKS", getBlocks("Campaigns","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
-$smarty->assign("SINGLE_MOD","Campaign");
+$smarty->assign("SINGLE_MOD",'Campaign');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Campaigns",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Campaigns","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("Campaigns",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Campaigns","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$smarty->assign("UPDATEINFO",updateInfo($focus->id));
 $smarty->assign("ID", $_REQUEST['record']);
 
-$smarty->assign("MODULE","Campaigns");
+
+$tabid = getTabid("Campaigns");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+	$cvObj = new CustomView("Contacts");
+	$cvcombo = $cvObj->getCustomViewCombo();
+	$smarty->assign("CONTCVCOMBO","<select id='cont_cv_list' onchange='loadCvList(\"Contacts\",".$_REQUEST["record"].");'><option value='None'>-- ".$mod_strings['Select One']." --</option>".$cvcombo."</select>");
+
+	$cvObj = new CustomView("Leads");
+	$cvcombo = $cvObj->getCustomViewCombo();
+	$smarty->assign("LEADCVCOMBO","<select id='lead_cv_list' onchange='loadCvList(\"Leads\",".$_REQUEST["record"].");'> <option value='None'>-- ".$mod_strings['Select One']." --</option>".$cvcombo."</select>");
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
+$smarty->assign("MODULE",$currentModule);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
 $smarty->display("DetailView.tpl");
-//Security check for related list
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
+
 $focus->id = $_REQUEST['record'];
 
 ?>

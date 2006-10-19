@@ -1,12 +1,14 @@
 <?php
 /*********************************************************************************
- * $Header$
- * Description:  Defines the Account SugarBean Account entity with the necessary
- * methods and variables.
- * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- * Contributor(s): ______________________________________..
+*
  ********************************************************************************/
+
 /** Class to retreive all the Parent Groups of the specified Group
  *
  */
@@ -14,14 +16,15 @@ class GetParentGroups {
 
 	var $parent_groups=Array();
 
-	/** to get all the parent groups of the specified group
+	/** to get all the parent vtiger_groups of the specified group
 	 * @params $groupId --> Group Id :: Type Integer
          * @returns updates the parent group in the varibale $parent_groups of the class
          */
 	function getAllParentGroups($groupId)
 	{
-		global $adb;
-		$query="select groupid from group2grouprel where containsgroupid=".$groupId;
+		global $adb,$log;
+		$log->debug("Entering getAllParentGroups(".$groupid.") method...");
+		$query="select groupid from vtiger_group2grouprel where containsgroupid=".$groupId;
 		$adb->query($query);
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
@@ -37,7 +40,7 @@ class GetParentGroups {
 				}
 			}
 		}
-
+		$log->debug("Exiting getAllParentGroups method...");
 	}
 }
 

@@ -1,6 +1,41 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 <script language="javascript">
+
+function dup_validation()
+{ldelim}
+	var mode = getObj('mode').value;
+	var groupname = $('groupName').value;
+	var groupid = getObj('groupId').value;
+	if(mode == 'edit')
+		var reminstr = '&mode='+mode+'&groupName='+groupname+'&groupid='+groupid;
+	else
+		var reminstr = '&groupName='+groupname;
+	new Ajax.Request(
+		'index.php',
+		{ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
+			method: 'post',
+			postBody: 'module=Users&action=UsersAjax&file=SaveGroup&ajax=true&dup_check=true'+reminstr,
+			onComplete: function(response) {ldelim}
+				if(response.responseText.indexOf('SUCESS') >-1)
+					document.newGroupForm.submit();
+				else
+					alert(response.responseText);
+			{rdelim}
+		{rdelim}
+	);
+{rdelim}
+
 var constructedOptionValue;
 var constructedOptionName;
 
@@ -99,136 +134,178 @@ function validate()
 	if( !emptyCheck( "groupName", "Group Name" ) )
 		return false;
 
+	if(trim(document.newGroupForm.groupName.value) == "")
+	{ldelim}	
+		alert('Group Name cannot be none');
+		return false;		
+	{rdelim}
+
 	//alert(document.newGroupForm.selectedColumnsString.value);
 	if(document.newGroupForm.selectedColumnsString.value.replace(/^\s+/g, '').replace(/\s+$/g, '').length==0)
 	{ldelim}
 
-		alert('Group should have atleast one member. Select a member to the group');
+		alert('Group should have at least one member. Select a member to the group');
 		return false;
 	{rdelim}
-	return true;
+	dup_validation();	
 {rdelim}
 </script>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
 
-<form name="newGroupForm" action="index.php" method="post">
-<input type="hidden" name="module" value="Users">
-<input type="hidden" name="action" value="SaveGroup">
-<input type="hidden" name="mode" value="{$MODE}">
-<input type="hidden" name="parenttab" value="Settings">
-<input type="hidden" name="groupId" value="{$GROUPID}">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<tr>
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br />
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$CMOD.LBL_CREATE_NEW_GROUP}</b></span>
-<hr noshade="noshade" size="1"/>
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
-
-	<table align="center" border="0" cellpadding="5" cellspacing="0" width="90%">
-	<tbody>
-	<tr>
-	<td colspan="2">&nbsp;</td>
-	</tr>
-	<tr>
-	<td width="20%">&nbsp;</td>
-	<td width="80%">&nbsp;</td>
-	</tr>
-	<tr>
-	<td style="padding-right: 10px;" align="right" width="20%">Group Name</td>
-	<td style="padding-left: 10px;" align="left" width="80%">
-	<input name="groupName" class="detailedViewTextBox" onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'" type="text" value="{$GROUPNAME}">
-	</td>
-	</tr>
-	<tr>
-	<td style="padding-right: 10px;" align="right">Description</td>
-	<td style="padding-left: 10px;" align="left">
-	<textarea name="description"  class="detailedViewTextBox" onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'">{$DESCRIPTION}</textarea>
-	</td>
-	
-	</tr>
-	<tr>
-	<td colspan=2>
-		<table align="center" border="0" cellpadding="0" cellspacing="0" width="90%">
-		<tbody>
-		<tr>
-		<td style="padding-right: 10px;" align="right">Filters</td>
-		<td>
-		<select id="memberType" name="memberType" onchange="showOptions()">
-		<option value="groups" selected>Groups</option>
-		<option value="roles">Roles</option>
-		<option value="rs">Roles and Subordinates</option>
-		<option value="users">Users</option>
-		</select>
-		</td><td>
-		<input type="text" name="findStr">
-    	<input type="button" name="Find" value="Find" class="button" onClick="showOptions()">
+	<div align=center>
+			{include file='SetMenu.tpl'}
+				<!-- DISPLAY -->
+				<table border=0 cellspacing=0 cellpadding=5 width=100% class="settingsSelUITopLine">
+				<form name="newGroupForm" action="index.php" method="post">
+				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="action" value="SaveGroup">
+				<input type="hidden" name="mode" value="{$MODE}">
+				<input type="hidden" name="parenttab" value="Settings">
+				<input type="hidden" name="groupId" value="{$GROUPID}">
+				<input type="hidden" name="returnaction" value="{$RETURN_ACTION}">
+				<tr>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ico-groups.gif" alt="Groups" width="48" height="48" border=0 title="Roles"></td>
+					{if $MODE eq 'edit'}
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listgroups&parenttab=Settings">{$CMOD.LBL_GROUPS}</a> &gt; {$MOD.LBL_EDIT} &quot;{$GROUPNAME}&quot; </b></td>
+					{else}	
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listgroups&parenttab=Settings">{$CMOD.LBL_GROUPS}</a> &gt; {$CMOD.LBL_CREATE_NEW_GROUP}</b></td>
+					{/if}
+				</tr>
+				<tr>
+					{if $MODE eq 'edit'}
+					<td valign=top class="small">{$MOD.LBL_EDIT} {$CMOD.LBL_PROPERTIES} &quot;{$GROUPNAME}&quot; {$CMOD.LBL_GROUP}</td>
+					{else}
+					<td valign=top class="small">{$CMOD.LBL_NEW_GROUP}</td>
+					{/if}
+				</tr>
+				</table>
+				
+				<br>
+				<table border=0 cellspacing=0 cellpadding=10 width=100% >
+				<tr>
+				<td valign=top>
+					
+					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
+					<tr>
+						{if $MODE eq 'edit'}
+						<td class="big"><strong>{$CMOD.LBL_PROPERTIES} &quot;{$GROUPNAME}&quot; </strong></td>
+						{else}
+						<td class="big"><strong>{$CMOD.LBL_NEW_GROUP}</strong></td>
+						{/if}
+						<td><div align="right">
+						{if $MODE eq 'edit'}
+							<input type="button" class="crmButton small save" name="add" value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " onClick="return validate()">
+						{else}
+							<input type="button" class="crmButton create small" name="add" value="{$CMOD.LBL_ADD_GROUP_BUTTON}" onClick="return validate()">
+						{/if}
+						&nbsp;
+						<input type="button" class="crmButton cancel small" name="cancel" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" onClick="window.history.back()">
+						</div></td>
+					  </tr>
+					</table>
+					<table width="100%"  border="0" cellspacing="0" cellpadding="5">
+                      <tr class="small">
+                        <td width="15%" class="small cellLabel"><font color="red">*</font><strong>{$CMOD.LBL_GROUP_NAME}</strong></td>
+                        <td width="85%" class="cellText" ><input id="groupName" name="groupName" type="text" value="{$GROUPNAME}" class="detailedViewTextBox"></td>
+                      </tr>
+                      <tr class="small">
+                        <td class="small cellLabel"><strong>{$CMOD.LBL_DESCRIPTION}</strong></td>
+                        <td class="cellText"><input name="description" type="text" value="{$DESCRIPTION}" class="detailedViewTextBox"> </td>
+                      </tr>
+                      <tr class="small">
+                        <td colspan="2" valign=top class="cellLabel"><strong>{$CMOD.LBL_MEMBER}</strong>						</td>
+                      </tr>
+                      <tr class="small">
+                        <td colspan="2" valign=top class="cellText"> 
+						<br>
+						<table width="95%"  border="0" align="center" cellpadding="5" cellspacing="0">
+                          <tr>
+                            <td width="40%" valign=top class="cellBottomDotLinePlain small"><strong>{$CMOD.LBL_MEMBER_AVLBL}</strong></td>
+                            <td width="10%">&nbsp;</td>
+                            <td width="40%" class="cellBottomDotLinePlain small"><strong>{$CMOD.LBL_MEMBER_SELECTED}</strong></td>
+                          </tr>
+                          <tr>
+                            <td valign=top class="small">
+				{$CMOD.LBL_ENTITY}:&nbsp;
+				<select id="memberType" name="memberType" class="small" onchange="showOptions()">
+				          <option value="groups" selected>{$CMOD.LBL_GROUPS}</option>
+				          <option value="roles">{$CMOD.LBL_ROLES}</option>
+				          <option value="rs">{$CMOD.LBL_ROLES_SUBORDINATES}</option>
+				          <option value="users">{$MOD.LBL_USERS}</option>
+				</select>
+		<input type="hidden" name="findStr" class="small">&nbsp;
+			    </td>
+                            <td width="50">&nbsp;</td>
+                            <td class="small">&nbsp;</td>
+                          </tr>
+                          <tr class=small>
+                            <td valign=top>{$CMOD.LBL_MEMBER} {$CMOD.LBL_OF} {$CMOD.LBL_ENTITY}<br>
+				<select id="availList" name="availList" multiple size="10" class="small crmFormList">
+				</select>
+				<input type="hidden" name="selectedColumnsString"/>
+							
+			    </td>
+                            <td width="50"><div align="center">
+				<input type="button" name="Button" value="&nbsp;&rsaquo;&rsaquo;&nbsp;" onClick="addColumn()" class="crmButton small"/><br /><br />
+				<input type="button" name="Button1" value="&nbsp;&lsaquo;&lsaquo;&nbsp;" onClick="delColumn()" class="crmButton small"/>
+                            	  </div></td>
+                            <td class="small" style="background-color:#ddFFdd" valign=top>{$CMOD.LBL_MEMBER} {$CMOD.LBL_OF} &quot;{$GROUPNAME}&quot; <br>
+			      <select id="selectedColumns" name="selectedColumns" multiple size="10" class="small crmFormList">
+				{foreach item=element from=$MEMBER}
+				<option value="{$element.0}">{$element.1}</option>
+				{/foreach}
+                              </select></td>
+                          </tr>
+						  <tr>
+						  	<td colspan=3>
+							<ul class=small>
+							<li>{$CMOD.LBL_GROUP_MESG1}</li>
+							<li>{$CMOD.LBL_GROUP_MESG2}</li>
+							<li>{$CMOD.LBL_GROUP_MESG3}</li>
+							</ul>
+							
+							</td>
+						</tr>
+                        </table>
+						
+						</td>
+                      </tr>
+                    </table>
+					<br>
+					<table border=0 cellspacing=0 cellpadding=5 width=100% >
+					<tr><td class="small" nowrap align=right><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+					</table>
+					
+					
+				</td>
+				</tr>
+				<tr>
+				  <td valign=top>&nbsp;</td>
+				  </tr>
+				</table>
+			
+			
+			
+			</td>
+			</tr>
+			</table>
 		</td>
-		</tr>
-		</tbody>
-		</table>
-	</td>
 	</tr>
-	<tr>
-	<td	colspan="2">
-	<table align="center" border="0" cellpadding="0" cellspacing="0" width="75%">
-	<tbody>
-	<tr>
-	<td align="center"><b>Member Available</b><br>
-	<select id="availList" name="availList" multiple size="10" style="width:200px; ">
-	</select>
-	<input type="hidden" name="selectedColumnsString"/>
-	</td>
-	<td align="center">
-	<input type="button" name="Button" value=" Add &rsaquo; " onClick="addColumn()"/><br /><br />
-	<input type="button" name="Button1" value=" &lsaquo; Remove " onClick="delColumn()"/>
-	</td>
-	<td align="center"><b>Selected Member</b><br>
-	<select id="selectedColumns" name="selectedColumns" multiple size="10" style="width:200px; ">
-  	{foreach item=element from=$MEMBER}
-	<option value="{$element.0}">{$element.1}</option>
-	{/foreach}
-	</select>
-	
-	</td>
-	</tr>
-	</tbody></table></td>
-	</tr>
-
-	<tr>
-	<td colspan="2" style="border-bottom: 1px dashed rgb(204, 204, 204);">&nbsp;</td>
-	</tr>
-	<tr>
-	<td colspan="2" align="right"> &nbsp;&nbsp;
-	
-	<input type="submit" class="button" name="add" value="Add Group" onClick="return validate()">
-	&nbsp;&nbsp;
-    <input type="button" class="button" name="cancel" value="Cancel" onClick="window.history.back()">
-	</td>
-	</tr>
-	<tr>
-	<td colspan="2" style="border-top: 1px solid rgb(204, 204, 204);">&nbsp;</td>
-	</tr>
-	</tbody></table>
-
-<td colspan="2" style="border-top:1px solid #CCCCCC;">&nbsp;</td>
-</tr>
-</table>
-</form>
-</td>
-
-</tr>
-</table>
+	</form>
+	</table>
 		
+	</div>
+
 </td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+   </tr>
+</tbody>
 </table>
 <script language="JavaScript" type="text/JavaScript">    
 var moveupLinkObj,moveupDisabledObj,movedownLinkObj,movedownDisabledObj;
@@ -300,11 +377,3 @@ document.newGroupForm.selectedColumnsString.value = selectedColStr;
 setObjects();
 showOptions();
 </script>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-	{include file='SettingsSubMenu.tpl'}
-

@@ -17,16 +17,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
-// $Id: en.php,v 1.15 2004/08/30 15:51:26 webbie Exp $
+// $Id: en.php,v 1.18 2005/12/31 17:25:02 bigmichi1 Exp $
 
-$text['title']          = 'System Information';
+$text['title']          = 'Server Hardware Information';
 
-$text['vitals']         = 'System Vital';
+$text['vitals']         = 'Generic Details';
 $text['hostname']       = 'Canonical Hostname';
 $text['ip']             = 'Listening IP';
 $text['kversion']       = 'Kernel Version';
-$text['dversion']       = 'Distro Name';
-$text['uptime']         = 'Uptime';
+$text['dversion']       = 'OS/ Distribution ';
+$text['uptime']         = 'Server uptime';
 $text['users']          = 'Current Users';
 $text['loadavg']        = 'Load Averages';
 
@@ -51,12 +51,12 @@ $text['errors']         = 'Err/Drop';
 
 $text['connections']    = 'Established Network Connections';
 
-$text['memusage']       = 'Memory Usage';
-$text['phymem']         = 'Physical Memory';
+$text['memusage']       = 'Server Memory';
+$text['phymem']         = 'Hardware Memory (RAM)';
 $text['swap']           = 'Disk Swap';
 
-$text['fs']             = 'Mounted Filesystems';
-$text['mount']          = 'Mount';
+$text['fs']             = 'Server Drives and Volumes';
+$text['mount']          = 'Mount/Drive';
 $text['partition']      = 'Partition';
 
 $text['percent']        = 'Percent Capacity';
@@ -79,7 +79,7 @@ $text['language']       = 'Language';
 $text['submit']         = 'Submit';
 $text['created']        = 'Created by';
 $text['locale']         = 'en_US';
-$text['gen_time']       = 'on %b %d, %Y at %r';
+$text['gen_time']       = 'on %b %d, %Y at %I:%M %p';
 
 $text['days']           = 'days';
 $text['hours']          = 'hours';
@@ -98,5 +98,9 @@ $text['s_label']        = 'Label';
 $text['degree_mark']    = '&ordm;C';
 $text['voltage_mark']   = 'V';
 $text['rpm_mark']       = 'RPM';
+
+$text['app']		= 'Kernel + applications';
+$text['buffers']	= 'Buffers';
+$text['cached']		= 'Cached';
 
 ?>

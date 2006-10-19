@@ -23,10 +23,7 @@ global $entityDel;
 global $display;
 global $category;
 require_once('include/utils/utils.php');
-//if (substr(phpversion(), 0, 1) == "5") {
-// while using php5, in graphs we get illegal exception
- //       ini_set("zend.ze1_compatibility_mode", "1");
-//}
+
 
 if (version_compare(phpversion(), '5.0') < 0) {
     eval('
@@ -37,76 +34,12 @@ if (version_compare(phpversion(), '5.0') < 0) {
   }
 
 global $currentModule;
-function fetchPermissionDataForTabList()
-{
-  $permittedTabs = $_SESSION['tab_permission_set'];
-  $i=0;$j=0;
-  
-  while($i<count($permittedTabs))
-  {
-    $modulesPermitted[$j++]=  $permittedTabs[$i];
-    $i++;
-  }
-  return $modulesPermitted;
-}
 
-
-
-function fetchPermissionData($module,$action)
-{
-
-	global $theme,$display;
-	global $others_permission_id;
-	global $others_view;
-	global $others_create_edit;
-	global $others_delete;
-	global $current_user;
-        
-	global $tabid;
-	global $actionid;
-	global $profile_id;
-
-	require_once('include/utils/UserInfoUtil.php');
-	$tabid = getTabid($module);
-
-	$actionid = getActionid($action);
-	$profile_id = $_SESSION['authenticated_user_profileid'];
-	$tab_per_Data = getAllTabsPermission($profile_id);
-
-	$permissionData = $_SESSION['action_permission_set'];
-	$defSharingPermissionData = $_SESSION['defaultaction_sharing_permission_set'];
-	$others_permission_id = $defSharingPermissionData[$tabid];
-	
-}
-
-//we have to do this as there is no UI page for Delete. Hence, when the user clicks delete, it gets stuck halfway and the page looks ugly because the theme is not set
-function checkDeletePermission($tabid)
-{
-	global $entityDel;
-	$action ="Delete";
-	$actionid = 2;	
-	$permissionData = $_SESSION['action_permission_set'];
-	$i = 0;
-	//keep searching till Delete method is found in the array
-	while($i<count($permissionData))
-	{
-		if($permissionData[$i][0] == $tabid  &&  $permissionData[$i][1] == $actionid)
-		{
-			$actionpermissionvalue=$permissionData[$i][2];
-			if($actionpermissionvalue == 0)
-			{
-				//if 0, then the delete button should be shown
-				$entityDel = true;
-			}
-			else
-			{
-				$entityDel = false;
-			}
-		}
-		$i++;
-	}
-
-}
+ /** Function to  return a string with backslashes stripped off
+   * @param $value -- value:: Type string
+   * @returns $value -- value:: Type string array
+ */
+	  
  function stripslashes_checkstrings($value){
         if(is_string($value)){
                 return stripslashes($value);
@@ -128,6 +61,10 @@ if(isset($_REQUEST['PHPSESSID']))
 	//Setting the same session id to Forums as in CRM
         $sid=$_REQUEST['PHPSESSID'];
 }	
+
+/** Function to set, character set in the header, as given in include/language/*_lang.php
+ */
+	 
 function insert_charset_header()
 {
  	global $app_strings, $default_charset;
@@ -168,7 +105,7 @@ require_once('modules/Users/User.php');
 
 global $currentModule;
 
-if($calculate_response_time) $startTime = microtime();
+//if($calculate_response_time) $startTime = microtime();
 
 $log =& LoggerManager::getLogger('index');
 
@@ -185,6 +122,7 @@ if(!isset($_SERVER['REQUEST_URI']))
 	$_SERVER['REQUEST_URI'] = '';
 }
 
+$action = '';
 if(isset($_REQUEST['action']))
 {
 	$action = $_REQUEST['action'];
@@ -196,13 +134,13 @@ if(isset($_REQUEST['module']))
 {
 	$module = $_REQUEST['module'];	
 
-	if ($dir = @opendir("./modules")) 
+	if ($dir = @opendir($root_directory."modules")) 
 	{
 		while (($file = readdir($dir)) !== false) 
 		{
            		if ($file != ".." && $file != "." && $file != "CVS" && $file != "Attic") 
 			{
-			   	if(is_dir("./modules/".$file)) 
+			   	if(is_dir($root_directory."modules/".$file)) 
 				{
 					if(!($file[0] == '.')) 
 					{
@@ -217,7 +155,7 @@ if(isset($_REQUEST['module']))
 	}
 	if(!$is_module)
 	{
-		die("Hacking Attempt");
+		die("Module name is missing. Please check the module name.");
 	}
 }
 if($action == 'Export')
@@ -261,15 +199,105 @@ $viewAttachment = false;
 $skipSecurityCheck= false;
 //echo $module;
 // echo $action;
+
 if(isset($action) && isset($module))
 {
 	$log->info("About to take action ".$action);
 	$log->debug("in $action");
-	if(ereg("^Save", $action) || ereg("^Delete", $action) || ereg("^Choose", $action) || ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Authenticate", $action) || ereg("^Logout", $action) || ereg("^Export",$action) || ereg("^add2db", $action) || ereg("^result", $action) || ereg("^LeadConvertToEntities", $action) || ereg("^downloadfile", $action) || ereg("^massdelete", $action) || ereg("^updateLeadDBStatus",$action) || ereg("^AddCustomFieldToDB", $action) || ereg("^updateRole",$action) || ereg("^UserInfoUtil",$action) || ereg("^deleteRole",$action) || ereg("^UpdateComboValues",$action) || ereg("^fieldtypes",$action) || ereg("^app_ins",$action) || ereg("^minical",$action) || ereg("^minitimer",$action) || ereg("^app_del",$action) || ereg("^send_mail",$action) || ereg("^populatetemplate",$action) || ereg("^TemplateMerge",$action) || ereg("^testemailtemplateusage",$action) || ereg("^saveemailtemplate",$action) || ereg("^lookupemailtemplate",$action) || ereg("^deletewordtemplate",$action) || ereg("^deleteemailtemplate",$action) || ereg("^CurrencyDelete",$action) || ereg("^deleteattachments",$action) || ereg("^MassDeleteUsers",$action) || ereg("^UpdateFieldLevelAccess",$action) || ereg("^UpdateDefaultFieldLevelAccess",$action) || ereg("^UpdateProfile",$action)  || ereg("^updateRelations",$action) || ereg("^updateNotificationSchedulers",$action) || ereg("^Star",$action) || ereg("^addPbProductRelToDB",$action) || ereg("^UpdateListPrice",$action) || ereg("^PriceListPopup",$action) || ereg("^SalesOrderPopup",$action) || ereg("^CreatePDF",$action) || ereg("^CreateSOPDF",$action) || ereg("^redirect",$action) || ereg("^webmail",$action) || ereg("^left_main",$action) || ereg("^delete_message",$action) || ereg("^mime",$action) || ereg("^move_messages",$action) || ereg("^folders_create",$action) || ereg("^imap_general",$action) || ereg("^mime",$action) || ereg("^download",$action) || ereg("^about_us",$action) || ereg("^SendMailAction",$action) || ereg("^CreateXL",$action) || ereg("^savetermsandconditions",$action) || ereg("^home_rss",$action) || ereg("^ConvertAsFAQ",$action) || ereg("^Tickerdetail",$action) || ereg("^".$module."Ajax",$action) || ereg("^chat",$action) || ereg("^vtchat",$action) || ereg("^updateCalendarSharing",$action) || ereg("^disable_sharing",$action) || ereg("^HeadLines",$action))
+	if(ereg("^Save", $action) ||
+		ereg("^Delete", $action) ||
+		ereg("^Choose", $action) ||
+		ereg("^Popup", $action) ||
+		ereg("^ChangePassword", $action) ||
+		ereg("^Authenticate", $action) ||
+		ereg("^Logout", $action) ||
+		ereg("^Export",$action) ||
+		ereg("^add2db", $action) ||
+		ereg("^result", $action) ||
+		ereg("^LeadConvertToEntities", $action) ||
+		ereg("^downloadfile", $action) ||
+		ereg("^massdelete", $action) ||
+		ereg("^updateLeadDBStatus",$action) ||
+		ereg("^AddCustomFieldToDB", $action) ||
+		ereg("^updateRole",$action) ||
+		ereg("^UserInfoUtil",$action) ||
+		ereg("^deleteRole",$action) ||
+		ereg("^UpdateComboValues",$action) ||
+		ereg("^fieldtypes",$action) ||
+		ereg("^app_ins",$action) ||
+		ereg("^minical",$action) ||
+		ereg("^minitimer",$action) ||
+		ereg("^app_del",$action) ||
+		ereg("^send_mail",$action) ||
+		ereg("^populatetemplate",$action) ||
+		ereg("^TemplateMerge",$action) ||
+		ereg("^testemailtemplateusage",$action) ||
+		ereg("^saveemailtemplate",$action) ||
+		ereg("^lookupemailtemplate",$action) ||
+		ereg("^deletewordtemplate",$action) ||
+		ereg("^deleteemailtemplate",$action) ||
+		ereg("^CurrencyDelete",$action) ||
+		ereg("^deleteattachments",$action) ||
+		ereg("^MassDeleteUsers",$action) ||
+		ereg("^UpdateFieldLevelAccess",$action) ||
+		ereg("^UpdateDefaultFieldLevelAccess",$action) ||
+		ereg("^UpdateProfile",$action)  ||
+		ereg("^updateRelations",$action) ||
+		ereg("^updateNotificationSchedulers",$action) ||
+		ereg("^Star",$action) ||
+		ereg("^addPbProductRelToDB",$action) ||
+		ereg("^UpdateListPrice",$action) ||
+		ereg("^PriceListPopup",$action) ||
+		ereg("^SalesOrderPopup",$action) ||
+		ereg("^CreatePDF",$action) ||
+		ereg("^CreateSOPDF",$action) ||
+		ereg("^redirect",$action) ||
+		ereg("^webmail",$action) ||
+		ereg("^left_main",$action) ||
+		ereg("^delete_message",$action) ||
+		ereg("^mime",$action) ||
+		ereg("^move_messages",$action) ||
+		ereg("^folders_create",$action) ||
+		ereg("^imap_general",$action) ||
+		ereg("^mime",$action) ||
+		ereg("^download",$action) ||
+		ereg("^about_us",$action) ||
+		ereg("^SendMailAction",$action) ||
+		ereg("^CreateXL",$action) ||
+		ereg("^savetermsandconditions",$action) ||
+		ereg("^home_rss",$action) ||
+		ereg("^ConvertAsFAQ",$action) ||
+		ereg("^Tickerdetail",$action) ||
+		ereg("^".$module."Ajax",$action) ||
+		ereg("^ActivityAjax",$action) ||
+		ereg("^chat",$action) ||
+		ereg("^vtchat",$action) ||
+		ereg("^updateCalendarSharing",$action) ||
+		ereg("^disable_sharing",$action) ||
+		ereg("^HeadLines",$action) ||
+		ereg("^TodoSave",$action) ||
+		ereg("^RecalculateSharingRules",$action) ||
+		(ereg("^body",$action) &&
+			ereg("^Webmails",$module)) ||
+			(ereg("^DetailView",$action) &&
+			ereg("^Webmails",$module) ))
 	{
 		$skipHeaders=true;
-		if(ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Export", $action) || ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^lookupemailtemplate",$action) || ereg("^about_us",$action) || ereg("^home_rss",$action) || ereg("^".$module."Ajax",$action) || ereg("^chat",$action)|| ereg("^vtchat",$action) || ereg("^massdelete", $action))
+		//skip headers for all these invocations as they are mostly popups
+		if(ereg("^Popup", $action) ||
+			ereg("^ChangePassword", $action) ||
+			ereg("^Export", $action) ||
+			ereg("^downloadfile", $action) ||
+			ereg("^fieldtypes",$action) ||
+			ereg("^lookupemailtemplate",$action) ||
+			ereg("^about_us",$action) ||
+			ereg("^home_rss",$action) ||
+			ereg("^".$module."Ajax",$action) ||
+			ereg("^chat",$action) ||
+			ereg("^vtchat",$action) ||
+			ereg("^massdelete", $action))
 			$skipFooters=true;
+		//skip footers for all these invocations as they are mostly popups
 		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action))
 		{
 			$viewAttachment = true;
@@ -280,7 +308,7 @@ if(isset($action) && isset($module))
 		}
 	}
 	
-	if($action == 'BusinessCard' || $action == 'Save')
+	if($action == 'Save')
 	{
  	         header( "Expires: Mon, 20 Dec 1998 01:00:00 GMT" );
  	         header( "Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT" );
@@ -288,30 +316,26 @@ if(isset($action) && isset($module))
  	         header( "Pragma: no-cache" );        
  	}
 
-	if ( $action == "Import" &&
-                isset($_REQUEST['step']) &&
-                $_REQUEST['step'] == '4'  )
-        {
-                $skipHeaders=true;
-                $skipFooters=true;
-        }
-        if($module == 'Users' || $module == 'Home' || $module == 'Administration' || $module == 'uploads' ||  $module == 'Settings' || $module == 'Calendar')
+        if($module == 'Users' || $module == 'Home' || $module == 'uploads')
         {
           $skipSecurityCheck=true;
         }
 
 	$currentModuleFile = 'modules/'.$module.'/'.$action.'.php';
 	$currentModule = $module;
+	
+      	
 }
 elseif(isset($module))
 {
+	
 	$currentModule = $module;
 	$currentModuleFile = $moduleDefaultFile[$currentModule];
 }
 else {
     // use $default_module and $default_action as set in config.php
     // Redirect to the correct module with the correct action.  We need the URI to include these fields.
-  
+	  
 
         header("Location: index.php?action=$default_action&module=$default_module");
     exit();
@@ -346,8 +370,26 @@ if($use_current_login)
         foreach ($moduleList as $mod) {
                 $moduleDefaultFile[$mod] = "modules/".$currentModule."/index.php";
         }
+
+	//auditing
+
+	require_once('user_privileges/audit_trail.php');
 	
-	
+	if($audit_trail == 'true')
+	{
+		if($record == '')
+			$auditrecord = '';						
+		else
+			$auditrecord = $record;	
+
+		$date_var = $adb->formatDate(date('YmdHis'));
+		if ($action != 'chat')
+		{	
+			$query = "insert into vtiger_audit_trial values(".$adb->getUniqueID('vtiger_audit_trial').",".$current_user->id.",'".$module."','".$action."','".$auditrecord."',$date_var)";
+			$adb->query($query);
+		}	
+	}	
+
 	$log->debug('Current user is: '.$current_user->user_name);
 }
 
@@ -409,7 +451,7 @@ if($action == "DetailView")
 			require_once("modules/$currentModule/Opportunity.php");
 			$focus = new Potential();
 			break;
-		case 'Activities':
+		case 'Calendar':
 			require_once("modules/$currentModule/Activity.php");
 			$focus = new Activity();
 			break;
@@ -470,7 +512,7 @@ if($action == "DetailView")
 			break;
 		}
 	
-	if(isset($_REQUEST['record']) && $_REQUEST['record']!='')
+	if(isset($_REQUEST['record']) && $_REQUEST['record']!='' && $_REQUEST["module"] != "Webmails") 
         {
                 // Only track a viewing if the record was retrieved.
                 $focus->track_view($current_user->id, $actualModule,$_REQUEST['record']);
@@ -538,22 +580,35 @@ else
 	$theme = $default_theme;
 }
 
+
 //logging the security Information
-$seclog->debug('########  Module -->  '.$module.'  :: Action --> '.$action.' ::  UserID --> '.$current_user->id.'  #######');
+$seclog->debug('########  Module -->  '.$module.'  :: Action --> '.$action.' ::  UserID --> '.$current_user->id.' :: RecordID --> '.$record.' #######');
 
 if(!$skipSecurityCheck)
 {
+
+
 	require_once('include/utils/UserInfoUtil.php');
-	if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
-	{
-		$display = isPermitted($module,$action,$_REQUEST['record']);
-	}
-	else
-	{
-		$display = isPermitted($module,$action);
-	}
+	if(ereg('Ajax',$action))
+        {
+                $now_action=$_REQUEST['file'];
+        }
+        else
+        {
+                $now_action=$action;
+        }
+        
+
+        if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
+        {
+                $display = isPermitted($module,$now_action,$_REQUEST['record']);
+        }
+        else
+        {
+                $display = isPermitted($module,$now_action);
+        }	
 	$seclog->debug('########### Pemitted ---> '.$display.'  ##############');
-	fetchPermissionData($module,$action);
+
 }
 else
 {
@@ -563,14 +618,28 @@ else
 
 if($display == "no")
 {
-        echo "You are not permitted to execute this Operation";
+	echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+	echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+		<tbody><tr>
+		<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
+		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
+		</tr>
+		<tr>
+		<td class='small' align='right' nowrap='nowrap'>			   	
+		<a href='javascript:window.history.back();'>$app_strings[LBL_GO_BACK]</a><br>								   						     </td>
+		</tr>
+		</tbody></table> 
+		</div>";
+	echo "</td></tr></table>";
 }
 else
 {
 	include($currentModuleFile);
 }
 
-	if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss' && $action != $module."Ajax" && $action != "chat" && $action != 'massdelete') )
+	if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss' && $action != $module."Ajax" && $action != "chat" && $action != 'massdelete' && $action != "body") )
 	{
 		echo "<!-- stopscrmprint -->";
 	}
@@ -584,8 +653,10 @@ else
 {
         $theme = $default_theme;
 }
-
-if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action != 'Tickerdetail' && $action != $module."Ajax" && $action != "chat" && $action != "HeadLines" && $action != 'massdelete')
+$Ajx_module= $module;
+if($module == 'Events')
+	$Ajx_module = 'Calendar';
+if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action != 'Tickerdetail' && $action != $Ajx_module."Ajax" && $action != "chat" && $action != "HeadLines" && $action != 'massdelete'  &&  $action != "DashboardAjax" && $action != "ActivityAjax")
 {
 	// Under the SPL you do not have the right to remove this copyright statement.	
 	$copyrightstatement="<style>
@@ -629,37 +700,37 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 	</script>
 		";
 
-	echo $copyrightstatement;
-	if($action != "about_us" && $action != "vtchat")
+	if($action != "about_us" && $action != "vtchat" && $action != "ChangePassword" && $action != "body" && $action != $module."Ajax" && $action!='Popup' && $action != 'ImportStep3' && $action != 'ActivityAjax')
+	
 	{
+		echo $copyrightstatement;
 		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
-		echo "<table width=20% border=0 cellspacing=1 cellpadding=0 class=\"bggray\" align=center><tr><td align=center>\n";
-		echo "<table width=100% border=0 cellspacing=1 cellpadding=0 class=\"bgwhite\" align=center><tr><td align=center class=\"copy\">\n";
-		
-                echo "&copy; Click <a href ='javascript:mypopup()'>here</a> for Copyright details.<br>";
-		echo "</td></tr></table></td></tr></table>\n";
-
-		echo "<table align='center'><tr><td align='center'>";
+		echo '<style type="text/css">@import url("themes/'.$theme.'/style.css"); </style>';
+		echo "<br><br><br><table border=0 cellspacing=0 cellpadding=5 width=100% class=settingsSelectedUI >";
+		echo "<tr><td class=small align=left>vtiger CRM 5.0.0 | Visit <a href='http://www.vtiger.com'>www.vtiger.com</a> for more information </td>";
+		echo "<td class=small align=right> &copy; <a href='javascript:mypopup()'>Copyright Details</a></td></tr></table>";
+			
+	//	echo "<table align='center'><tr><td align='center'>";
 		// Under the Sugar Public License referenced above, you are required to leave in all copyright statements
 		// in both the code and end-user application.
-		if($calculate_response_time)
-		{
-			$endTime = microtime();
+	//	if($calculate_response_time)
+	//	{
+	//		$endTime = microtime();
 
-			$deltaTime = microtime_diff($startTime, $endTime);
-			echo('&nbsp;Server response time: '.$deltaTime.' seconds.');
-		}
-		echo "</td></tr></table>\n";
+	//		$deltaTime = microtime_diff($startTime, $endTime);
+	//		echo('&nbsp;Server response time: '.$deltaTime.' seconds.');
+	//	}
+	//	echo "</td></tr></table>\n";
 	}
-	if(($action != 'mytkt_rss') && ($action != 'home_rss'))
+	if(($action != 'mytkt_rss') && ($action != 'home_rss') && ($action != $module."Ajax") && ($action != "body") && ($action != 'ActivityAjax'))
 	{
 	?>
 		<script>
-			var userDateFormat = "<? echo $current_user->date_format ?>";
+			var userDateFormat = "<?php echo $current_user->date_format ?>";
 		</script>
 <?php
 	}
-	if(!$skipFooters)
-	include('themes/'.$theme.'/footer.php');
+	if((!$skipFooters) && ($action != "body") && ($action != $module."Ajax") && ($action != "ActivityAjax"))
+		include('themes/'.$theme.'/footer.php');
 }
 ?>

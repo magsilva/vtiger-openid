@@ -11,9 +11,10 @@
 *
  ********************************************************************************/
 
-global $adb;	
-global $log;
 require_once('include/database/PearDatabase.php');
+require_once('user_privileges/default_module_view.php');
+global $adb,$singlepane_view;	
+global $log;
 $idlist = $_POST['idlist'];
 $returnmodule=$_REQUEST['return_module'];
 $pricebook_id=$_REQUEST['pricebook_id'];
@@ -24,14 +25,19 @@ if(isset($_REQUEST['pricebook_id']) && $_REQUEST['pricebook_id']!='')
 	$storearray = explode(";",$idlist);
 	foreach($storearray as $id)
 	{
-		$lp_name = $id.'_listprice';
-		$list_price = $_REQUEST[$lp_name];
-		//Updating the pricebook product rel table
-		 $log->info("Products :: Inserting products to price book");
-		$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$pricebook_id.",".$id.",".$list_price.")";
-		$adb->query($query);
+		if($id != '') {
+			$lp_name = $id.'_listprice';
+			$list_price = $_REQUEST[$lp_name];
+			//Updating the vtiger_pricebook product rel vtiger_table
+			 $log->info("Products :: Inserting vtiger_products to price book");
+			$query= "insert into vtiger_pricebookproductrel (pricebookid,productid,listprice) values(".$pricebook_id.",".$id.",".$list_price.")";
+			$adb->query($query);
+		}
 	}
-	header("Location: index.php?module=PriceBooks&action=CallRelatedList&record=".$pricebook_id);
+	if($singlepane_view == 'true')
+		header("Location: index.php?module=PriceBooks&action=DetailView&record=".$pricebook_id);
+	else
+		header("Location: index.php?module=PriceBooks&action=CallRelatedList&record=".$pricebook_id);
 }
 elseif(isset($_REQUEST['product_id']) && $_REQUEST['product_id']!='')
 {
@@ -39,14 +45,19 @@ elseif(isset($_REQUEST['product_id']) && $_REQUEST['product_id']!='')
 	$storearray = explode(";",$idlist);
 	foreach($storearray as $id)
 	{
-		$lp_name = $id.'_listprice';
-		$list_price = $_REQUEST[$lp_name];
-		//Updating the pricebook product rel table
-		 $log->info("Products :: Inserting PriceBooks to Product");
-		$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$id.",".$productid.",".$list_price.")";
-		$adb->query($query);
+		if($id != '') {
+			$lp_name = $id.'_listprice';
+			$list_price = $_REQUEST[$lp_name];
+			//Updating the vtiger_pricebook product rel vtiger_table
+			 $log->info("Products :: Inserting PriceBooks to Product");
+			$query= "insert into vtiger_pricebookproductrel (pricebookid,productid,listprice) values(".$id.",".$productid.",".$list_price.")";
+			$adb->query($query);
+		}
 	}
-	header("Location: index.php?module=Products&action=CallRelatedList&record=".$productid);
+	if($singlepane_view == 'true')
+		header("Location: index.php?module=Products&action=DetailView&record=".$productid);
+	else
+		header("Location: index.php?module=Products&action=CallRelatedList&record=".$productid);
 }
 
 ?>

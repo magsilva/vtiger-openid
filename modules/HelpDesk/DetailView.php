@@ -11,9 +11,9 @@
 
 require_once('include/database/PearDatabase.php');
 require_once('Smarty_setup.php');
-require_once('include/utils/utils.php');
 require_once('modules/HelpDesk/HelpDesk.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 
 $focus = new HelpDesk();
 
@@ -37,6 +37,7 @@ if($_REQUEST['mail_error'] != '')
 
 global $app_strings;
 global $mod_strings;
+global $currentModule, $singlepane_view;
 
 global $theme;
 $theme_path="themes/".$theme."/";
@@ -47,31 +48,32 @@ $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
+$focus->id = $_REQUEST['record'];
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
-$smarty->assign("BLOCKS", getBlocks("HelpDesk","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 $smarty->assign("TICKETID", $_REQUEST['record']);
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
-$smarty->assign("SINGLE_MOD","HelpDesk");
+$smarty->assign("SINGLE_MOD", 'HelpDesk');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 $smarty->assign("UPDATEINFO",updateInfo($_REQUEST['record']));
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("HelpDesk",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("HelpDesk","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("HelpDesk",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("HelpDesk","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
 //Added button for Convert the ticket to FAQ
-$smarty->assign("CONVERTASFAQ","permitted");
+if(isPermitted("Faq","EditView",'') == 'yes')
+	$smarty->assign("CONVERTASFAQ","permitted");
 
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $smarty->assign("ID", $_REQUEST['record']);
-if(isPermitted("HelpDesk",8,'') == 'yes')
+if(isPermitted("HelpDesk","Merge",'') == 'yes')
 {
 	$smarty->assign("MERGEBUTTON","permitted");
         require_once('include/utils/UserInfoUtil.php');
@@ -80,21 +82,38 @@ if(isPermitted("HelpDesk",8,'') == 'yes')
         $tempVal = $adb->fetch_array($wordTemplateResult);
         for($templateCount=0;$templateCount<$tempCount;$templateCount++)
         {
-                $optionString []=$tempVal["filename"];
+                $optionString[$tempVal["templateid"]]=$tempVal["filename"];
                 $tempVal = $adb->fetch_array($wordTemplateResult);
         }
 	$smarty->assign("WORDTEMPLATEOPTIONS",$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']);
         $smarty->assign("TOPTIONS",$optionString);
 }
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
-$smarty->assign("MODULE","HelpDesk");
+$tabid = getTabid("HelpDesk");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+//Added to display the ticket comments information
+$smarty->assign("COMMENT_BLOCK",$focus->getCommentInformation($_REQUEST['record']));
+
+$smarty->assign("MODULE",$currentModule);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
 $smarty->display("DetailView.tpl");
-//Security check for related list
-global $profile_id;
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
-$focus->id = $_REQUEST['record'];
 
 
 ?>

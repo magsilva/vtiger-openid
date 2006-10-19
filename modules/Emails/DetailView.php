@@ -23,7 +23,6 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Emails/Email.php');
-require_once('modules/Emails/Forms.php');
 require_once('include/upload_file.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
@@ -31,14 +30,25 @@ require_once('include/utils/utils.php');
 global $log;
 global $app_strings;
 global $mod_strings;
+global $currentModule;
 
 $focus = new Email();
 
+$smarty = new vtigerCRM_Smarty;
 if(isset($_REQUEST['record'])) 
 {
+	global $adb;
 	$focus->retrieve_entity_info($_REQUEST['record'],"Emails");
-	 $log->info("Entity info successfully retrieved for DetailView.");
+	$log->info("Entity info successfully retrieved for DetailView.");
 	$focus->id = $_REQUEST['record'];
+	$query = 'select email_flag,from_email,to_email,cc_email,bcc_email from vtiger_emaildetails where emailid ='.$focus->id;
+	$result = $adb->query($query);
+    	$smarty->assign('FROM_MAIL',$adb->query_result($result,0,'from_email'));	
+	$to_email = ereg_replace('###',', ',$adb->query_result($result,0,'to_email'));
+	$smarty->assign('TO_MAIL',to_html($to_email));	
+	$smarty->assign('CC_MAIL',to_html(ereg_replace('###',', ',$adb->query_result($result,0,'cc_email'))));	
+    	$smarty->assign('BCC_MAIL',to_html(ereg_replace('###',', ',$adb->query_result($result,0,'bcc_email'))));	
+    	$smarty->assign('EMAIL_FLAG',$adb->query_result($result,0,'email_flag'));	
 	if($focus->column_fields['name'] != '')
 	        $focus->name = $focus->column_fields['name'];		
 	else
@@ -104,9 +114,7 @@ $log->info("Email detail view");
 
 $submenu = array('LBL_EMAILS_TITLE'=>'index.php?module=Emails&action=index','LBL_WEBMAILS_TITLE'=>'index.php?module=squirrelmail-1.4.4&action=redirect');
 $sec_arr = array('index.php?module=Emails&action=index'=>'Emails','index.php?module=squirrelmail-1.4.4&action=redirect'=>'Emails'); 
-echo '<br>';
 
-$smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
@@ -120,29 +128,30 @@ $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
-else $smarty->assign("NAME", "");
+	else $smarty->assign("NAME", "");
 
-$smarty->assign("BLOCKS", getBlocks("Emails","detail_view",'',$focus->column_fields));
-
-$smarty->assign("SINGLE_MOD","Email");
+$entries = getBlocks($currentModule,"detail_view",'',$focus->column_fields);
+$entries['Email Information']['4']['Description']['value'] = from_html($entries['Email Information']['4']['Description']['value']);
+$smarty->assign("BLOCKS", $entries['Email Information']);
+$smarty->assign("SINGLE_MOD", 'Email');
 
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 
-$smarty->assign("ID", $_REQUEST['record']);
-
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Emails",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Emails","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("Emails",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Emails","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
-//Security check for related list
-global $profile_id;
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
+$smarty->assign("ID",$focus->id);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+	
 //Constructing the Related Lists from here
-$smarty->assign("MODULE","Emails");
-$smarty->display("DetailView.tpl");
+$smarty->assign("MODULE",$currentModule);
+$smarty->assign("SENDER",$email_id);
+if($_REQUEST['mode'] != 'ajax')
+	$smarty->display("EmailDetailView.tpl");
+else
+	$smarty->display("EmailDetails.tpl")
 ?>

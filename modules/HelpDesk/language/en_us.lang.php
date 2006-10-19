@@ -22,7 +22,7 @@
 
 $mod_strings = Array(
 // Added in release 4.0
-'LBL_MODULE_NAME'=>'HelpDesk',
+'LBL_MODULE_NAME'=>'Trouble Tickets',
 'LBL_GROUP'=>'Group',
 'LBL_ACCOUNT_NAME'=>'Account Name',
 'LBL_CONTACT_NAME'=>'Contact Name',
@@ -64,12 +64,12 @@ $mod_strings = Array(
 'LBL_AUTHOR'=>'Author',
 'LBL_QUESTION'=>'Question',
 
-//Added fields for File Attachment and Mail send in Tickets
+//Added vtiger_fields for File Attachment and Mail send in Tickets
 'LBL_ATTACHMENTS'=>'Attachments',
 'LBL_NEW_ATTACHMENT'=>'New Attachment',
 'LBL_SEND_MAIL'=>'Send Mail',
 
-//Added fields for search option  in TicketsList -- 4Beta
+//Added vtiger_fields for search option  in TicketsList -- 4Beta
 'LBL_CREATED_DATE'=>'Created Date',
 'LBL_IS'=>'is',
 'LBL_IS_NOT'=>'is not',
@@ -96,21 +96,21 @@ $mod_strings = Array(
 'LBL_TICKET_CATEGORY'=>'Category',
 'LBL_TICKET_PRIORITY'=>'Priority',
 
-//Added fields after 4 -- Beta
+//Added vtiger_fields after 4 -- Beta
 'LBL_NEW_TICKET'=>'New Ticket',
 'LBL_TICKET_INFORMATION'=>'Ticket Information',
 
 'LBL_LIST_FORM_TITLE'=>'Tickets List',
 'LBL_SEARCH_FORM_TITLE'=>'Ticket Search',
 
-//Added fields after RC1 - Release
+//Added vtiger_fields after RC1 - Release
 'LBL_CHOOSE_A_VIEW'=>'Choose a View...',
 'LBL_ALL'=>'All',
 'LBL_LOW'=>'Low',
 'LBL_MEDIUM'=>'Medium',
 'LBL_HIGH'=>'High',
 'LBL_CRITICAL'=>'Critical',
-//Added fields for 4GA
+//Added vtiger_fields for 4GA
 'Assigned To'=>'Assigned To',
 'Contact Name'=>'Contact Name',
 'Priority'=>'Priority',
@@ -132,10 +132,11 @@ $mod_strings = Array(
 'LBL_PRIORITIES'=>'Priorities',
 'LBL_SUPPORTERS'=>'Supporters',
 
-//Added fields after 4_0_1
+//Added vtiger_fields after 4_0_1
 'LBL_TICKET_RESOLUTION'=>'Solution Information',
 'Solution'=>'Solution',
 'Add Comment'=>'Add Comment',
+'LBL_ADD_COMMENT'=>'Add Comment',//give the same value given to the above string 'Add Comment'
 
 //Added for 4.2 Release -- CustomView
 'Ticket ID'=>'Ticket ID',
@@ -157,6 +158,28 @@ $mod_strings = Array(
 'LBL_CONVERT_AS_FAQ_BUTTON_KEY'=>'C',
 'LBL_CONVERT_AS_FAQ_BUTTON_LABEL'=>'Convert As FAQ',
 'Attachment'=>'Attachment',
+'LBL_COMMENT_INFORMATION'=>'Comment Information',
+
+//Added for existing picklist entries
+
+'Big Problem'=>'Big Problem',
+'Small Problem'=>'Small Problem',
+'Other Problem'=>'Other Problem',
+
+'Low'=>'Low',
+'Normal'=>'Normal',
+'High'=>'High',
+'Urgent'=>'Urgent',
+
+'Minor'=>'Minor',
+'Major'=>'Major',
+'Feature'=>'Feature',
+'Critical'=>'Critical',
+
+'Open'=>'Open',
+'In Progress'=>'In Progress',
+'Wait For Response'=>'Wait For Response',
+'Closed'=>'Closed',
 
 );
 

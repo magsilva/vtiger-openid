@@ -15,17 +15,18 @@ global $adb;
 $cvid = $_REQUEST["record"];
 $module = $_REQUEST["dmodule"];
 $smodule = $REQUEST["smodule"];
+$parenttab = $_REQUEST["parenttab"];
 
 if(isset($cvid) && $cvid != '')
 {
-	$deletesql = "delete from customview where cvid =".$cvid;
+	$deletesql = "delete from vtiger_customview where cvid =".$cvid;
 	$deleteresult = $adb->query($deletesql);
-	$_SESSION["cv$module"] ='';
+	$_SESSION['lvs'][$module]["viewname"] = '';
 }
 if(isset($smodule) && $smodule != '')
 {
 	$smodule_url = "&smodule=".$smodule;
 }
 
-header("Location: index.php?action=index&module=$module".$smodule_url);
+header("Location: index.php?action=ListView&parenttab=$parenttab&module=$module".$smodule_url);
 ?>

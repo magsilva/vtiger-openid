@@ -143,7 +143,7 @@ $default_action = 'index';
 
 // set default theme
 // default_theme default value = blue
-$default_theme = 'blue';
+$default_theme = 'bluelagoon';
 
 // show or hide time to compose each page
 // calculate_response_time default value = true
@@ -170,6 +170,9 @@ $disable_persistent_connections = false;
 // defined languages available. the key must be the language file prefix. (Example 'en_us' is the prefix for every 'en_us.lang.php' file)
 // languages default value = en_us=>US English
 $languages = Array('en_us'=>'US English',);
+
+//Master currency name
+$currency_name = '_MASTER_CURRENCY_';
 
 // default charset
 // default charset default value = ISO-8859-1

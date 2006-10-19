@@ -99,15 +99,27 @@ require_once('include/utils/utils.php');
 		if(!isset($organization_logoname))
 			$organization_logoname="";
 
-		$sql="select * from organizationdetails where organizationame = '".$org_name."'";
+		$sql="SELECT * FROM vtiger_organizationdetails WHERE organizationname = ".$adb->quote($org_name);
 		$result = $adb->query($sql);
-		$org_name = $adb->query_result($result,0,'organizationame');
+		$org_name = from_html($adb->query_result($result,0,'organizationname'));
 		$org_logo = $adb->query_result($result,0,'logoname'); 
 
 
 		if($org_name=='')
 		{
-			$sql="insert into organizationdetails(organizationame,address,city,state,code,country,phone,fax,website,logoname) values( '".$organization_name ."','".$organization_address."','". $organization_city."','".$organization_state."','".$organization_code."','".$organization_country."','".$organization_phone."','".$organization_fax."','".$organization_website."','".$organization_logoname."')";
+			$sql="INSERT INTO vtiger_organizationdetails
+				(organizationname, address, city, state, code, country, phone, fax, website, logoname)
+				VALUES (".$adb->quote($organization_name).
+					",".$adb->quote($organization_address).
+					",".$adb->quote($organization_city).
+					",".$adb->quote($organization_state).
+					",".$adb->quote($organization_code).
+					",".$adb->quote($organization_country).
+					",".$adb->quote($organization_phone).
+					",".$adb->quote($organization_fax).
+					",".$adb->quote($organization_website).
+					",".$adb->quote($organization_logoname).
+				")";
 		}
 		else
 		{
@@ -130,18 +142,29 @@ require_once('include/utils/utils.php');
 				$organization_logoname=$org_logo;
 			}
 
-			$sql="update organizationdetails set organizationame = '".$organization_name."', address = '".$organization_address."', city = '".$organization_city."', state = '".$organization_state."',  code = '".$organization_code."', country = '".$organization_country."' ,  phone = '".$organization_phone."' ,  fax = '".$organization_fax."',  website = '".$organization_website."', logoname = '". $organization_logoname ."' where organizationame = '".$org_name."'";
+			$sql = "UPDATE vtiger_organizationdetails
+				SET organizationname = ".$adb->quote($organization_name).",
+					address = ".$adb->quote($organization_address).",
+					city = ".$adb->quote($organization_city).",
+					state = ".$adb->quote($organization_state).",
+					code = ".$adb->quote($organization_code).",
+					country = ".$adb->quote($organization_country)." ,
+					phone = ".$adb->quote($organization_phone)." ,
+					fax = ".$adb->quote($organization_fax).",
+					website = ".$adb->quote($organization_website).",
+					logoname = ".$adb->quote($organization_logoname)."
+				WHERE organizationname = ".$adb->quote($org_name);
 		}
 		$adb->query($sql);
 
 		if($savelogo=="true")
 		{
-			header("Location: index.php?module=Settings&action=OrganizationConfig");
+			header("Location: index.php?parenttab=Settings&module=Settings&action=OrganizationConfig");
 		}
 		elseif($savelogo=="false")
 		{
 		
-    		header("Location: index.php?module=Settings&action=EditCompanyDetails&flag=".$error_flag);
+    		header("Location: index.php?parenttab=Settings&module=Settings&action=EditCompanyDetails&flag=".$error_flag);
 		}
 	
 

@@ -15,7 +15,7 @@
 /*********************************************************************************
  * $Header$
  * Description:  Contains a variety of utility functions used to display UI
- * components such as form headers and footers.  Intended to be modified on a per
+ * components such as form vtiger_headers and footers.  Intended to be modified on a per
  * theme basis.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -88,7 +88,7 @@ return $the_script;
 }
 
 /**
- * Create HTML form to enter a new record with the minimum necessary fields.
+ * Create HTML form to enter a new record with the minimum necessary vtiger_fields.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
@@ -115,7 +115,7 @@ $user_id = $current_user->id;
 $qcreate_form = get_left_form_header($mod_strings['LBL_NEW_FORM_TITLE']);
 
 
-$qcreate_get_field="select * from field where tabid=4 and quickcreate=0 order by quickcreatesequence";
+$qcreate_get_field="select * from vtiger_field where tabid=4 and quickcreate=0 order by quickcreatesequence";
 $qcreate_get_result=$adb->query($qcreate_get_field);
 $qcreate_get_noofrows=$adb->num_rows($qcreate_get_result);
 

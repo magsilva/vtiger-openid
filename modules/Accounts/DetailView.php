@@ -26,10 +26,11 @@ require_once('modules/Accounts/Account.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
+require_once('user_privileges/default_module_view.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
-global $log;
+global $log, $currentModule, $singlepane_view;
 
 $focus = new Account();
 if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) {
@@ -65,19 +66,21 @@ $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
-$smarty->assign("SINGLE_MOD","Account");
+$smarty->assign("SINGLE_MOD",'Account');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
+if(useInternalMailer() == 1)
+        $smarty->assign("INT_MAILER","true");
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Accounts",1,$_REQUEST['record']) == 'yes')
+
+if(isPermitted("Accounts","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-if(isPermitted("Accounts",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Accounts","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
-if(isPermitted("Accounts",8,'') == 'yes')
+if(isPermitted("Accounts","Merge",'') == 'yes')
 {
 	$smarty->assign("MERGEBUTTON","permitted");
 	require_once('include/utils/UserInfoUtil.php');
@@ -86,14 +89,34 @@ if(isPermitted("Accounts",8,'') == 'yes')
 	$tempVal = $adb->fetch_array($wordTemplateResult);
 	for($templateCount=0;$templateCount<$tempCount;$templateCount++)
 	{
-		$optionString []=$tempVal["filename"];
+		$optionString[$tempVal["templateid"]]=$tempVal["filename"];
 		$tempVal = $adb->fetch_array($wordTemplateResult);
 	}
 	$smarty->assign("WORDTEMPLATEOPTIONS",$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']);
         $smarty->assign("TOPTIONS",$optionString);
 }
 
+$tabid = getTabid("Accounts");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
 
-$smarty->assign("MODULE","Accounts");
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+      
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+$smarty->assign("MODULE",$currentModule);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+$smarty->assign("SinglePane_View", $singlepane_view);
+
 $smarty->display("DetailView.tpl");
 ?>

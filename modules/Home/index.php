@@ -27,6 +27,7 @@ require_once($theme_path.'layout_utils.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/UserInfoUtil.php');
 require_once('include/utils/CommonUtils.php');
+require_once('include/freetag/freetag.class.php');
 global $app_strings;
 global $app_list_strings;
 global $mod_strings;
@@ -43,7 +44,7 @@ $task_title = $mod_strings['LBL_OPEN_TASKS'];
 global $adb;
 global $current_user;
 
-$query = "SELECT users.homeorder FROM users WHERE id=".$current_user->id;
+$query = "SELECT vtiger_users.homeorder FROM vtiger_users WHERE id=".$current_user->id;
 $result =& $adb->query($query, true,"Error getting home order");
 $row = $adb->fetchByAssoc($result);
 
@@ -53,18 +54,21 @@ if($row != null)
 }
 if( count($home_section_order) < 1 )
 {
-	$home_section_order = array("ALVT","PLVT","QLTQ","CVLVT","HLT","OLV","GRT","OLTSO","ILTI");
+	$home_section_order = array("ALVT","HDB","PLVT","QLTQ","CVLVT","HLT","OLV","GRT","OLTSO","ILTI","MNL","OLTPO","LTFAQ");
 }
 
+require('user_privileges/user_privileges_'.$current_user->id.'.php');
 foreach ( explode(",",$home_section_order) as $section )
 {
 	switch( $section )
 	{
 		case 'OLV':
-	if(isPermitted('Activities','index') == "yes")
+	if(isPermitted('Calendar','index') == "yes")
 	{
-		include("modules/Activities/OpenListView.php") ;
-		$home_values[]= getPendingActivities();
+		$activities = Array();
+                include("modules/Calendar/OpenListView.php") ;
+                $activities[] = getPendingActivities(0);
+                $activities[] = getPendingActivities(1);
 	}
             break;
         case 'ALVT':
@@ -75,14 +79,14 @@ foreach ( explode(",",$home_section_order) as $section )
         if(isPermitted('Accounts','index') == "yes")
         {
                 include("modules/Accounts/ListViewTop.php");
-		$home_values[]=getTopAccounts();
+		$home_values['Accounts']=getTopAccounts();
         }
             break;
         case 'PLVT':
 	if(isPermitted('Potentials','index') == "yes")
         {
 		 include("modules/Potentials/ListViewTop.php");
-		 $home_values[]=getTopPotentials();
+		 $home_values['Potentials']=getTopPotentials();
 	}
             break;
 
@@ -90,104 +94,133 @@ foreach ( explode(",",$home_section_order) as $section )
 	if(isPermitted('Leads','index') == "yes")
         {
 		 include("modules/Leads/ListViewTop.php");
-		 $home_values[]=getNewLeads();
+		 $home_values['Leads']=getNewLeads();
 	}
             break;
 
 	case 'GRT':
-	if(isPermitted('Activities','index') == "yes")
-	{
-		$home_values[]=getGroupTaskLists();	   
-	}
-   			break;
+		$home_values['GroupAllocation']=getGroupTaskLists();	   
+   		break;
         case 'HLT':
         if(isPermitted('HelpDesk','index') == "yes")
         {
 		require_once('modules/HelpDesk/ListTickets.php');
-		$home_values[]=getMyTickets();
+		$home_values['HelpDesk']=getMyTickets();
 	}
         	break;
         case 'CVLVT':
 	include("modules/CustomView/ListViewTop.php");
-	$home_values[] = getKeyMetrics();
+	$home_values['CustomView'] = getKeyMetrics();
         	break;
         case 'QLTQ':
         if(isPermitted('Quotes','index') == "yes")
         {
 		require_once('modules/Quotes/ListTopQuotes.php');
-		$home_values[]=getTopQuotes();
+		$home_values['Quotes']=getTopQuotes();
 	}
         	break;
         case 'OLTSO':
         if(isPermitted('SalesOrder','index') == "yes")
         {
 		require_once('modules/SalesOrder/ListTopSalesOrder.php');
-		$home_values[]=getTopSalesOrder();
+		$home_values['SalesOrder']=getTopSalesOrder();
 	}
         	break;
         case 'ILTI':
         if(isPermitted('Invoice','index') == "yes")
         {
 		require_once('modules/Invoice/ListTopInvoice.php');
-		$home_values[]=getTopInvoice();
+		$home_values['Invoice']=getTopInvoice();
 	}
         	break;
+	case 'HDB':
+	if(isPermitted('Dashboard','index') == "yes")
+	{
+		$smarty->assign('IS_HOMEDASH','true');
+		$home_values['Dashboard']="true";
+	}
+		break;
+	case 'OLTPO':
+        if(isPermitted('PurchaseOrder','index') == "yes")
+        {
+		require_once('modules/PurchaseOrder/ListTopPurchaseOrder.php');
+		$home_values['PurchaseOrder']=getTopPurchaseOrder();
+	}
+		break;
+	case 'LTFAQ':
+        if(isPermitted('Faq','index') == "yes")
+        {
+		require_once('modules/Faq/ListFaq.php');
+		$home_values['Faq']=getMyFaq();
+	}
+        	break;
+
     }
 }
+
+	/** Function to get the ActivityType for the given entity id
+	 *  @param entityid : Type Integer
+	 *  return the activity type for the given id
+	 */
 function getActivityType($id)
 {
 	global $adb;
-	$quer = "select activitytype from activity where activityid=".$id;
+	$quer = "select activitytype from vtiger_activity where activityid=".$id;
 	$res = $adb->query($quer);
 	$acti_type = $adb->query_result($res,0,"activitytype");
 	return $acti_type;
 
 }
-$query="select tagcloud from users where id=".$current_user->id;
-$result=$adb->query($query);
-$tagcloud_js=$adb->query_result($result,0,'tagcloud');
-$smarty->assign("TAGCLOUD_JS",$tagcloud_js);
-$smarty->assign("TAGCLOUD_CSS",ereg_replace('/js/','/css/',$tagcloud_js));
-$smarty->assign("LOGINHISTORY",getLoginHistory());
+
 global $current_language;
 $current_module_strings = return_module_language($current_language, 'Calendar');
 
 $t=Date("Ymd");
+$buttoncheck['Calendar'] = isPermitted('Calendar','index');
+$smarty->assign("CHECK",$buttoncheck);
 $smarty->assign("IMAGE_PATH",$image_path);
+$smarty->assign("APP",$app_strings);
+$smarty->assign("MOD",$mod_strings);
+$smarty->assign("MODULE",'Home');
+$smarty->assign("CATEGORY",getParenttab('Home'));
 $smarty->assign("HOMEDETAILS",$home_values);
 $smarty->assign("HOMEDEFAULTVIEW",DefHomeView());
+$smarty->assign("ACTIVITIES",$activities);
+$freetag = new freetag();
+$smarty->assign("ALL_TAG",$freetag->get_tag_cloud_html("",$current_user->id));
 $smarty->display("HomePage.tpl");
 
-function getLoginHistory()
-{
-	global $current_user;
-	global $adb;
-	global $app_strings;
-	$i=0;
-	$userid= $current_user->id;
-	$query="select * from loginhistory inner join users on loginhistory.user_name=users.user_name where users.id=".$userid;
-	$result=$adb->query($query);
-	$count=$adb->num_rows($result);
-	$logout_time=$adb->query_result($result,$count-2,'logout_time');
-	if($logout_time !='' && $logout_time != '0000-00-00 00:00:00' && $count >= 2)
-	{
-		$query ="select * from crmentity where modifiedtime > '".$logout_time."'and smownerid =".$userid;
-		$result=$adb->query($query);
-		$entry_list=array();
-		for(;$i < $adb->num_rows($result);$i++)
-		{
-			$entries=array();
-			$entries['setype'] =$adb->query_result($result,$i,'setype');	
-			$entries['modifiedby'] = getUserName($adb->query_result($result,$i,'modifiedby'));
-			$entries['modifiedtime'] = $adb->query_result($result,$i,'modifiedtime');
-			$entries['crmid'] = $adb->query_result($result,$i,'crmid');
-			$entry_list[]=$entries;	
-		}
-		if($i > 0)
-			return $entry_list;
-	}
-}
-	
+	/** Function to get the Tasks assigned to the group for the currentUser 
+	 *  This function accepts no arguments
+	 * @returns  $group related tasks Array in the following format
+	 * $values = Array('Title'=>Array(0=>'image name',
+	 *				 1=>'My Group Allocation',
+	 *			 	 2=>'home_mygrp'
+	 *			 	),
+	 *		  'Header'=>Array(0=>'Entity Name',
+	 *	  			  1=>'Group Name',
+	 *				  2=>'Entity Type'	
+	 *			  	),
+	 *		  'Entries'=>Array($id=>Array(
+	 *			  			0=>$name,
+	 *						1=>$groupname,
+	 *						2=>$entityname
+	 *					       ),
+	 *				   $id1=>Array(
+         *                                               0=>$name1,
+         *                                               1=>$groupname1,
+	 *						 2=>$entityname1	
+         *                                              ),
+	 *					|
+	 *					|
+         *				   $idn=>Array(
+         *                                               0=>$namen,
+         *                                               1=>$groupnamen,
+	 *						 2=>$entitynamen		
+         *                                              )	
+	 *				  )
+	 *
+        */
 function getGroupTaskLists()
 {
 	//get all the group relation tasks
@@ -199,17 +232,28 @@ function getGroupTaskLists()
 	$groupids = fetchUserGroupids($userid);
 	if($groupids !='')
 	{
-		//code modified to list the groups associates to a user om 21-11-05
-		//Get the leads assigned to group
-		$query = "select leaddetails.leadid as id,leaddetails.lastname as name,leadgrouprelation.groupname as groupname, 'Leads     ' as Type from leaddetails inner join leadgrouprelation on leaddetails.leadid=leadgrouprelation.leadid inner join crmentity on crmentity.crmid = leaddetails.leadid inner join groups on leadgrouprelation.groupname=groups.groupname where  crmentity.deleted=0  and leadgrouprelation.groupname is not null and groups.groupid in (".$groupids.")";
-		$query .= " union all ";
-		//Get the activities assigned to group
-		$query .= "select activity.activityid id,activity.subject,activitygrouprelation.groupname,'Activities' as Type from activity inner join activitygrouprelation on activitygrouprelation.activityid=activity.activityid inner join crmentity on crmentity.crmid = activity.activityid inner join groups on activitygrouprelation.groupname=groups.groupname where  crmentity.deleted=0 and ((activity.eventstatus !='held'and (activity.status is null or activity.status ='')) or (activity.status !='completed' and (activity.eventstatus is null or activity.eventstatus=''))) and activitygrouprelation.groupname is not null and groups.groupid in (".$groupids.")";
-		$query .= " union all ";
-		//Get the tickets assigned to group (status not Closed -- hardcoded value)
-		$query .= "select troubletickets.ticketid,troubletickets.title,ticketgrouprelation.groupname,'Tickets   ' as Type from troubletickets inner join ticketgrouprelation on ticketgrouprelation.ticketid=troubletickets.ticketid inner join crmentity on crmentity.crmid = troubletickets.ticketid inner join groups on ticketgrouprelation.groupname=groups.groupname where crmentity.deleted=0 and troubletickets.status != 'Closed' and ticketgrouprelation.groupname is not null and groups.groupid in (".$groupids.")";
+		$query = '';
+		if(isPermitted('Leads','index') == "yes")
+        	{
+			//code modified to list the vtiger_groups associates to a user om 21-11-05
+			//Get the leads assigned to group
+			$query = "select vtiger_leaddetails.leadid as id,vtiger_leaddetails.lastname as name,vtiger_leadgrouprelation.groupname as groupname, 'Leads     ' as Type from vtiger_leaddetails inner join vtiger_leadgrouprelation on vtiger_leaddetails.leadid=vtiger_leadgrouprelation.leadid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_leaddetails.leadid inner join vtiger_groups on vtiger_leadgrouprelation.groupname=vtiger_groups.groupname where  vtiger_crmentity.deleted=0  and vtiger_leadgrouprelation.groupname is not null and vtiger_groups.groupid in (".$groupids.")";
+		}
+		if(isPermitted('Calendar','index') == "yes")
+        	{
+			if($query !='')
+			$query .= " union all ";
+			//Get the activities assigned to group
+			$query .= "select vtiger_activity.activityid id,vtiger_activity.subject as name,vtiger_activitygrouprelation.groupname,'Activities' as Type from vtiger_activity inner join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_activity.activityid inner join vtiger_groups on vtiger_activitygrouprelation.groupname=vtiger_groups.groupname where  vtiger_crmentity.deleted=0 and ((vtiger_activity.eventstatus !='held'and (vtiger_activity.status is null or vtiger_activity.status ='')) or (vtiger_activity.status !='completed' and (vtiger_activity.eventstatus is null or vtiger_activity.eventstatus=''))) and vtiger_activitygrouprelation.groupname is not null and vtiger_groups.groupid in (".$groupids.")";
+		}
+		if(isPermitted('HelpDesk','index') == "yes")
+                {
+			if($query !='')
+			$query .= " union all ";
+			//Get the tickets assigned to group (status not Closed -- hardcoded value)
+			$query .= "select vtiger_troubletickets.ticketid,vtiger_troubletickets.title as name,vtiger_ticketgrouprelation.groupname,'Tickets   ' as Type from vtiger_troubletickets inner join vtiger_ticketgrouprelation on vtiger_ticketgrouprelation.ticketid=vtiger_troubletickets.ticketid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_troubletickets.ticketid inner join vtiger_groups on vtiger_ticketgrouprelation.groupname=vtiger_groups.groupname where vtiger_crmentity.deleted=0 and vtiger_troubletickets.status != 'Closed' and vtiger_ticketgrouprelation.groupname is not null and vtiger_groups.groupid in (".$groupids.")";
 
-
+		}
 		$log->info("Here is the where clause for the list view: $query");
 		$result = $adb->limitquery($query,0,5) or die("Couldn't get the group listing");
 
@@ -230,12 +274,15 @@ function getGroupTaskLists()
 			while($row = $adb->fetch_array($result))
 			{
 				$value=array();	
+				$row["type"]=trim($row["type"]);
 				if($row["type"] == "Tickets")
 				{	
 					$list = '<a href=index.php?module=HelpDesk';
+					$list .= '&action=DetailView&record='.$row["id"].'>'.$row["name"].'</a>';
 				}
 				elseif($row["type"] == "Activities")
 				{
+					$row["type"] = 'Calendar';
 					$acti_type = getActivityType($row["id"]);
 					$list = '<a href=index.php?module='.$row["type"];
 					if($acti_type == 'Task')
@@ -246,13 +293,14 @@ function getGroupTaskLists()
 					{
 						$list .= '&activity_mode=Events';
 					}
+					$list .= '&action=DetailView&record='.$row["id"].'>'.$row["name"].'</a>';
 				}
 				else
 				{
 					$list = '<a href=index.php?module='.$row["type"];
+					$list .= '&action=DetailView&record='.$row["id"].'>'.$row["name"].'</a>';
 				}
 
-				$list .= '&action=DetailView&record='.$row["id"].'>'.$row["name"].'</a>';
 				$value[]=$list;	
 				$value[]= $row["groupname"];
 				$value[]= $row["type"];
@@ -262,8 +310,8 @@ function getGroupTaskLists()
 		}
 
 		$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
-		return $values;
+		if(count($entries)>0)	
+			return $values;
 		} 
 }
 ?>
-

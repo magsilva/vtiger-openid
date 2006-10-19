@@ -14,7 +14,7 @@ require_once('include/utils/utils.php');
 require_once('modules/PriceBooks/PriceBook.php');
 require_once('include/FormValidationUtil.php');
 
-global $app_strings,$mod_strings,$theme;
+global $app_strings,$mod_strings,$theme,$currentModule;
 
 $focus = new PriceBook();
 $smarty = new vtigerCRM_Smarty();
@@ -38,15 +38,19 @@ require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("PriceBooks",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else	
 {
-	$smarty->assign("BASBLOCKS",getBlocks("PriceBooks",$disp_view,$mode,$focus->column_fields,'BAS'));
+	$bas_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS');
+	$blocks['basicTab'] = $bas_block;
+
+	$smarty->assign("BLOCKS",$blocks);
+	$smarty->assign("BLOCKS_COUNT",count($blocks));
 }
 $smarty->assign("OP_MODE",$disp_view);
 
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Product");
+$smarty->assign("SINGLE_MOD",$app_strings['PriceBook']);
 
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
@@ -74,9 +78,8 @@ $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
 
-$pb_tables = Array('pricebook'); 
-
-$validationData = getDBValidationData($pb_tables);
+$tabid = getTabid("PriceBooks");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
 $data = split_validationdataArray($validationData);
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
@@ -84,8 +87,12 @@ $smarty->assign("CATEGORY",$category);
 $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
 $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
 $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if($focus->mode == 'edit')
-	$smarty->display('salesEditView.tpl');
+	$smarty->display('Inventory/InventoryEditView.tpl');
 else 
-	$smarty->display('CreateView.tpl');
+	$smarty->display('Inventory/InventoryCreateView.tpl');
 ?>

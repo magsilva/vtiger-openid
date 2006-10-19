@@ -32,10 +32,6 @@ class freetag {
 	 *  @access private
 	 *  @param string
 	 */ 
-	//var $_db_user = 'root';
-	//var $_db_pass = '';
-	//var $_db_host = 'jerijohn';
-	//var $_db_name = 'vtigercrm06_03'; 
 	/**#@-*/
 
 	/**
@@ -50,9 +46,9 @@ class freetag {
 	var $_debug = FALSE;
 	/**
 	 * @access private
-	 * @param string The prefix of freetag database tables.
+	 * @param string The prefix of freetag database vtiger_tables.
 	 */
-	var $_table_prefix = '';
+	var $_table_prefix = 'vtiger_';
 	/**
 	 * @access private
 	 * @param string The regex-style set of characters that are valid for normalized tags.
@@ -61,11 +57,13 @@ class freetag {
 	/**
 	 * @access private
 	 * @param string Whether to normalize tags at all.
+	 * value 0 saves the tag in case insensitive mode
+	 * value 1 save the tag in lower case
 	 */
-	var $_normalize_tags = 1;
+	var $_normalize_tags = 0;
 	/**
 	 * @access private
-	 * @param string Whether to prevent multiple users from tagging the same object. By default, set to block (ala Upcoming.org)
+	 * @param string Whether to prevent multiple vtiger_users from tagging the same object. By default, set to block (ala Upcoming.org)
 	 */
 	var $_block_multiuser_tag_on_object =0;
 	/**
@@ -97,10 +95,10 @@ class freetag {
 	 * - db_pass: Database password
 	 * - db_host: Database hostname [default: localhost]
 	 * - db_name: Database name
-	 * - table_prefix: If you wish to create multiple Freetag databases on the same database, you can put a prefix in front of the table names and pass separate prefixes to the constructor. [default: '']
+	 * - vtiger_table_prefix: If you wish to create multiple Freetag databases on the same database, you can put a prefix in front of the vtiger_table names and pass separate prefixes to the constructor. [default: '']
 	 * - normalize_tags: Whether to normalize (lowercase and filter for valid characters) on tags at all. [default: 1]
 	 * - normalized_valid_chars: Pass a regex-style set of valid characters that you want your tags normalized against. [default: 'a-zA-Z0-9' for alphanumeric]
-	 * - block_multiuser_tag_on_object: Set to 0 in order to allow individual users to all tag the same object with the same tag. Default is 1 to only allow one occurence of a tag per object. [default: 1]
+	 * - block_multiuser_tag_on_object: Set to 0 in order to allow individual vtiger_users to all tag the same object with the same tag. Default is 1 to only allow one occurence of a tag per object. [default: 1]
 	 * - MAX_TAG_LENGTH: maximum length of normalized tags in chars. [default: 30]
 	 * - ADODB_DIR: directory in which adodb is installed. Change if you don't want to use the bundled version. [default: adodb/]
 	 * - PCONNECT: Whether to use ADODB persistent connections. [default: FALSE]
@@ -240,7 +238,7 @@ class freetag {
 	 * get_objects_with_tag_combo
 	 *
 	 * Returns an array of object ID's that have all the tags passed in the
-	 * tagArray parameter. Use this to provide tag combo services to your users.
+	 * tagArray parameter. Use this to provide tag combo services to your vtiger_users.
 	 *
 	 * @param array - Pass an array of normalized form tags along to the function.
 	 * @param int (Optional) - The numerical offset to begin display at. Defaults to 0.
@@ -347,7 +345,7 @@ class freetag {
 	 * You can use this function to show the tags on an object. Since it supports both user-specific
 	 * and general modes with the $tagger_id parameter, you can use it twice on a page to make it work
 	 * similar to upcoming.org and flickr, where the page displays your own tags differently than
-	 * other users' tags.
+	 * other vtiger_users' tags.
 	 *
 	 * @param int The unique ID of the object in question.
 	 * @param int The offset of tags to return.
@@ -378,7 +376,7 @@ class freetag {
 		}
 		$prefix = $this->_table_prefix;
 
-		$sql = "SELECT DISTINCT tag, raw_tag, tagger_id
+		$sql = "SELECT DISTINCT tag, raw_tag, tagger_id, id
 			FROM ${prefix}freetagged_objects INNER JOIN ${prefix}freetags ON (tag_id = id)
 			WHERE object_id = $object_id
 			$tagger_sql
@@ -428,7 +426,7 @@ class freetag {
 		$prefix = $this->_table_prefix;
 
 		// First, check for duplicate of the normalized form of the tag on this object.
-		// Dynamically switch between allowing duplication between users on the constructor param 'block_multiuser_tag_on_object'.
+		// Dynamically switch between allowing duplication between vtiger_users on the constructor param 'block_multiuser_tag_on_object'.
 		// If it's set not to block multiuser tags, then modify the existence
 		// check to look for a tag by this particular user. Otherwise, the following
 		// query will reveal whether that tag exists on that object for ANY user.
@@ -437,7 +435,7 @@ class freetag {
 		}
 		$sql = "SELECT COUNT(*) as count 
 			FROM ${prefix}freetagged_objects INNER JOIN ${prefix}freetags ON (tag_id = id)
-			WHERE 1 
+			WHERE 1=1 
 			$tagger_sql
 			AND object_id = $object_id
 			AND tag = $normalized_tag
@@ -456,7 +454,7 @@ class freetag {
 			$tag_id = $rs->fields['id'];
 		} else {
 			// Add new tag! 
-			$tag_id = $adb->getUniqueId('freetags');
+			$tag_id = $adb->getUniqueId('vtiger_freetags');
 			$sql = "INSERT INTO ${prefix}freetags (id,tag, raw_tag) VALUES ($tag_id,$normalized_tag, $tag)";
 			$rs = $adb->query($sql) or die("Syntax Error: $sql");
 			
@@ -514,7 +512,7 @@ class freetag {
 	 *
 	 * @param int The unique ID of the person who tagged the object with this tag.
 	 * @param int The ID of the object in question.
-	 * @param string The raw string form of the tag to delete. See above for notes.
+	 * @param string The raw string form of the tag to delete. See above for vtiger_notes.
 	 *
 	 * @return string Returns the tag in normalized form.
 	 */ 
@@ -682,7 +680,7 @@ class freetag {
 	 *
 	 * @param int The unique ID of the person who tagged the object with this tag.
 	 * @param int The ID of the object in question.
-	 * @param string The raw string form of the tag to delete. See above for notes.
+	 * @param string The raw string form of the tag to delete. See above for vtiger_notes.
 	 * @param int Whether to skip the update portion for objects that haven't been tagged. (Default: 1)
 	 *
 	 * @return string Returns the tag in normalized form.
@@ -894,12 +892,16 @@ class freetag {
 	 * @return string Returns an HTML snippet that can be used directly as a tag cloud.
 	 */
 
-	function get_tag_cloud_html($module="",$num_tags = 100, $min_font_size = 10, $max_font_size = 20, $font_units = 'px', $span_class = '', $tag_page_url = '/tag/', $tagger_id = NULL) {
-		$tag_list = $this->get_tag_cloud_tags($num_tags, $tagger_id,$module);
+	function get_tag_cloud_html($module="",$tagger_id = NULL,$obj_id= NULL,$num_tags = 100, $min_font_size = 10, $max_font_size = 20, $font_units = 'px', $span_class = '', $tag_page_url = '/tag/') {
+		global $theme;
+		$theme_path="themes/".$theme."/";
+		$image_path=$theme_path."images/";	
+		$tag_list = $this->get_tag_cloud_tags($num_tags, $tagger_id,$module,$obj_id);
+		if(!$tag_list[0]) return;
 		// Get the maximum qty of tagged objects in the set
-		$max_qty = max(array_values($tag_list));
+		$max_qty = max(array_values($tag_list[0]));
 		// Get the min qty of tagged objects in the set
-		$min_qty = min(array_values($tag_list));
+		$min_qty = min(array_values($tag_list[0]));
 
 		// For ever additional tagged object from min to max, we add
 		// $step to the font size.
@@ -915,14 +917,24 @@ class freetag {
 		// by $step.
 		$cloud_html = '';
 		$cloud_spans = array();
-		//included to get the site URL
-		include("config.php");
+		if($module =='')
+			$module = 'All';	
+		if($module != 'All')	
+		{	
+			foreach($tag_list[0] as $tag => $qty) {
+				$size = $min_font_size + ($qty - $min_qty) * 3;
+				$cloud_span[] = '<span id="tag_'.$tag_list[1][$tag].'" class="' . $span_class . '" onMouseOver=$("tagspan_'.$tag_list[1][$tag].'").style.display="inline"; onMouseOut=$("tagspan_'.$tag_list[1][$tag].'").style.display="none";><a class="tagit" href="index.php?module=Home&action=UnifiedSearch&search_module='.$module.'&query_string='. $tag . '" style="font-size: '. $size . $font_units . '">' . htmlspecialchars(stripslashes($tag)) . '</a><span class="'. $span_class .'" id="tagspan_'.$tag_list[1][$tag].'" style="display:none;cursor:pointer;" onClick="DeleteTag('.$tag_list[1][$tag].');"><img src="'.$image_path.'del_tag.gif"></span></span>';
 
-		foreach ($tag_list as $tag => $qty) {
-          		$size = $min_font_size + ($qty - $min_qty) * 3;
-			$cloud_span[] = '<span class="' . $span_class . '"><a class="tagit" href="'.$site_URL.'/index.php?module=Home&action=UnifiedSearch&search_module='.$module.'&query_string='. $tag . '" style="font-size: '. $size . $font_units . '">' . htmlspecialchars(stripslashes($tag)) . '</a></span>';
+			}
+		}else
+		{
+			foreach($tag_list[0] as $tag => $qty) {
+				$size = $min_font_size + ($qty - $min_qty) * 3;
+				$cloud_span[] = '<span class="' . $span_class . '"><a class="tagit" href="index.php?module=Home&action=UnifiedSearch&search_module='.$module.'&query_string='. $tag . '" style="font-size: '. $size . $font_units . '">' . htmlspecialchars(stripslashes($tag)) . '</a></span>';
 
-		}
+			}
+
+		}	
 		$cloud_html = join("\n ", $cloud_span);
 
 		return $cloud_html;
@@ -946,67 +958,48 @@ class freetag {
 	 * values are numeric quantity of objects tagged with that tag.
 	 */
 
-	function get_tag_cloud_tags($max = 100, $tagger_id = NULL,$module = "") {
+	function get_tag_cloud_tags($max = 100, $tagger_id = NULL,$module = "",$obj_id = NULL) {
 		global $adb;
 		if(isset($tagger_id) && ($tagger_id > 0)) {
-			$tagger_sql = "AND tagger_id = $tagger_id";
+			$tagger_sql = " AND tagger_id = $tagger_id";
 		} else {
 			$tagger_sql = "";
 		}
 
 		if($module != "") {
-			$tagger_sql .= "AND module = '$module'";
+			$tagger_sql .= " AND module = '$module'";
 		} else {
 			$tagger_sql .= "";
 		}
 
+		if(isset($obj_id) && $obj_id > 0) {
+                        $tagger_sql .= " AND object_id = $obj_id";
+                } else {
+                        $tagger_sql .= "";
+                }
+
 		$prefix = $this->_table_prefix;
-		$sql = "SELECT tag, COUNT(object_id) AS quantity
+		$sql = "SELECT tag,tag_id,COUNT(object_id) AS quantity
 			FROM ${prefix}freetags INNER JOIN ${prefix}freetagged_objects
 			ON (${prefix}freetags.id = tag_id)
-			WHERE 1
+			WHERE 1=1
 			$tagger_sql
-			GROUP BY tag
-			ORDER BY quantity DESC
-			LIMIT 0, $max
-			";
+			GROUP BY tag,tag_id
+			ORDER BY quantity DESC";
         //echo $sql;
-		$rs = $adb->query($sql) or die("Syntax Error: $sql");
+		$rs = $adb->limitQuery($sql, 0, $max) or die("Syntax Error: $sql");
+		$retarr = array();
 		while(!$rs->EOF) {
 			$retarr[$rs->fields['tag']] = $rs->fields['quantity'];
+			$retarr1[$rs->fields['tag']] = $rs->fields['tag_id'];
 			$rs->MoveNext();
 		}
+		if($retarr) ksort($retarr);
+		if($retarr1) ksort($retarr1);
+		$return_value[]=$retarr;
+		$return_value[]=$retarr1;
+		return $return_value;
 
-		ksort($retarr);
-
-		return $retarr;
-
-	}
-
-
-	/**
-	 * silly_list
-	 *
-	 * silly_list is now deprecated in favor of using get_tag_cloud_tags. It's still
-	 * available for compatibility. If you're just looking to get a tag cloud going,
-	 * try get_tag_cloud_html().
-	 * 
-	 * This is a function built explicitly to set up a page with most popular tags
-	 * that contains an alphabetically sorted list of tags, which can then be sized
-	 * or colored by popularity.
-	 *
-	 * Also known more popularly as Tag Clouds!
-	 *
-	 * Here's the example case: http://upcoming.org/tag/
-	 *
-	 * @param int The maximum number of tags to return.
-	 *
-	 * @return array Returns an array where the keys are normalized tags, and the
-	 * values are numeric quantity of objects tagged with that tag.
-	 */
-
-	function silly_list($max = 100, $tagger_id = NULL) {
-		return $this->get_tag_cloud_tags($max, $tagger_id);
 	}
 
 	/**
@@ -1014,7 +1007,7 @@ class freetag {
 	 *
 	 * Finds tags that are "similar" or related to the given tag.
 	 * It does this by looking at the other tags on objects tagged with the tag specified.
-	 * Confusing? Think of it like e-commerce's "Other users who bought this also bought," 
+	 * Confusing? Think of it like e-commerce's "Other vtiger_users who bought this also bought," 
 	 * as that's exactly how this works.
 	 *
 	 * Returns an empty array if no tag is passed, or if no related tags are found.

@@ -9,38 +9,60 @@
 *
 ********************************************************************************/
 
-
+require_once('modules/Portal/Portal.php');
 global $app_strings;
 global $app_list_strings;
 global $mod_strings;
-$portal_inputs='';
-if(isset($_REQUEST['portalurl']) && $_REQUEST['portalurl']!='')
+global $adb;
+
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+if(isset($_REQUEST['record']) && $_REQUEST['record'] !='')
 {
-	$result=SavePortal($_REQUEST['portalname'],$_REQUEST['portalurl']);
-	if($result == 'true')
-	$portal_inputs.="<script>window.opener.location.href=window.opener.location.href;window.self.close();</script>";
+	$portalid = $_REQUEST['record'];
+	$query="select * from vtiger_portal where portalid =$portalid";
+	$result=$adb->query($query);
+	$portalname = $adb->query_result($result,0,'portalname');
+        $portalurl = $adb->query_result($result,0,'portalurl');		
 }
+$portal_inputs='';
+$portal_inputs.='<div style="display:block;position:relative;" id="orgLay" class="layerPopup">
+		<table border="0" cellpadding="3" cellspacing="0" width="100%" class="layerHeadingULine">
+		<tr>
+			<td class="layerPopupHeading" align="left" width="60%">' .$mod_strings['LBL_ADD'] .' '.$mod_strings['LBL_BOOKMARK'].'</td>
+			<td align="right" width="40%"><a href="javascript:fninvsh(\'orgLay\');"><img src="'.$image_path.'close.gif" align="absmiddle" border="0"></a></td>
+		</tr>
+		</table>
+<table border="0" cellspacing="0" cellpadding="5" width="95%" align="center"> 
+	<tr>
+	<td class="small" >
+		<table border="0" celspacing="0" cellpadding="5" width="100%" align="center" bgcolor="white">
+		
+		<tr>
 
+			<td align="right" width="40%" ><b>'.$mod_strings['LBL_BOOKMARK'].' ' .$mod_strings['LBL_URL'] .' </b></td>
+			<td align="left" width="60%"><input name="portalurl" id="portalurl" class="txtBox" value="'.$portalurl.'" type="text"></td>
+		</tr>
+		<tr>
+			<td align="right" width="40%"> <b>'.$mod_strings['LBL_BOOKMARK'].' ' .$mod_strings['LBL_NAME'] .' </b></td>
+			<td align="left" width="60%"><input name="portalname" id="portalname" value="'.$portalname.'" class="txtBox" type="text"></td>
+		</tr>
+		</table>
+	</td>
+	</tr>
+</table>
+<table border="0" cellspacing="0" cellpadding="5" width="100%" class="layerPopupTransport">
+	<tr>
+	<td align="center">
+			<input name="save" value=" &nbsp;'.$app_strings['LBL_SAVE_BUTTON_LABEL'].'&nbsp; " class="crmbutton small save" onClick="SaveSite(\''.$portalid.'\')" type="button">&nbsp;&nbsp;
+			<input name="cancel" value=" '.$app_strings['LBL_CANCEL_BUTTON_LABEL'].' " class="crmbutton small cancel" onclick="fninvsh(\'orgLay\');" type="button">
+	</td>
+	</tr>
+</table>
+</div>';
 	
-	$portal_inputs.='<form name="NewPortal"><input type="hidden" name="action" value="Popup"><input type="hidden" name="module" value="Portal">';
-	$portal_inputs.='<table width="100%" border=0 cellspacing=2 cellpadding=2><tr><td>'.$mod_strings['LBL_ADD_PORTAL'].'</td><td></td></tr><tr><td>'.$mod_strings['LBL_NAME'].'</td><td><input type="text" name="portalname" class="textField" style="width:100%"/></td></tr>';
-	$portal_inputs.='<tr><td>'.$mod_strings['LBL_SITE_URL'].'</td><td><input type="text" name="portalurl" class="textField" style="width:100%"/></td></tr>';
-	$portal_inputs.='<table width="100%" border="0" cellpadding="5" cellspacing="5" class="buttonLayer"><tr>';
-    $portal_inputs.='<td align=center><input type="submit" name="Button"  value="Add" class="button">'; 
-	$portal_inputs.='<input type="button" value="Cancel" class="button" onClick="window.close()"/>'; 
-	$portal_inputs.='</td></tr></table></form>';
-
 echo $portal_inputs;
 
-function SavePortal($portalname,$portalurl)
-{
 
-global $adb;
-$portalid=$adb->getUniqueID('portal');
-$portal_name=$_REQUEST['portalname'];
-$portal_url=$_REQUEST['portalurl'];
-$query="insert into portal values(".$portalid.",'".$portal_name."','".$portal_url."',0)";
-$result=$adb->query($query);
-return true;
-}
 ?>

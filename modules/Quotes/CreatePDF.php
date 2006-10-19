@@ -1,11 +1,22 @@
 <?php
+/*********************************************************************************
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ *
+ ********************************************************************************/
+
+
 require_once('include/fpdf/pdf.php');
 require_once('modules/Quotes/Quote.php');
 require_once('include/database/PearDatabase.php');
 
 global $adb,$app_strings;
 
-$sql="select currency_symbol from currency_info";
+$sql="select currency_symbol from vtiger_currency_info";
 $result = $adb->query($sql);
 $currency_symbol = $adb->query_result($result,0,'currency_symbol');
 
@@ -14,10 +25,17 @@ $endpage="1";
 global $products_per_page;
 $products_per_page="6";
 
-// **************** BEGIN POPULATE DATA ********************
 $focus = new Quote();
 $focus->retrieve_entity_info($_REQUEST['record'],"Quotes");
 $account_name = getAccountName($focus->column_fields[account_id]);
+
+if($focus->column_fields["hdnTaxType"] == "individual") {
+        $product_taxes = 'true';
+} else {
+        $product_taxes = 'false';
+}
+
+// **************** BEGIN POPULATE DATA ********************
 $account_id = $focus->column_fields[account_id];
 $quote_id=$_REQUEST['record'];
 
@@ -41,13 +59,13 @@ $description = $focus->column_fields["description"];
 $status = $focus->column_fields["quotestage"];
 
 // Company information
-$add_query = "select * from organizationdetails";
+$add_query = "select * from vtiger_organizationdetails";
 $result = $adb->query($add_query);
 $num_rows = $adb->num_rows($result);
 
 if($num_rows == 1)
 {
-		$org_name = $adb->query_result($result,0,"organizationame");
+		$org_name = $adb->query_result($result,0,"organizationname");
 		$org_address = $adb->query_result($result,0,"address");
 		$org_city = $adb->query_result($result,0,"city");
 		$org_state = $adb->query_result($result,0,"state");
@@ -60,49 +78,115 @@ if($num_rows == 1)
 		$logo_name = $adb->query_result($result,0,"logoname");
 }
 
-//getting the Total Array
-$price_subtotal = $currency_symbol.number_format(StripLastZero($focus->column_fields["hdnSubTotal"]),2,'.',',');
-$price_tax = $currency_symbol.number_format(StripLastZero($focus->column_fields["txtTax"]),2,'.',',');
-$price_adjustment = $currency_symbol.number_format(StripLastZero($focus->column_fields["txtAdjustment"]),2,'.',',');
-$price_total = $currency_symbol.number_format(StripLastZero($focus->column_fields["hdnGrandTotal"]),2,'.',',');
 
-//getting the Product Data
-$query="select products.productname,products.unit_price,products.product_description,quotesproductrel.* from quotesproductrel inner join products on products.productid=quotesproductrel.productid where quoteid=".$quote_id;
+//Population of Product Details - Starts
 
-global $result;
-$result = $adb->query($query);
-$num_products=$adb->num_rows($result);
-for($i=0;$i<$num_products;$i++) {
-		$product_name[$i]=$adb->query_result($result,$i,'productname');
-		$prod_description[$i]=$adb->query_result($result,$i,'product_description');
-		$product_id[$i]=$adb->query_result($result,$i,'productid');
-		$qty[$i]=$adb->query_result($result,$i,'quantity');
+//we can cut and paste the following lines in a file and include that file here is enough. For that we have to put a new common file. we will do this later
+//NOTE : Removed currency symbols and added with Grand Total text. it is enough to show the currency symbol in one place
 
-		$unit_price[$i]= $currency_symbol.number_format($adb->query_result($result,$i,'unit_price'),2,'.',',');
-		$list_price[$i]= $currency_symbol.number_format(StripLastZero($adb->query_result($result,$i,'listprice')),2,'.',',');
-		$list_pricet[$i]= $adb->query_result($result,$i,'listprice');
-		$prod_total[$i]= $qty[$i]*$list_pricet[$i];
+//we can also get the NetTotal, Final Discount Amount/Percent, Adjustment and GrandTotal from the array $associated_products[1]['final_details']
+
+//getting the Net Total
+$price_subtotal = number_format($focus->column_fields["hdnSubTotal"],2,'.',',');
+
+//Final discount amount/percentage
+$discount_amount = $focus->column_fields["hdnDiscountAmount"];
+$discount_percent = $focus->column_fields["hdnDiscountPercent"];
+
+if($discount_amount != "")
+	$price_discount = number_format($discount_amount,2,'.',',');
+else if($discount_percent != "")
+	$price_discount = $discount_percent."%";
+else
+	$price_discount = "0.00";
+
+//Adjustment
+$price_adjustment = number_format($focus->column_fields["txtAdjustment"],2,'.',',');
+//Grand Total
+$price_total = number_format($focus->column_fields["hdnGrandTotal"],2,'.',',');
 
 
-		$product_line[] = array( "Product Name"    => $product_name[$i],
-				"Description"  => $prod_description[$i],
-				"Qty"     => $qty[$i],
-				"List Price"      => $list_price[$i],
-				"Unit Price" => $unit_price[$i],
-				"Total" => $currency_symbol.number_format($prod_total[$i],2,'.',','));
+//get the Associated Products for this Invoice
+$focus->id = $focus->column_fields["record_id"];
+$associated_products = getAssociatedProducts("Quotes",$focus);
+$num_products = count($associated_products);
+
+//This $final_details array will contain the final total, discount, Group Tax, S&H charge, S&H taxes and adjustment
+$final_details = $associated_products[1]['final_details'];
+
+//To calculate the group tax amount
+if($final_details['taxtype'] == 'group')
+{
+	$group_tax_total = $final_details['tax_totalamount'];
+	$price_salestax = number_format($group_tax_total,2,'.',',');
+
+	$group_total_tax_percent = '0.00';
+	$group_tax_details = $final_details['taxes'];
+	for($i=0;$i<count($group_tax_details);$i++)
+	{
+		$group_total_tax_percent = $group_total_tax_percent+$group_tax_details[$i]['percentage'];
+	}
 }
 
-	$total[]=array("Unit Price" => $app_strings['LBL_SUB_TOTAL'],
-		"Total" => $price_subtotal);
+//S&H amount
+$sh_amount = $final_details['shipping_handling_charge'];
+$price_shipping = number_format($sh_amount,2,'.',',');
 
-	$total[]=array("Unit Price" => $app_strings['LBL_ADJUSTMENT'],
-		"Total" => $price_adjustment);
+//S&H taxes
+$sh_tax_details = $final_details['sh_taxes'];
+$sh_tax_percent = '0.00';
+for($i=0;$i<count($sh_tax_details);$i++)
+{
+	$sh_tax_percent = $sh_tax_percent + $sh_tax_details[$i]['percentage'];
+}
+$sh_tax_amount = $final_details['shtax_totalamount'];
+$price_shipping_tax = number_format($sh_tax_amount,2,'.',',');
 
-	$total[]=array("Unit Price" => $app_strings['LBL_TAX'],
-		"Total" => $price_tax);
 
-	$total[]=array("Unit Price" => $app_strings['LBL_GRAND_TOTAL'],
-		"Total" => $price_total);
+//This is to get all prodcut details as row basis
+for($i=1,$j=$i-1;$i<=$num_products;$i++,$j++)
+{
+	$product_name[$i] = $associated_products[$i]['productName'.$i];
+	$prod_description[$i] = $associated_products[$i]['productDescription'.$i];
+	$product_id[$i] = $associated_products[$i]['hdnProductId'.$i];
+	$qty[$i] = $associated_products[$i]['qty'.$i];
+	$unit_price[$i] = number_format($associated_products[$i]['unitPrice'.$i],2,'.',',');
+	$list_price[$i] = number_format($associated_products[$i]['listPrice'.$i],2,'.',',');
+	$list_pricet[$i] = $associated_products[$i]['listPrice'.$i];
+	$discount_total[$i] = $associated_products[$i]['discountTotal'.$i];
+	
+	$taxable_total = $qty[$i]*$list_pricet[$i]-$discount_total[$i];
+
+	$producttotal = $taxable_total;
+	$total_taxes = '0.00';
+	if($focus->column_fields["hdnTaxType"] == "individual")
+	{
+		$total_tax_percent = '0.00';
+		//This loop is to get all tax percentage and then calculate the total of all taxes
+		for($tax_count=0;$tax_count<count($associated_products[$i]['taxes']);$tax_count++)
+		{
+			$tax_percent = $associated_products[$i]['taxes'][$tax_count]['percentage'];
+			$total_tax_percent = $total_tax_percent+$tax_percent;
+			$tax_amount = (($taxable_total*$tax_percent)/100);
+			$total_taxes = $total_taxes+$tax_amount;
+		}
+		$producttotal = $taxable_total+$total_taxes;
+		$product_line[$j]["Tax"] = number_format($total_taxes,2,'.',',')."\n ($total_tax_percent %) ";
+	}
+	$prod_total[$i] = number_format($producttotal,2,'.',',');
+
+	$product_line[$j]["Product Name"] = $product_name[$i];
+	$product_line[$j]["Description"] = $prod_description[$i];
+	$product_line[$j]["Qty"] = $qty[$i];
+	$product_line[$j]["Price"] = $list_price[$i];
+	$product_line[$j]["Discount"] = $discount_total[$i];
+	$product_line[$j]["Total"] = $prod_total[$i];
+}
+//echo '<pre>Product Details ==>';print_r($product_line);echo '</pre>';
+//echo '<pre>';print_r($associated_products);echo '</pre>';
+
+
+//Population of Product Details - Ends
 
 
 // ************************ END POPULATE DATA ***************************8
@@ -145,5 +229,5 @@ for($l=0;$l<$num_pages;$l++)
 
 
 $pdf->Output('Quotes.pdf','D'); //added file name to make it work in IE, also forces the download giving the user the option to save
-
+exit();
 ?>

@@ -27,7 +27,7 @@ if($_REQUEST['list_module_mode'] != '' && $_REQUEST['list_module_mode'] == 'save
 		$tabid = getTabid($val);
 		if($tabid != '' && $userid != '')
 		{
-			$sql = 'update moduleowners set user_id = '.$userid.' where tabid = '.$tabid;
+			$sql = 'update vtiger_moduleowners set user_id = '.$userid.' where tabid = '.$tabid;
 			$adb->query($sql);
 		}
 	}
@@ -78,21 +78,28 @@ if($_REQUEST['file_mode'] != 'ajax')
 else
 	$smarty->display("Settings/ModuleOwnersContents.tpl");
 	
+	/** Function to get the module owner for the tabid
+	 *  @ param $tabid
+	 *  It gets the module owner for the given tabid from vtiger_moduleowners table
+	 *  returns the userid of the module owner for the given tabid
+	 */
 function getModuleOwner($tabid)
 {
 	global $adb;
-	$sql = "select * from moduleowners where tabid=".$tabid;
+	$sql = "select * from vtiger_moduleowners where tabid=".$tabid;
 	$res = $adb->query($sql);
 	$userid = $adb->query_result($res,0,'user_id');
 
 	return $userid;
 }
-
+	/** Function to get the module List to which the owners can be assigned 
+	 *  It gets the module list and returns in an array 
+	 */
 function getModuleNameList()
 {
 	global $adb;
 
-	$sql = "select moduleowners.*, tab.name from moduleowners inner join tab on moduleowners.tabid = tab.tabid order by tab.tabsequence";
+	$sql = "select vtiger_moduleowners.*, vtiger_tab.name from vtiger_moduleowners inner join vtiger_tab on vtiger_moduleowners.tabid = vtiger_tab.tabid order by vtiger_tab.tabsequence";
 	$res = $adb->query($sql);
 	$mod_array = Array();
 	while($row = $adb->fetchByAssoc($res))
@@ -101,12 +108,18 @@ function getModuleNameList()
 	}
 	return $mod_array;
 }
+	/** Function to get combostrings of users 
+	 *  @ $user_array : type Array
+	 *  @ $modulename : Type String 
+	 *  returns the html string for module owners for the given module owners
+	 */
+
 function getUserCombo($user_array,$name)
 {
 	global $adb;
 
 	$tabid = getTabid($name);
-	$sql = "select * from moduleowners where tabid=".$tabid;
+	$sql = "select * from vtiger_moduleowners where tabid=".$tabid;
 	$res = $adb->query($sql);
 	$db_userid = $adb->query_result($res,0,'user_id');
 	

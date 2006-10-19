@@ -24,12 +24,18 @@ $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
-$sql = "select * from profile";
+$sql = "select * from vtiger_profile";
 $profileListResult = $adb->query($sql);
 $noofrows = $adb->num_rows($profileListResult);
-$list_entries = array($mod_strings['LBL_OERATION'],$mod_strings['LBL_NEW_PROFILE_NAME'],$mod_strings['LBL_DESCRIPTION']);
+$list_entries = array($mod_strings['LBL_LIST_NO'],$mod_strings['LBL_LIST_TOOLS'],$mod_strings['LBL_NEW_PROFILE_NAME'],$mod_strings['LBL_DESCRIPTION']);
 
-//Standard PickList Fields
+/** gives the profile list info array 
+  * @param $profileListResult -- profile list database result:: Type array
+  * @param $noofrows -- no of rows in the $profileListResult:: Type integer 
+  * @param $mod_strings -- i18n mod_strings array:: Type array 
+  * @returns $return_date -- profile list info array:: Type array
+  *
+ */
 function getStdOutput($profileListResult, $noofrows, $mod_strings)
 {
 	global $adb;
@@ -60,10 +66,9 @@ $smarty->assign("LIST_ENTRIES",getStdOutput($profileListResult, $noofrows, $mod_
 $smarty->assign("MOD", return_module_language($current_language,'Settings'));
 $smarty->assign("PROFILES", $standCustFld);
 $smarty->assign("IMAGE_PATH",$image_path);
+$smarty->assign("COUNT",$noofrows);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("CMOD", $mod_strings);
 
-
-
-$smarty->display("UserProfile.tpl");
+$smarty->display("UserProfileList.tpl");
 ?>

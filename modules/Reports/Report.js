@@ -7,7 +7,6 @@
  * All Rights Reserved.
  *
  ********************************************************************************/
-
 var typeofdata = new Array();
 typeofdata['V'] = ['e','n','s','c','k'];
 typeofdata['N'] = ['e','n','l','g','m','h'];
@@ -27,7 +26,7 @@ fLabels['g'] = 'greater than';
 fLabels['m'] = 'less or equal';
 fLabels['h'] = 'greater or equal';
 var noneLabel;
-
+var gcurrepfolderid=0;
 function trimfValues(value)
 {
     var string_array;
@@ -141,25 +140,8 @@ function invokeAction( actionName )
         goToURL( "?module=Reports&action=NewReport0&return_module=Reports&return_action=index" );
         return;
     }    
-    if( actionName == "newReportFolder" )
-    {
-        goToURL( "?module=Reports&action=NewReportFolder&return_module=Reports&return_action=index" );
-        return;
-    }    
     goToURL( "/crm/ScheduleReport.do?step=showAllSchedules" );
 } 
-function showRelatedModules(currmodule) 
-        {
-            for (i=0;i<getObj("primarymodule").length;i++) 
-            {
-                var moduleopt=getObj("primarymodule")[i].value
-                if (currmodule==i) 
-                    getObj(moduleopt+"relatedmodule").style.display="block"
-                else
-                    getObj(moduleopt+"relatedmodule").style.display="none"
-            }
-        }
-        
 function verify_data(form) {
 	var isError = false;
 	var errorMessage = "";
@@ -176,194 +158,317 @@ function verify_data(form) {
 }
 
 function setObjects() 
-        {
-            availListObj=getObj("availList")
-            selectedColumnsObj=getObj("selectedColumns")
+{
+	availListObj=getObj("availList")
+	selectedColumnsObj=getObj("selectedColumns")
 
-            moveupLinkObj=getObj("moveup_link")
-            moveupDisabledObj=getObj("moveup_disabled")
-            movedownLinkObj=getObj("movedown_link")
-            movedownDisabledObj=getObj("movedown_disabled")
-        }
-
-        function addColumn() 
-        {
-            for (i=0;i<selectedColumnsObj.length;i++) 
-            {
-                selectedColumnsObj.options[i].selected=false
-            }
-
-            for (i=0;i<availListObj.length;i++) 
-            {
-                if (availListObj.options[i].selected==true) 
-                {
-                    for (j=0;j<selectedColumnsObj.length;j++) 
-                    {
-                        if (selectedColumnsObj.options[j].value==availListObj.options[i].value) 
-                        {
-                            var rowFound=true
-                            var existingObj=selectedColumnsObj.options[j]
-                            break
-                        }
-                    }
-
-                    if (rowFound!=true) 
-                    {
-                        var newColObj=document.createElement("OPTION")
-                        newColObj.value=availListObj.options[i].value
-                        if (browser_ie) newColObj.innerText=availListObj.options[i].innerText
-                        else if (browser_nn4 || browser_nn6) newColObj.text=availListObj.options[i].text
-                        selectedColumnsObj.appendChild(newColObj)
-                        availListObj.options[i].selected=false
-                        newColObj.selected=true
-                        rowFound=false
-                    } 
-                    else 
-                    {
-                        existingObj.selected=true
-                    }
-                }
-            }
-        }
-
-        function delColumn() 
-        {
-            for (i=0;i<=selectedColumnsObj.options.length;i++) 
-            {
-                if (selectedColumnsObj.options.selectedIndex>=0)
-                selectedColumnsObj.remove(selectedColumnsObj.options.selectedIndex)
-            }
-        }
-                        
-        function formSelectColumnString()
-        {
-            var selectedColStr = "";
-            for (i=0;i<selectedColumnsObj.options.length;i++) 
-            {
-                selectedColStr += selectedColumnsObj.options[i].value + ";";
-            }
-            document.NewReport.selectedColumnsString.value = selectedColStr;
-        }
-        
-        function moveUp() 
-        {
-            var currpos=selectedColumnsObj.options.selectedIndex
-            if (currpos>0) 
-            {
-                var prevpos=selectedColumnsObj.options.selectedIndex-1
-		
-                if (browser_ie) 
-                {
-                    temp=selectedColumnsObj.options[prevpos].innerText
-                    selectedColumnsObj.options[prevpos].innerText=selectedColumnsObj.options[currpos].innerText
-                    selectedColumnsObj.options[currpos].innerText=temp     
-                } 
-                else if (browser_nn4 || browser_nn6) 
-                {
-                    temp=selectedColumnsObj.options[prevpos].text
-                    selectedColumnsObj.options[prevpos].text=selectedColumnsObj.options[currpos].text
-                    selectedColumnsObj.options[currpos].text=temp
-                }
-                temp=selectedColumnsObj.options[prevpos].value
-                selectedColumnsObj.options[prevpos].value=selectedColumnsObj.options[currpos].value
-                selectedColumnsObj.options[currpos].value=temp
-	
-            selectedColumnsObj.options[prevpos].selected=true
-            selectedColumnsObj.options[currpos].selected=false
-            }
-        }
-
-        function moveDown() 
-        {
-            var currpos=selectedColumnsObj.options.selectedIndex
-            if (currpos<selectedColumnsObj.options.length-1)	
-            {
-                var nextpos=selectedColumnsObj.options.selectedIndex+1
-
-                if (browser_ie) 
-                {	
-                    temp=selectedColumnsObj.options[nextpos].innerText
-                    selectedColumnsObj.options[nextpos].innerText=selectedColumnsObj.options[currpos].innerText
-                    selectedColumnsObj.options[currpos].innerText=temp
-                }
-                else if (browser_nn4 || browser_nn6) 
-                {
-                    temp=selectedColumnsObj.options[nextpos].text
-                    selectedColumnsObj.options[nextpos].text=selectedColumnsObj.options[currpos].text
-                    selectedColumnsObj.options[currpos].text=temp
-                }
-                temp=selectedColumnsObj.options[nextpos].value
-                selectedColumnsObj.options[nextpos].value=selectedColumnsObj.options[currpos].value
-                selectedColumnsObj.options[currpos].value=temp
-                    
-                selectedColumnsObj.options[nextpos].selected=true
-                selectedColumnsObj.options[currpos].selected=false
-            }
-        }
-
-        function disableMove() 
-        {
-            var cnt=0
-            for (i=0;i<selectedColumnsObj.options.length;i++) 
-            {
-                if (selectedColumnsObj.options[i].selected==true)
-                cnt++
-            }
-
-            if (cnt>1) 
-            {
-                moveupLinkObj.style.display=movedownLinkObj.style.display="none"
-                moveupDisabledObj.style.display=movedownDisabledObj.style.display="block"
-            }
-            else 
-            {
-                moveupLinkObj.style.display=movedownLinkObj.style.display="block"
-                moveupDisabledObj.style.display=movedownDisabledObj.style.display="none"
-            }
-        }        
-        
-        function selectAction( url )
-        {
-            formSelectColumnString();
-            document.NewReport.action = url;
-            document.NewReport.submit();
-        }
-
-function getOpenerObj(n) {
-
-   return getObj(n,opener.document)
-
+	moveupLinkObj=getObj("moveup_link")
+	moveupDisabledObj=getObj("moveup_disabled")
+	movedownLinkObj=getObj("movedown_link")
+	movedownDisabledObj=getObj("movedown_disabled")
 }
-function saveReport( dlgType )
-    {
-       if( !emptyCheck( "reportName", "Report Name" ) )
-       return false;    
-                
-        var repNameObj = getOpenerObj( "reportName" );
-        var repDescObj = getOpenerObj( "reportDesc" );
-        var folderObj = getOpenerObj( "folder" );
-        var actionObj = getOpenerObj( "actionItem" );
-        var formObj = getOpenerObj( "NewReport" );
-        if( dlgType == "save" )
-        {
-           formObj = getOpenerObj( "NewReport" );
-            if( getOpenerObj( 'reportId' ) != null )
-            {
-                formObj.removeChild( getOpenerObj( 'reportId' ) );
-            }
-        }
-        else
-        {
-//            formObj = getOpenerObj( "SaveAsForm" );
-            actionObj.value = "saveAs";
-        }
-        
-        repNameObj.value = document.NewReport.reportName.value;
-        repDescObj.value = document.NewReport.reportDesc.value;
-        folderObj.value = document.NewReport.folder.value;        
-        formObj.submit();
-        
-        window.self.close();
-        return false;
-    }   
+
+function addColumn() 
+{
+	for (i=0;i<selectedColumnsObj.length;i++) 
+	{
+		selectedColumnsObj.options[i].selected=false
+	}
+	addColumnStep1();
+}
+
+function addColumnStep1()
+{
+	if (availListObj.options.selectedIndex > -1)
+	{
+		for (i=0;i<availListObj.length;i++) 
+		{
+			if (availListObj.options[i].selected==true) 
+			{
+				var rowFound=false;
+				for (j=0;j<selectedColumnsObj.length;j++) 
+				{
+					if (selectedColumnsObj.options[j].value==availListObj.options[i].value) 
+					{
+						var rowFound=true;
+						var existingObj=selectedColumnsObj.options[j];
+						break;
+					}
+				}
+
+				if (rowFound!=true) 
+				{
+					var newColObj=document.createElement("OPTION")
+					newColObj.value=availListObj.options[i].value
+					if (browser_ie) newColObj.innerText=availListObj.options[i].innerText
+					else if (browser_nn4 || browser_nn6) newColObj.text=availListObj.options[i].text
+					selectedColumnsObj.appendChild(newColObj)
+					newColObj.selected=true
+				} 
+				else 
+				{
+					existingObj.selected=true
+				}
+				availListObj.options[i].selected=false
+				addColumnStep1();
+			}
+		}
+	}else
+	{
+		exit();
+	}
+}
+
+function delColumn() 
+{
+	if (selectedColumnsObj.options.selectedIndex > -1)
+	{
+		for (i=0;i < selectedColumnsObj.options.length;i++) 
+		{
+			if(selectedColumnsObj.options[i].selected == true)
+			{
+				selectedColumnsObj.remove(i);
+				delColumn();
+			}
+		}
+	}else
+	{
+		exit();
+	}
+}
+
+function formSelectColumnString()
+{
+	var selectedColStr = "";
+	for (i=0;i<selectedColumnsObj.options.length;i++) 
+	{
+		selectedColStr += selectedColumnsObj.options[i].value + ";";
+	}
+	document.NewReport.selectedColumnsString.value = selectedColStr;
+}
+
+function moveUp() 
+{
+	var currpos=selectedColumnsObj.options.selectedIndex
+	for (i=0;i<selectedColumnsObj.length;i++) 
+	{
+		if(i != currpos)
+			selectedColumnsObj.options[i].selected=false
+	}
+	if (currpos>0) 
+	{
+		var prevpos=selectedColumnsObj.options.selectedIndex-1
+
+		if (browser_ie) 
+		{
+			temp=selectedColumnsObj.options[prevpos].innerText
+			selectedColumnsObj.options[prevpos].innerText=selectedColumnsObj.options[currpos].innerText
+			selectedColumnsObj.options[currpos].innerText=temp     
+		} 
+		else if (browser_nn4 || browser_nn6) 
+		{
+			temp=selectedColumnsObj.options[prevpos].text
+			selectedColumnsObj.options[prevpos].text=selectedColumnsObj.options[currpos].text
+			selectedColumnsObj.options[currpos].text=temp
+		}
+		temp=selectedColumnsObj.options[prevpos].value
+		selectedColumnsObj.options[prevpos].value=selectedColumnsObj.options[currpos].value
+		selectedColumnsObj.options[currpos].value=temp
+		selectedColumnsObj.options[prevpos].selected=true
+		selectedColumnsObj.options[currpos].selected=false
+		}
 		
+}
+
+function moveDown() 
+{
+	var currpos=selectedColumnsObj.options.selectedIndex
+	for (i=0;i<selectedColumnsObj.length;i++) 
+	{
+		if(i != currpos)
+			selectedColumnsObj.options[i].selected=false
+	}
+	if (currpos<selectedColumnsObj.options.length-1)	
+	{
+		var nextpos=selectedColumnsObj.options.selectedIndex+1
+
+		if (browser_ie) 
+		{	
+			temp=selectedColumnsObj.options[nextpos].innerText
+			selectedColumnsObj.options[nextpos].innerText=selectedColumnsObj.options[currpos].innerText
+			selectedColumnsObj.options[currpos].innerText=temp
+		}
+		else if (browser_nn4 || browser_nn6) 
+		{
+			temp=selectedColumnsObj.options[nextpos].text
+			selectedColumnsObj.options[nextpos].text=selectedColumnsObj.options[currpos].text
+			selectedColumnsObj.options[currpos].text=temp
+		}
+		temp=selectedColumnsObj.options[nextpos].value
+		selectedColumnsObj.options[nextpos].value=selectedColumnsObj.options[currpos].value
+		selectedColumnsObj.options[currpos].value=temp
+
+		selectedColumnsObj.options[nextpos].selected=true
+		selectedColumnsObj.options[currpos].selected=false
+	}
+}
+
+function disableMove() 
+{
+	var cnt=0
+		for (i=0;i<selectedColumnsObj.options.length;i++) 
+		{
+			if (selectedColumnsObj.options[i].selected==true)
+				cnt++
+		}
+
+	if (cnt>1) 
+	{
+		moveupLinkObj.style.display=movedownLinkObj.style.display="none"
+			moveupDisabledObj.style.display=movedownDisabledObj.style.display="block"
+	}
+	else 
+	{
+		moveupLinkObj.style.display=movedownLinkObj.style.display="block"
+			moveupDisabledObj.style.display=movedownDisabledObj.style.display="none"
+	}
+}        
+
+
+function hideTabs()
+{
+	var objreportType = getObj('reportType');
+	if(objreportType[0].checked == true)
+	{
+		divarray = new Array('step1','step2','step4','step5');
+	}
+	else
+	{
+		divarray = new Array('step1','step2','step3','step4','step5');
+	}
+}
+        
+function showSaveDialog()
+{    
+	url = "index.php?module=Reports&action=SaveReport";
+	window.open(url,"Save_Report","width=550,height=350,top=20,left=20;toolbar=no,status=no,menubar=no,directories=no,resizable=yes,scrollbar=no")
+}
+    
+function saveAndRunReport()
+{
+	if(selectedColumnsObj.options.length == 0)
+	{
+		alert("Selected Columns cannot be empty");
+		return false;
+	}
+
+	formSelectColumnString();
+	document.NewReport.submit();
+}       
+        
+function changeSteps1() 
+{
+	
+	if(getObj('step5').style.display != 'none')
+	{
+		saveAndRunReport();
+	}else
+	{
+		for(i = 0; i < divarray.length ;i++)
+		{
+			if(getObj(divarray[i]).style.display != 'none')
+			{
+				if(i == 1 && selectedColumnsObj.options.length == 0)
+				{
+					alert("Selected Columns cannot be empty");
+					return false;
+				}	
+				if(divarray[i] == 'step4')
+				{
+					document.getElementById("next").value = finish_text;	
+				}
+				hide(divarray[i]);
+				show(divarray[i+1]);
+				tableid = divarray[i]+'label';
+				newtableid = divarray[i+1]+'label';
+				getObj(tableid).className = 'settingsTabList'; 
+				getObj(newtableid).className = 'settingsTabSelected';
+				document.getElementById('back_rep').disabled = false;
+				break;
+			}
+
+		}
+	}
+}
+function changeStepsback1() 
+{
+	if(getObj('step1').style.display != 'none')
+	{
+		document.NewReport.action.value='ReportsAjax';
+		document.NewReport.file.value='NewReport0';
+		document.NewReport.submit();
+	}else
+	{
+		for(i = 0; i < divarray.length ;i++)
+		{
+			if(getObj(divarray[i]).style.display != 'none')
+			{
+				if(divarray[i] == 'step2' && !backwalk_flag)
+				{
+					document.getElementById('back_rep').disabled = true;
+				}
+				document.getElementById("next").value = next_text+'>';	
+				hide(divarray[i]);
+				show(divarray[i-1]);
+				tableid = divarray[i]+'label';
+				newtableid = divarray[i-1]+'label';
+				getObj(tableid).className = 'settingsTabList'; 
+				getObj(newtableid).className = 'settingsTabSelected';
+				break;
+			}
+
+		}
+	}
+}
+function changeSteps()
+{
+	if(getObj('step1').style.display != 'none')
+	{
+		if (trim(document.NewRep.reportname.value) == "")
+		{
+			alert("Missing Report Name");
+		}else
+		{
+			hide('step1');
+			show('step2');
+			document.getElementById('back_rep').disabled = false;
+			getObj('step1label').className = 'settingsTabList'; 
+			getObj('step2label').className = 'settingsTabSelected';
+		}
+	}
+	else
+	{
+		document.NewRep.submit();
+	}
+}
+function changeStepsback()
+{
+	hide('step2');
+	show('step1');
+	document.getElementById('back_rep').disabled = true;
+	getObj('step1label').className = 'settingsTabSelected'; 
+	getObj('step2label').className = 'settingsTabList';
+}
+function editReport(id)
+{
+	var arg = 'index.php?module=Reports&action=ReportsAjax&file=NewReport1&record='+id;
+	fnPopupWin(arg);
+}
+function CreateReport(module)
+{
+	var arg ='index.php?module=Reports&action=ReportsAjax&file=NewReport0&folder='+gcurrepfolderid+'&reportmodule='+module;
+	fnPopupWin(arg);
+}
+function fnPopupWin(winName){
+	window.open(winName, "ReportWindow","width=740px,height=625px,scrollbars=yes");
+}

@@ -29,59 +29,27 @@ include("modules/Emails/mail.php");
 $local_log =& LoggerManager::getLogger('index');
 
 $focus = new Invoice();
-
+global $current_user;
+$currencyid=fetchCurrency($current_user->id);
+$rate_symbol = getCurrencySymbolandCRate($currencyid);
+$rate = $rate_symbol['rate'];
 setObjectValuesFromRequest(&$focus);
 
 $focus->save("Invoice");
 
-//Checking if salesorderid is present and updating the quote status
+//Checking if vtiger_salesorderid is present and updating the quote status
 if($focus->column_fields["salesorder_id"] != '')
 {
         $so_id = $focus->column_fields["salesorder_id"];
-        $query1 = "update salesorder set sostatus='Approved' where salesorderid=".$so_id;
+        $query1 = "update vtiger_salesorder set sostatus='Approved' where salesorderid=".$so_id;
         $adb->query($query1);
 }
 
 
-$ext_prod_arr = Array();
-if($focus->mode == 'edit')
-{
-	$query2  = "select * from invoiceproductrel where invoiceid=".$focus->id;
-	$result2 = $adb->query($query2);
-	$num_rows = $adb->num_rows($result2);
-	for($i=0; $i<$num_rows;$i++)
-	{
-		$pro_id = $adb->query_result($result2,$i,"productid");	
-		$pro_qty = $adb->query_result($result2,$i,"quantity");
-		$ext_prod_arr[$pro_id] = $pro_qty;	
-	}	
+//Based on the total Number of rows we will save the product relationship with this entity
+saveInventoryProductDetails(&$focus, 'Invoice');
 
-        $query1 = "delete from invoiceproductrel where invoiceid=".$focus->id;
-        $adb->query($query1);
 
-}
-//Printing the total Number of rows
-$tot_no_prod = $_REQUEST['totalProductCount'];
-for($i=1; $i<=$tot_no_prod; $i++)
-{
-        $product_id_var = 'hdnProductId'.$i;
-        $status_var = 'hdnRowStatus'.$i;
-        $qty_var = 'txtQty'.$i;
-        $list_price_var = 'txtListPrice'.$i;
-
-        $prod_id = $_REQUEST[$product_id_var];
-        $prod_status = $_REQUEST[$status_var];
-        $qty = $_REQUEST[$qty_var];
-        $listprice = $_REQUEST[$list_price_var];
-        if($prod_status != 'D')
-        {
-
-                $query ="insert into invoiceproductrel values(".$focus->id.",".$prod_id.",".$qty.",".$listprice.")";
-                $adb->query($query);
-		//Updating the Quantity in Stock in the Product Table
-		updateStk($prod_id,$qty,$focus->mode,$ext_prod_arr,'Invoice');
-        }
-}
 $return_id = $focus->id;
 
 if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];

@@ -1,461 +1,488 @@
-<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<style type="text/css">@import url(themes/blue/style.css);</style>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-<tr>
-	{include file='SettingsMenu.tpl'}
-<td width="75%" valign="top">
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+{literal}
+<style>
+.showTable{
+	display:inline-table;
+}
+.hideTable{
+	display:none;
+}
+</style>
+{/literal}
+<script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0" height="100%">
-<tr>
-<td class="showPanelBg" valign="top" width="100%" colspan="3" style="padding-left:20px; "><br />
-<span class="lvtHeaderText"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS} </a> > {$MOD.LBL_USER_MANAGEMENT} > {$MOD.LBL_PROFILES}</b></span>
-<hr noshade="noshade" size="1" />
-</td>
-</tr>
-<tr>
-<td width="75%" style="padding-left:20px;" valign="top">
-	
-	<table width="75%" border="0" cellpadding="5" cellspacing="0" align="center">
-	<tr>
-	<td colspan="2" class="calDayHourCell">Details of Profile </td>
+<br>
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+<tbody><tr>
+        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td class="showPanelBg" style="padding: 10px;" valign="top" width="100%">
+        <br>
+	<div align=center>
+			{include file='SetMenu.tpl'}
+				<!-- DISPLAY -->
+				<form action="index.php" method="post" name="profileform" id="form">
+				<input type="hidden" name="module" value="Users">		
+				<input type="hidden" name="parenttab" value="Settings">
+				<input type="hidden" name="action" value="{$ACTION}">		
+				<input type="hidden" name="mode" value="{$MODE}">	
+				<input type="hidden" name="profileid" value="{$PROFILEID}">
+				<input type="hidden" name="profile_name" value="{$PROFILE_NAME}">
+				<input type="hidden" name="profile_description" value="{$PROFILE_DESCRIPTION}">
+				<input type="hidden" name="parent_profile" value="{$PARENTPROFILEID}">
+				<input type="hidden" name="radio_button" value="{$RADIOBUTTON}">	
+				<input type="hidden" name="return_action" value="{$RETURN_ACTION}">	
 
-	</tr>
-	<tr>
-	<td>
-	<table border="0" cellspacing="0" cellpadding="0" width="100%">
-	<tr>
-	<td><table border="0" cellspacing="0" cellpadding="0" width="100%">
-	<tr class="small">
-	<td><img src="{$IMAGE_PATH}prvPrfTopLeft.gif" /></td>
-	<td class="prvPrfTopBg" width="100%" ></td>
+				<table class="settingsSelUITopLine" border="0" cellpadding="5" cellspacing="0" width="100%">
+				<tbody><tr>
+					<td rowspan="2" valign="top" width="50"><img src="{$IMAGE_PATH}ico-profile.gif" alt="{$MOD.LBL_PROFILES}" title="{$MOD.LBL_PROFILES}" border="0" height="48" width="48"></td>
+					<td class="heading2" valign="bottom"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=ListProfiles&parenttab=Settings">{$CMOD.LBL_PROFILE_PRIVILEGES}</a> &gt; {$CMOD.LBL_VIEWING} &quot;{$PROFILE_NAME}&quot;</b></td>
+				</tr>
+				<tr>
+					<td class="small" valign="top">{$CMOD.LBL_PROFILE_MESG} &quot;{$PROFILE_NAME}&quot; </td>
+				</tr>
+				</tbody></table>
+				
+				
+				<table border="0" cellpadding="10" cellspacing="0" width="100%">
+				<tbody><tr>
+				<td valign="top">
+					<table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tbody><tr>
+                        <td><table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tbody><tr class="small">
+                              <td><img src="{$IMAGE_PATH}prvPrfTopLeft.gif"></td>
+                              <td class="prvPrfTopBg" width="100%"></td>
+                              <td><img src="{$IMAGE_PATH}prvPrfTopRight.gif"></td>
+                            </tr>
+                          </tbody></table>
+                            <table class="prvPrfOutline" border="0" cellpadding="0" cellspacing="0" width="100%">
+                              <tbody><tr>
+                                <td><!-- tabs -->
+                                    
+                                    <!-- Headers -->
+                                    <table border="0" cellpadding="5" cellspacing="0" width="100%">
+                                      <tbody><tr>
+                                        <td><table class="small" border="0" cellpadding="5" cellspacing="0" width="100%">
+                                            <tbody><tr>
+                                              <td><!-- Module name heading -->
+                                                  <table class="small" border="0" cellpadding="2" cellspacing="0">
+                                                    <tbody><tr>
+                                                      <td valign="top"><img src="{$IMAGE_PATH}prvPrfHdrArrow.gif"> </td>
+                                                      <td class="prvPrfBigText"><b> {if $MODE eq 'create'}{$CMOD.LBL_STEP_2_2} : {/if}{$CMOD.LBL_DEFINE_PRIV_FOR} &lt;{$PROFILE_NAME}&gt; </b><br>
+                                                      <font class="small">{$CMOD.LBL_USE_OPTION_TO_SET_PRIV}</font> </td>
+                                                      <td class="small" style="padding-left: 10px;" align="right"></td>
+                                                    </tr>
+                                                </tbody></table></td>
+                                              <td align="right" valign="bottom">&nbsp;											 	{if $ACTION eq 'SaveProfile'}
+                                                <input type="submit" value=" {$CMOD.LBL_FINISH_BUTTON} " name="save" class="crmButton create small"/>&nbsp;&nbsp;
+                                                {else}
+                                                        <input type="submit" value=" {$APP.LBL_SAVE_BUTTON_LABEL} " name="save" class="crmButton small save"/>&nbsp;&nbsp;
+                                                {/if}
+                                                <input type="button" value=" {$APP.LBL_CANCEL_BUTTON_LABEL} " name="Cancel" class="crmButton cancel small"onClick="window.history.back();" /> 
+						</td>
+                                            </tr>
+                                          </tbody></table>
+                                            <!-- privilege lists -->
+                                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                              <tbody><tr>
+                                                <td style="height: 10px;" align="center"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width: 100%; height: 1px;"></td>
+                                              </tr>
+                                            </tbody></table>
+                                            <table border="0" cellpadding="10" cellspacing="0" width="100%">
+                                              <tbody><tr>
+                                                <td>
+						<table border="0" cellpadding="5" cellspacing="0" width="100%">
+  						<tbody>
+							<tr>
+    							<td class="cellLabel big"> {$CMOD.LBL_SUPER_USER_PRIV} </td>
+						       </tr>
+						</tbody>
+						</table>
+						<table class="small" align="center" border="0" cellpadding="5" cellspacing="0" width="90%">
+                                                <tbody><tr>
+                                                    <td class="prvPrfTexture" style="width: 20px;">&nbsp;</td>
+                                                    <td valign="top" width="97%"><table class="small" border="0" cellpadding="2" cellspacing="0" width="100%">
+                                                      <tbody>
+				                         <tr id="gva">
+                                                          <td valign="top">{$GLOBAL_PRIV.0}</td>
+                                                          <td ><b>{$CMOD.LBL_VIEW_ALL}</b> </td>
+                                                        </tr>
+                                                        <tr>
+                                                          <td valign="top"></td>
+                                                          <td width="100%" >{$CMOD.LBL_ALLOW} "{$PROFILE_NAME}" {$CMOD.LBL_MESG_VIEW}</td>
+                                                        </tr>
+                                                        <tr>
+                                                          <td>&nbsp;</td>
+                                                        </tr>
+							<tr>
+							<td valign="top">{$GLOBAL_PRIV.1}</td>
+							<td ><b>{$CMOD.LBL_EDIT_ALL}</b> </td>
+							</tr>
+                                                        <tr>
+                                                          <td valign="top"></td>
+                                                          <td > {$CMOD.LBL_ALLOW} "{$PROFILE_NAME}" {$CMOD.LBL_MESG_EDIT}</td>
+                                                        </tr>
 
-	<td><img src="{$IMAGE_PATH}prvPrfTopRight.gif" /></td>
-	</tr>
+                                                      </tbody></table>
+						</td>
+                                                  </tr>
+                                                </tbody></table>
+<br>
+
+			<table border="0" cellpadding="5" cellspacing="0" width="100%">
+			  <tbody><tr>
+			    <td class="cellLabel big"> {$CMOD.LBL_SET_PRIV_FOR_EACH_MODULE} </td>
+			  </tr>
+			</tbody></table>
+			<table class="small" align="center" border="0" cellpadding="5" cellspacing="0" width="90%">
+			  <tbody><tr>
+			    <td class="prvPrfTexture" style="width: 20px;">&nbsp;</td>
+			    <td valign="top" width="97%">
+				<table class="small listTable" border="0" cellpadding="5" cellspacing="0" width="100%">
+			        <tbody>
+				<tr id="gva">
+			          <td colspan="2" rowspan="2" class="small colHeader"><strong> {$CMOD.LBL_TAB_MESG_OPTION} </strong><strong></strong></td>
+			          <td colspan="3" class="small colHeader"><div align="center"><strong>{$CMOD.LBL_EDIT_PERMISSIONS}</strong></div></td>
+			          <td rowspan="2" class="small colHeader" nowrap="nowrap">{$CMOD.LBL_FIELDS_AND_TOOLS_SETTINGS}</td>
+			        </tr>
+			        <tr id="gva">
+			          <td class="small colHeader"><div align="center"><strong>
+		                {$CMOD.LBL_CREATE_EDIT}
+			          </strong></div></td>
+			          <td class="small colHeader"> <div align="center"><strong>{$CMOD.LBL_VIEW}</strong></div></td>
+			          <td class="small colHeader"> <div align="center"><strong>{$CMOD.LBL_DELETE}</strong></div></td>
+			        </tr>
+					
+				<!-- module loops-->
+			        {foreach key=tabid item=elements from=$TAB_PRIV}	
+			        <tr>
+                                        {assign var=modulename value=$TAB_PRIV[$tabid][0]}
+			          <td class="small cellLabel" width="3%"><div align="right">
+					{$TAB_PRIV[$tabid][1]}
+			          </div></td>
+			          <td class="small cellLabel" width="40%"><p>{$APP[$modulename]}</p></td>
+			          <td class="small cellText" width="15%">&nbsp;<div align="center">
+					{$STANDARD_PRIV[$tabid][1]}
+			          </div></td>
+			          <td class="small cellText" width="15%">&nbsp;<div align="center">
+					{$STANDARD_PRIV[$tabid][3]}
+			          </div></td>
+			          <td class="small cellText" width="15%">&nbsp;<div align="center">
+					{$STANDARD_PRIV[$tabid][2]}
+        			  </div></td>
+			          <td class="small cellText" width="22%">&nbsp;<div align="center">
+				{if $FIELD_PRIVILEGES[$tabid] neq NULL || $modulename eq 'Emails'}
+				<img src="{$IMAGE_PATH}showDown.gif" id="img_{$tabid}" alt="{$APP.LBL_EXPAND_COLLAPSE}" title="{$APP.LBL_EXPAND_COLLAPSE}" onclick="fnToggleVIew('{$tabid}_view')" border="0" height="16" width="40" style="display:block;">
+				{/if}
+				</div></td>
+				  </tr>
+		                  <tr class="hideTable" id="{$tabid}_view" className="hideTable">
+				          <td colspan="6" class="small settingsSelectedUI">
+						<table class="small" border="0" cellpadding="2" cellspacing="0" width="100%">
+			        	    	<tbody>
+						{if $FIELD_PRIVILEGES[$tabid] neq ''}
+						<tr>
+							{if $modulename eq 'Calendar'}
+				                	<td class="small colHeader" colspan="6" valign="top">{$CMOD.LBL_FIELDS_SELECT_DESELECT} ({$APP.Tasks})</td>
+							{else}
+				                	<td class="small colHeader" colspan="6" valign="top">{$CMOD.LBL_FIELDS_SELECT_DESELECT}</td>
+							{/if}
+					        </tr>
+						{/if}
+						{foreach item=row_values from=$FIELD_PRIVILEGES[$tabid]}
+				            	<tr>
+						      {foreach item=element from=$row_values}
+					              <td valign="top">{$element.1}</td>
+					              <td>{$element.0}</td>
+						      {/foreach}
+				                </tr>
+						{/foreach}
+						{if $modulename eq 'Calendar'}
+						<tr>
+				                	<td class="small colHeader" colspan="6" valign="top">{$CMOD.LBL_FIELDS_SELECT_DESELECT} ({$APP.Events})</td>
+					        </tr>
+						{foreach item=row_values from=$FIELD_PRIVILEGES[16]}
+				            	<tr>
+						      {foreach item=element from=$row_values}
+					              <td valign="top">{$element.1}</td>
+					              <td>{$element.0}</td>
+						      {/foreach}
+				                </tr>
+						{/foreach}
+						{/if}
+						{if $UTILITIES_PRIV[$tabid] neq ''}
+					        <tr>
+					              <td colspan="6" class="small colHeader" valign="top">{$CMOD.LBL_TOOLS_TO_BE_SHOWN}</td>
+						</tr>
+						{/if}
+						{foreach item=util_value from=$UTILITIES_PRIV[$tabid]}
+							<tr>
+							{foreach item=util_elements from=$util_value}
+					              		<td valign="top">{$util_elements.1}</td>
+						                <td>{$APP[$util_elements.0]}</td>
+							{/foreach}
+				                	</tr>
+						{/foreach}
+					        </tbody>
+						</table>
+					</td>
+			          </tr>
+				  {/foreach}	
+			    	  </tbody>
+				  </table>
+			  </td>
+			  </tr>
+                          </tbody>
+			</table>
+		</td>
+                </tr>
+		<table border="0" cellpadding="2" cellspacing="0">
+			<tr>
+				<td align="left"><font color="red" size=5>*</font>{$CMOD.LBL_MANDATORY_MSG}</td>
+			</tr>
+			<tr>
+				<td align="left"><font color="blue" size=5>*</font>{$CMOD.LBL_DISABLE_FIELD_MSG}</td>
+			</tr>
+		</table>
+		<tr>
+		<td style="border-top: 2px dotted rgb(204, 204, 204);" align="right">
+		<!-- wizard buttons -->
+		<table border="0" cellpadding="2" cellspacing="0">
+		<tbody>
+			<tr><td>
+				{if $ACTION eq 'SaveProfile'}
+					<input type="submit" value=" {$CMOD.LBL_FINISH_BUTTON} " name="save" class="crmButton create small"/>&nbsp;&nbsp;
+				{else}
+					<input type="submit" value=" {$APP.LBL_SAVE_BUTTON_LABEL} " name="save" class="crmButton small save"/>&nbsp;&nbsp;
+				{/if}
+				</td><td>
+					<input type="button" value=" {$APP.LBL_CANCEL_BUTTON_LABEL} " name="Cancel" class="crmButton cancel small"onClick="window.history.back();" /></td>
+
+				<td>&nbsp;</td>
+			</tr>
+		</tbody>
+		</table>
+		</td>
+		</tr>
+          </tbody>
+	  </table>
+	</td>
+        </tr>
+        </tbody>
 	</table>
-	<form action="index.php" method="post" name="new" id="form">
-	<input type="hidden" name="module" value="Users">		
-	<input type="hidden" name="action" value="{$ACTION}">		
-	<input type="hidden" name="mode" value="{$MODE}">	
-	<input type="hidden" name="profileid" value="{$PROFILEID}">
-	<input type="hidden" name="profile_name" value="{$PROFILE_NAME}">
-	<input type="hidden" name="profile_description" value="{$PROFILE_DESCRIPTION}">	
-	<input type="hidden" name="return_action" value="{$RETURN_ACTION}">	
-	
-	<table border="0" cellspacing="0" cellpadding=	"0" width="100%" class="prvPrfOutline">
-	<tr>
-	<td>
-	<!-- tabs -->
-	<table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-	<tr>
-	<td width="20%" id="prvPrfTab1" class="prvPrfSelectedTab" align="center" style="height:31px;" onClick="toggleshowhide('global_privileges','prvPrfTab1');">Global Privileges</td>
-	<td width="20%" id="prvPrfTab2" class="prvPrfUnSelectedTab" align="center" onClick="toggleshowhide('tab_privileges','prvPrfTab2');">Tab Privileges</td>
-	<td width="20%" id="prvPrfTab3" class="prvPrfUnSelectedTab" align="center" onClick="toggleshowhide('standard_privileges','prvPrfTab3');">Standard Privileges</td>
-	<td width="20%" id="prvPrfTab4" class="prvPrfUnSelectedTab" align="center" onClick="toggleshowhide('field_privileges','prvPrfTab4');">Field Privileges</td>
-	<td width="20%" id="prvPrfTab5" class="prvPrfUnSelectedTab" align="center" onClick="toggleshowhide('utility_privileges','prvPrfTab5');">Utilities</td>
-	</tr>
-	</table>
-		<div id="global_privileges" style="display:block;">
-		<!-- Headers -->
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" class="prvPrfBgImgGlobal">
-		<tr>
-		<td>
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-		<tr>
-		<td><!-- Module name heading -->
-		<table border="0" cellspacing="0" cellpadding="2" class="small">
-		<tr>
-		<td valign="top"><img src="{$IMAGE_PATH}prvPrfHdrArrow.gif"/> </td>
-	
-		<td class="prvPrfBigText"><b> Global Privileges for "{$PROFILE_NAME}"</b> <br />
-		<font class="small">Select the options below to change global privileges </font> </td>
-		<td class="small" style="padding-left:10px" align="right"></td>
-		</tr>
-		</table></td>
-		<td align="right" valign="bottom"><font class="small">2 enabled, 0 disabled</font> </td>
-
-		</tr>
-		</table>
-		<!-- privilege lists -->
-		<table border="0" cellspacing="0" cellpadding="0" width="100%" >
-		<tr>
-		<td align="center" style="height:10px"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width:100%;height:1px" /></td>
-		</tr>
-		</table>
-		<table border="0" cellspacing="0" cellpadding="10" width="100%">
-		<tr>
-		<td >
-		<table border="0" cellspacing="0" cellpadding="5" width="90%" class="small" align="center">
-		<tr>
-		<td class="prvPrfTexture" style="width:20px">&nbsp;</td>
-		<td width="97%" valign="top">
-		<table border="0" cellspacing="0" cellpadding="2" width="100%" class="small">
-		<tr id="gva">
-		<td valign="top">{$GLOBAL_PRIV.0}</td>
-		<td ><b>View all</b> </td>
-		</tr>
-		<tr >
-		<td valign="top"></td>
-		<td width="100%" >Allows "{$PROFILE_NAME}" to view all information / modules of vtiger CRM</td>
-		</tr>
-		<tr>
-		<td>&nbsp;</td>
-		</tr>
-		<tr>
-		<td valign="top">{$GLOBAL_PRIV.1}</td>
-		<td ><b>Edit all</b> </td>
-		</tr>
-		<tr>
-		<td valign="top"></td>
-		<td > Allows "{$PROFILE_NAME}" to edit all information / modules of vtiger CRM</td>
-		</tr>
-		</table>
-		</td>
-		</tr>	
-		</table></td>
-		</tr>
-		</table></td>
-		</tr>
-		</table>
-		</div>
-		
-		<div id="standard_privileges" style="display:none;">
-		<table border=0 cellspacing=0 cellpadding=5 width=100% >
-		<tr>
-		<td>
-		<table border=0 cellspacing=0 cellpadding=5 width=100% class=small>
-		<tr>
-		<td>
-		<!-- Module name heading -->
-		<table border=0 cellspacing=0 cellpadding=2 class=small>
-		<tr>
-		<td valign=top >
-		<img src="{$IMAGE_PATH}prvPrfHdrArrow.gif">
-		</td>
-		<td class="prvPrfBigText">
-		<b> Tabs for "{$PROFILE_NAME}"</b> <br>
-		<font class=small>Select the tabs / modules to be shown  </font> 
-		</td>
-		</tr>
-		</table>
-		</td>
-		<td align=right valign=bottom>
-		<font class=small>12 selected, 9 remaining</font> 
-		</td>
-		</tr>
-		</table>
-		<!-- privilege lists -->
-		<table border=0 cellspacing=0 cellpadding=0 width=100% >
-		<tr>
-		<td align=center style="height:10px"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width:100%;height:1px"></td>
-		</tr>
-		</table>
-		<table border=0 cellspacing=0 cellpadding=10 width=100%>
-		<tr>
-		<td >
-		<table border=0 cellspacing=0 cellpadding=5 width=90% class=small align=center >
-		<tr>
-		<td class="prvPrfTexture" style="width:20px">&nbsp;</td>
-		<td width=97% valign=top onMouseOver="this.className='prvPrfHoverOn'" onMouseOut="this.className='prvPrfHoverOff'" >
-		<table border=0 cellspacing=0 cellpadding=5 width=100% class=small>
-		
-		<tr>
-		<td>Entity</td>
-		<td>Create/Edit</td>
-		<td>Delete</td>
-		<td>View</td>
-		</tr>
-		
-		{foreach item=value from=$STANDARD_PRIV}
-		<tr>
-		{foreach item=element from=$value}
-		<td>{$element}</td>
-		{/foreach}
-		</tr>
-		{/foreach}
-		
-		</table>
-		</td>
-		</tr>
-		</table>
-		</td>
-		</tr>
-		</table>
-		</td>
-		</tr>
-		</table>
-		</div>
-		
-		<div id="tab_privileges" style="display:none;">
-		<table border=0 cellspacing=0 cellpadding=5 width=100% >
-		<tr>
-		<td>
-		<table border=0 cellspacing=0 cellpadding=5 width=100% class=small>
-		<tr>
-		<td>
-		<!-- Module name heading -->
-		<table border=0 cellspacing=0 cellpadding=2 class=small>
-		<tr>
-		<td valign=top >
-		<img src="{$IMAGE_PATH}prvPrfHdrArrow.gif">
-		</td>
-		<td class="prvPrfBigText">
-		<b> Tabs for "{$PROFILE_NAME}"</b> <br>
-		<font class=small>Select the tabs / modules to be shown  </font> 
-		</td>
-		</tr>
-		</table>
-		</td>
-		<td align=right valign=bottom>
-		<font class=small>12 selected, 9 remaining</font> 
-		</td>
-		</tr>
-		</table>
-		<!-- privilege lists -->
-		<table border=0 cellspacing=0 cellpadding=0 width=100% >
-		<tr>
-		<td align=center style="height:10px"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width:100%;height:1px"></td>
-		</tr>
-		</table>
-		<table border=0 cellspacing=0 cellpadding=10 width=100%>
-		<tr>
-		<td >
-		<!-- Home tab -->
-		<table border=0 cellspacing=0 cellpadding=5 width=90% class=small align=center >
-		<tr>
-		<td class="prvPrfTexture" style="width:20px">&nbsp;</td>
-		<td width=97% valign=top onMouseOver="this.className='prvPrfHoverOn'" onMouseOut="this.className='prvPrfHoverOff'" >
-		<table border=0 cellspacing=0 cellpadding=5 width=100% class=small>
-		
-
-		{foreach item=value from=$TAB_PRIV}
-		<tr>
-		{foreach item=element from=$value}
-		<td width=35%>{$element.0}</td>
-		<td width=15%>{$element.1}</td>
-		{/foreach}
-		</tr>
-		{/foreach}
-	
-		</table>
-		</td>
-		</tr>
-		</table>
-		</td>
-		</tr>
-		</table>
-		</td>
-		</tr>
-
-		</table>
-		</div>
-		
-		<div id="utility_privileges" style="display:none;">
-		<table border=0 cellspacing=0 cellpadding=5 width=100% >
-		<tr>
-		<td>
-		<table border=0 cellspacing=0 cellpadding=5 width=100% class=small>
-		<tr>
-		<td>
-		<!-- Module name heading -->
-		<table border=0 cellspacing=0 cellpadding=2 class=small>
-		<tr>
-		<td valign=top >
-		<img src="{$IMAGE_PATH}prvPrfHdrArrow.gif">
-		</td>
-		<td class="prvPrfBigText">
-		<b> Tabs for "{$PROFILE_NAME}"</b> <br>
-		<font class=small>Select the tabs / modules to be shown  </font> 
-		</td>
-		</tr>
-		</table>
-		</td>
-		<td align=right valign=bottom>
-		<font class=small>12 selected, 9 remaining</font> 
-		</td>
-		</tr>
-		</table>
-		<!-- privilege lists -->
-		<table border=0 cellspacing=0 cellpadding=0 width=100% >
-		<tr>
-		<td align=center style="height:10px"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width:100%;height:1px"></td>
-		</tr>
-		</table>
-		<table border=0 cellspacing=0 cellpadding=10 width=100%>
-		<tr>
-		<td >
-		<!-- Home tab -->
-		<table border="0" cellspacing="0" cellpadding="5" width="90%" class="small" align="center" >
-		
-		{foreach key=module item=value from=$UTILITIES_PRIV}
-		<tr>
-		<td colspan="4" style="border-bottom:1px solid #efefef"><b>{$module}</b></td>
-		</tr>
-		<tr>
-		<td class="prvPrfTexture" style="width:20px">&nbsp;</td>
-		<td width="97%" valign="top" onmouseover="this.className='prvPrfHoverOn'" onmouseout="this.className='prvPrfHoverOff'" >
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-		{foreach item=element from=$value}
-		<tr>
-		<td width=25%>{$element.0.0}</td>
-		<td width=25%>{$element.0.1}</td>
-		<td width=25%>{$element.1.0}</td>
-		<td width=25%>{$element.1.1}</td>
-		{/foreach}
-		</tr>
-		</table>
-		</td>
-		</tr>
-		
-		{/foreach}
-		</table>
-		</td>
-		</tr>
-		</table>
-		</td>
-		</tr>
-
-		</table>
-
-		</div>
-		
-		
-		<div id="field_privileges" style="display:none;">
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" >
-		<tr>
-		<td><table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-		<tr>
-		<td><!-- Module name heading -->
-		<table border="0" cellspacing="0" cellpadding="2" class="small">
-		<tr>
-		<td valign="top" ><img src="{$IMAGE_PATH}prvPrfHdrArrow.gif" /> </td>
-
-		<td class="prvPrfBigText"><b> Tabs for "{$PROFILE_NAME}"</b> <br />
-		<font class="small">Select the tabs / modules to be shown </font> </td>
-		</tr>
-		</table></td>
-		<td align="right" valign="bottom">
-		</td>
-		</tr>
-		</table>
-		<!-- privilege lists -->
-		<table border="0" cellspacing="0" cellpadding="0" width="100%" >
-		<tr>
-		<td align="center" style="height:10px"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width:100%;height:1px" /></td>
-		</tr>
-
-		</table>
-		<table border="0" cellspacing="0" cellpadding="10" width="100%">
-		<tr>
-		<td >
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-		<tr>
-		<td>
-		<select name="module_list" onchange="showmoduleperm(this)">
-		{foreach key=module item=label from=$PRI_FIELD_LIST}
-			<option value="{$label}">{$label}</option>
-		{/foreach}
-		</td>
-		<td width=50%>&nbsp;</td>
-		</tr>
-		<tr>
-		<td colspan=2>
-	
-		{foreach key=module item=value from=$FIELD_PRIVILEGES}
-		{if $module eq 'Leads'}
-		<div id="field_{$module}" style="display:block;">
-		{else}
-		<div id="field_{$module}" style="display:none;">
-		{/if}
-		<table border="0" cellspacing="0" cellpadding="5" width="100%" class="small">
-		{foreach item=row_value from=$value}
-		<tr>
-		{foreach item=element from=$row_value}
-		<td>{$element.0}</td>
-		<td>{$element.1}</td>
-		{/foreach}
-		</tr>
-		{/foreach}
-		</table>
-		</div>
-		{/foreach}
-		
-		</td>
-		</tr>
-		</table></td>
-		</tr>
-		</table></td>
-		</tr>
-		</table>
-		</div>
-		
-		</td>
-			
-		</tr>
-		</table>
-	<table border="0" cellspacing="0" cellpadding="0" width="100%" class="small">
-	<tr>
-	<td><img src="{$IMAGE_PATH}prvPrfBottomLeft.gif" /></td>
-	<td class="prvPrfBottomBg" width="100%"></td>
-	<td><img src="{$IMAGE_PATH}prvPrfBottomRight.gif" /></td>
-	</tr>
-	</table></td>
-
-	</tr>
-	</table></td>
-	</tr>	
-	<tr><td colspan="2" style="border-bottom:1px dashed #CCCCCC;">&nbsp;</td></tr>
-	<tr><td colspan="2">&nbsp;</td></tr>
-	<tr>
-	<td colspan="2" align="center">
-	<input type="button" value=" &lsaquo; Back " name="back" onclick="window.history.back()" />&nbsp;&nbsp;
-	{if $ACTION eq 'SaveProfile'}
-	<input type="submit" value=" Finish " name="save"/>&nbsp;&nbsp;
-	{else}
-	<input type="submit" value=" Save " name="save"/>&nbsp;&nbsp;
-	{/if}
-	<input type="button" value=" Cancel " name="Cancel" onClick="window.history.back();"/>
-
+      </td>
+      </tr>
+      </tbody></table>
+      <table class="small" border="0" cellpadding="0" cellspacing="0" width="100%">
+           <tbody><tr>
+                <td><img src="{$IMAGE_PATH}prvPrfBottomLeft.gif"></td>
+                <td class="prvPrfBottomBg" width="100%"></td>
+                <td><img src="{$IMAGE_PATH}prvPrfBottomRight.gif"></td>
+                </tr>
+            </tbody>
+      </table></td>
+      </tr>
+      </tbody></table>
+	<p>&nbsp;</p>
+	<table border="0" cellpadding="5" cellspacing="0" width="100%">
+	<tbody><tr><td class="small" align="right" nowrap="nowrap"><a href="#top">{$MOD.LBL_SCROLL}</a></td></tr>
+	</tbody></table>
+					
 	</td>
 	</tr>
-	<tr><td colspan="2">&nbsp;</td></tr>
-	<tr><td colspan="2" style="border-top:1px solid #CCCCCC;">&nbsp;</td></tr>
+	</tbody></table>
+	</form>	
+	<!-- End of Display -->
+	</td>
+	</tr>
 	</table>
-	
-</td>
-<td width="1%" style="border-right:1px dotted #CCCCCC;">&nbsp;</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-	{include file='SettingsSubMenu.tpl'}
+	</td>
+	</tr>
+	</table>
+	</div>
 
+	</td>
+	<td valign="top"><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+	</tr>
+</tbody>
+</table>
 <script language="javascript" type="text/javascript">
-var Selected_div= 'global_privileges';
-divarray = new Array('global_privileges','tab_privileges','standard_privileges','field_privileges','utility_privileges'); 	
-tabarray = new Array('prvPrfTab1','prvPrfTab2','prvPrfTab3','prvPrfTab4','prvPrfTab5'); 	
-var defaultmodule = 'field_Leads';
-function toggleshowhide(currentselecteddiv,currentselectedtab)
-{ldelim}
-	for(i = 0; i < divarray.length ;i++)
-	{ldelim}
-		if(Selected_div == divarray[i])
-			break;	
-	{rdelim}	
-	hide (Selected_div);
-	document.getElementById(tabarray[i]).className="prvPrfUnSelectedTab";
-	show (currentselecteddiv);
-	document.getElementById(currentselectedtab).className="prvPrfSelectedTab";
-	Selected_div = currentselecteddiv;
-{rdelim}	
-function showmoduleperm(selectmodule_view)
-{ldelim}
-	hide(defaultmodule);
-	defaultmodule='field_'+selectmodule_view.options[selectmodule_view.options.selectedIndex].value;
-	show(defaultmodule);
-{rdelim}	
-	
+{literal}
+var Imagid_array = new Array('img_2','img_4','img_6','img_7','img_8','img_9','img_10','img_13','img_14','img_18','img_19','img_20','img_21','img_22','img_23','img_26')
+function fnToggleVIew(obj){
+	var tagStyle = document.getElementById(obj).className;
+	if(tagStyle == 'hideTable' ){
+		document.getElementById(obj).className = 'showTable';
+	}
+	else
+		document.getElementById(obj).className = 'hideTable';
+}
+function invokeview_all()
+{
+	if($('view_all_chk').checked == true)
+	{
+		for(var i = 0;i < document.profileform.elements.length;i++)
+		{
+			if(document.profileform.elements[i].type == 'checkbox')
+			{
+				if(document.profileform.elements[i].id.indexOf('tab_chk_com_') != -1 || document.profileform.elements[i].id.indexOf('tab_chk_4') != -1 || document.profileform.elements[i].id.indexOf('_field_') != -1)
+					document.profileform.elements[i].checked = true; 
+			}
+		}	
+		showAllImages();
+	}
+}
+function showAllImages()
+{
+	for(var j=0;j < Imagid_array.length;j++)
+	{
+
+		if(typeof($(Imagid_array[j])) != 'undefined')
+			$(Imagid_array[j]).style.display = 'block';	
+	}
+}
+function invokeedit_all()
+{
+	if($('edit_all_chk').checked == true)
+	{
+		$('view_all_chk').checked = true;
+		for(var i = 0;i < document.profileform.elements.length;i++)
+		{
+			if(document.profileform.elements[i].type == 'checkbox')
+			{
+				if(document.profileform.elements[i].id.indexOf('tab_chk_com_') != -1 || document.profileform.elements[i].id.indexOf('tab_chk_4') != -1 || document.profileform.elements[i].id.indexOf('tab_chk_1') != -1 || document.profileform.elements[i].id.indexOf('_field_') != -1)
+					document.profileform.elements[i].checked = true; 
+			}
+		}	
+		showAllImages();
+	}
+
+}
+function unselect_edit_all()
+{
+	$('edit_all_chk').checked = false;
+}
+function unselect_view_all()
+{
+	$('view_all_chk').checked = false;
+}
+function unSelectView(id)
+{
+	var createid = 'tab_chk_1_'+id;	
+	var deleteid = 'tab_chk_2_'+id;
+	if($('tab_chk_4_'+id).checked == false)
+	{
+		unselect_view_all();
+		unselect_edit_all();
+		$(createid).checked = false;
+		$(deleteid).checked = false;
+	}else
+	{
+		var imageid = 'img_'+id;
+		var viewid = 'tab_chk_4_'+id;	
+		if(typeof($(imageid)) != 'undefined')
+			$(imageid).style.display = 'block';
+		$('tab_chk_com_'+id).checked = true; 
+	}
+}
+function unSelectCreate(id)
+{
+	var viewid = 'tab_chk_4_'+id;	
+	if($('tab_chk_1_'+id).checked == false)
+	{
+		unselect_edit_all();
+	}else
+	{
+		var imageid = 'img_'+id;
+		var viewid = 'tab_chk_4_'+id;	
+		if(typeof($(imageid)) != 'undefined')
+			$(imageid).style.display = 'block';
+		$('tab_chk_com_'+id).checked = true;
+		$(viewid).checked = true;
+	}
+}
+function unSelectDelete(id)
+{	
+	var contid = id+'_view';
+	if($('tab_chk_2_'+id).checked == false)
+	{
+	}else
+	{
+		var imageid = 'img_'+id;
+		var viewid = 'tab_chk_4_'+id;	
+		if(typeof($(imageid)) != 'undefined')
+			$(imageid).style.display = 'block';
+		$('tab_chk_com_'+id).checked = true;
+		$(viewid).checked = true;
+	}
+
+}
+function hideTab(id)
+{
+	var createid = 'tab_chk_1_'+id;	
+	var viewid = 'tab_chk_4_'+id;	
+	var deleteid = 'tab_chk_2_'+id;
+	var imageid = 'img_'+id;
+	var contid = id+'_view';
+	if($('tab_chk_com_'+id).checked == false)
+	{
+		unselect_view_all();
+		unselect_edit_all();
+		if(typeof($(imageid)) != 'undefined')
+			$(imageid).style.display = 'none';
+		$(contid).className = 'hideTable';
+		if(typeof($(createid)) != 'undefined')
+			$(createid).checked = false;
+		if(typeof($(deleteid)) != 'undefined')
+			$(deleteid).checked = false;
+		if(typeof($(viewid)) != 'undefined')
+			$(viewid).checked = false;
+	}else
+	{
+		if(typeof($(imageid)) != 'undefined')
+			$(imageid).style.display = 'block';
+		if(typeof($(createid)) != 'undefined')
+			$(createid).checked = true;
+		if(typeof($(deleteid)) != 'undefined')
+			$(deleteid).checked = true;
+		if(typeof($(viewid)) != 'undefined')
+			$(viewid).checked = true;
+		var fieldid = id +'_field_';
+		for(var i = 0;i < document.profileform.elements.length;i++)
+                {
+                        if(document.profileform.elements[i].type == 'checkbox' && document.profileform.elements[i].id.indexOf(fieldid) != -1)
+                        {
+                                        document.profileform.elements[i].checked = true;
+                        }
+                }
+	}
+}
+function selectUnselect(oCheckbox)
+{
+	if(oCheckbox.checked == false)
+	{
+		unselect_view_all();
+		unselect_edit_all();
+	}
+}
+function initialiseprofile()
+{
+	var module_array = Array(1,2,4,6,7,8,9,10,13,14,15,17,18,19,20,21,22,23,24,25,26,27);
+	for (var i=0;i < module_array.length;i++)
+	{
+		hideTab(module_array[i]);
+	}	
+}
+//initialiseprofile();
+{/literal}
 </script>

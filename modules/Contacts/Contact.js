@@ -60,65 +60,33 @@ if(this.document.getElementById( id).style.display=='none'){
 	}
 }
 
-//Function added for Mass select in Popup - Philip
-function SelectAll()
-{
-
-        x = document.selectall.selected_id.length;
-	var entity_id = window.opener.document.getElementById('parent_id').value
-	var module = window.opener.document.getElementById('return_module').value
-	document.selectall.action.value='updateRelations'
-        idstring = "";
-
-        if ( x == undefined)
-        {
-
-                if (document.selectall.selected_id.checked)
-                {
-                        document.selectall.idlist.value=document.selectall.selected_id.value;
-                }
-                else
-                {
-                        alert("Please select atleast one entity");
-                        return false;
-                }
-        }
-        else
-        {
-                xx = 0;
-                for(i = 0; i < x ; i++)
-                {
-                        if(document.selectall.selected_id[i].checked)
-                        {
-                                idstring = document.selectall.selected_id[i].value +";"+idstring
-                        xx++
-                        }
-                }
-                if (xx != 0)
-                {
-                        document.selectall.idlist.value=idstring;
-                }
-                else
-                {
-                        alert("Please select atleast one entity");
-                        return false;
-                }
-	}
-		if(confirm("Are you sure you want to add the selected "+xx+" records ?"))
-		{
-		opener.document.location.href="index.php?module="+module+"&parentid="+entity_id+"&action=updateRelations&return_module=Potentials&return_action=CallRelatedList&idlist="+idstring;
-		self.close();
-		}
-		else
-		{
-			return false;
-		}
-}
-
-
 function set_return(product_id, product_name) {
         window.opener.document.EditView.parent_name.value = product_name;
         window.opener.document.EditView.parent_id.value = product_id;
+}
+
+function add_data_to_relatedlist_incal(id,name)
+{
+	var idval = window.opener.document.EditView.contactidlist.value;
+	var nameval = window.opener.document.EditView.contactlist.value;
+	if(idval != '')
+	{
+		if(idval.indexOf(id) != -1)
+                {
+                        window.opener.document.EditView.contactidlist.value = idval;
+                        window.opener.document.EditView.contactlist.value = nameval;
+                }
+                else
+                {
+                        window.opener.document.EditView.contactidlist.value = idval+';'+id;
+                        window.opener.document.EditView.contactlist.value = nameval+'\n'+name;
+                }
+	}
+	else
+	{
+		window.opener.document.EditView.contactidlist.value = id;
+		window.opener.document.EditView.contactlist.value = name;
+	}
 }
 function set_return_specific(product_id, product_name) {
         //Used for DetailView, Removed 'EditView' formname hardcoding
@@ -137,21 +105,31 @@ function searchMapLocation(addressType)
         var mapParameter = '';
         if (addressType == 'Main')
         {
-                mapParameter = document.getElementById("dtlview_Mailing Street").innerHTML+' '
-                           +document.getElementById("dtlview_Mailing Po Box").innerHTML+' '
-                           +document.getElementById("dtlview_Mailing City").innerHTML+' '
-                           +document.getElementById("dtlview_Mailing State").innerHTML+' '
-                           +document.getElementById("dtlview_Mailing Country").innerHTML+' '
-                           +document.getElementById("dtlview_Mailing Zip").innerHTML
+		if(fieldname.indexOf('mailingstreet') > -1)
+			mapParameter = document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingstreet')]).innerHTML+' ';
+		if(fieldname.indexOf('mailingpobox') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingpobox')]).innerHTML+' ';
+		if(fieldname.indexOf('mailingcity') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingcity')]).innerHTML+' ';
+		if(fieldname.indexOf('mailingstate') > -1)
+                        mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingstate')]).innerHTML+' ';
+		if(fieldname.indexOf('mailingcountry') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingcountry')]).innerHTML+' ';
+		if(fieldname.indexOf('mailingzip') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('mailingzip')]).innerHTML;
         }
         else if (addressType == 'Other')
         {
-                mapParameter = document.getElementById("dtlview_Other Street").innerHTML+' '
-                           +document.getElementById("dtlview_Other Po Box").innerHTML+' '
-                           +document.getElementById("dtlview_Other City").innerHTML+' '
-                           +document.getElementById("dtlview_Other State").innerHTML+' '
-                           +document.getElementById("dtlview_Other Country").innerHTML+' '
-                           +document.getElementById("dtlview_Other Zip").innerHTML
+		if(fieldname.indexOf('otherstreet') > -1)
+			mapParameter = document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('otherstreet')]).innerHTML+' ';
+		if(fieldname.indexOf('otherpobox') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('otherpobox')]).innerHTML+' ';
+		if(fieldname.indexOf('otherstate') > -1)
+                        mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('otherstate')]).innerHTML+' ';
+                if(fieldname.indexOf('othercountry') > -1)
+			mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('othercountry')]).innerHTML+' ';
+                if(fieldname.indexOf('otherzip') > -1)
+                        mapParameter = mapParameter + document.getElementById("dtlview_"+fieldlabel[fieldname.indexOf('otherzip')]).innerHTML;
         }
          window.open('http://maps.google.com/maps?q='+mapParameter,'goolemap','height=450,width=700,resizable=no,titlebar,location,top=200,left=250');
 }

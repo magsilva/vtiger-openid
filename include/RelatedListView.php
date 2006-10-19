@@ -1,9 +1,37 @@
 <?php
+/*********************************************************************************
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+ *
+ ********************************************************************************/
+
+
 require_once('include/utils/UserInfoUtil.php');
 require_once("include/utils/utils.php");
+require_once("include/ListView/ListViewSession.php");
 
-function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,$edit_val='',$del_val='')
+/** Function to get related list entries in detailed array format
+  * @param $module -- modulename:: Type string
+  * @param $relatedmodule -- relatedmodule:: Type string
+  * @param $focus -- focus:: Type object
+  * @param $query -- query:: Type string
+  * @param $button -- buttons:: Type string
+  * @param $returnset -- returnset:: Type string
+  * @param $id -- id:: Type string
+  * @param $edit_val -- edit value:: Type string
+  * @param $del_val -- delete value:: Type string
+  * @returns $related_entries -- related entires:: Type string array
+  *
+  */
+
+function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,$id='',$edit_val='',$del_val='')
 {
+	$log = LoggerManager::getLogger('account_list');
+	$log->debug("Entering GetRelatedList(".$module.",".$relatedmodule.",".$focus.",".$query.",".$button.",".$returnset.",".$edit_val.",".$del_val.") method ...");
 
 	require_once('Smarty_setup.php');
 	require_once("data/Tracker.php");
@@ -18,7 +46,6 @@ function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,
 	global $list_max_entries_per_page;
 	global $urlPrefix;
 
-	$log = LoggerManager::getLogger('account_list');
 
 	global $currentModule;
 	global $theme;
@@ -29,9 +56,8 @@ function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,
 	global $focus_list;
 	$smarty = new vtigerCRM_Smarty;
 	if (!isset($where)) $where = "";
-
-	if (isset($_REQUEST['order_by'])) $order_by = $_REQUEST['order_by'];
-
+	
+	
 	$button = '<table cellspacing=0 cellpadding=2><tr><td>'.$button.'</td></tr></table>';
 
 	// Added to have Purchase Order as form Title
@@ -73,53 +99,85 @@ function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,
 	}
 	
 
-
-	/*
-	global $others_permission_id;
-	$rel_tab_id = getTabid($relatedmodule);
-	$defSharingPermissionData = $_SESSION['defaultaction_sharing_permission_set'];
-	$others_rel_permission_id = $defSharingPermissionData[$rel_tab_id];
-	if($others_rel_permission_id == 3 && $relatedmodule != 'Notes' && $relatedmodule != 'Products' && $relatedmodule != 'Faq' && $relatedmodule != 'PriceBook') //Security fix by Don
-	{
-		$query .= " and crmentity.smownerid in(".$current_user->id .",0)";
-	}
-	*/
-
 	if(isset($where) && $where != '')
 	{
 		$query .= ' and '.$where;
 	}
-
-	//Appending the group by for Jaguar/Don
-	if($relatedmodule == 'Activities')
+	
+	if(!$_SESSION['rlvs'][$module][$relatedmodule])
 	{
-		$query .= ' group by crmentity.crmid';
+		$modObj = new ListViewSession();
+		$modObj->sortby = $focus->default_order_by;
+		$modObj->sorder = $focus->default_sort_order;
+		$_SESSION['rlvs'][$module][$relatedmodule] = get_object_vars($modObj);
 	}
+	if(isset($_REQUEST['relmodule']) && ($_REQUEST['relmodule'] == $relatedmodule))
+	{	
+		if(method_exists($focus,getSortOrder))
+		$sorder = $focus->getSortOrder();
+		if(method_exists($focus,getOrderBy))
+		$order_by = $focus->getOrderBy();
 
+		if(isset($order_by) && $order_by != '')
+		{
+			$_SESSION['rlvs'][$module][$relatedmodule]['sorder'] = $sorder;
+			$_SESSION['rlvs'][$module][$relatedmodule]['sortby'] = $order_by;
+		}
 
-	//$url_qry = getURLstring($focus);
-
-	if(isset($order_by) && $order_by != '')
-	{
-		$query .= ' ORDER BY '.$order_by;
-		$url_qry .="&order_by=".$order_by;
 	}
-	$list_result = $adb->query($query);
-	//Retreiving the no of rows
-	$noofrows = $adb->num_rows($list_result);
-
-	//Retreiving the start value from request
-	if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+	elseif($_SESSION['rlvs'][$module][$relatedmodule])
 	{
-		$start = $_REQUEST['start'];
+		$sorder = $_SESSION['rlvs'][$module][$relatedmodule]['sorder'];
+		$order_by = $_SESSION['rlvs'][$module][$relatedmodule]['sortby'];
 	}
 	else
 	{
-
-		$start = 1;
+		$order_by = $focus->default_order_by;
+		$sorder = $focus->default_sort_order;
 	}
-	//Retreive the Navigation array
+		
+	$query .= ' ORDER BY '.$order_by.' '.$sorder;
+	$url_qry .="&order_by=".$order_by;
+	//Added for PHP version less than 5
+	if (!function_exists("stripos"))
+	{
+		function stripos($query,$needle)
+		{
+			return strpos(strtolower($query),strtolower($needle));
+		}
+	}
+	
+	//Retreiving the no of rows
+	$count_query = "select count(*) as count ".substr($query, stripos($query,'from'),strlen($query));
+	$count_result = $adb->query(substr($count_query, stripos($count_query,'select'),stripos($count_query,'ORDER BY')));
+	$noofrows = $adb->query_result($count_result,0,"count");
+	
+	//Setting Listview session object while sorting/pagination
+	if(isset($_REQUEST['relmodule']) && $_REQUEST['relmodule']!='' && $_REQUEST['relmodule'] == $relatedmodule)
+	{
+		$relmodule = $_REQUEST['relmodule'];
+		if($_SESSION['rlvs'][$module][$relmodule])
+		{
+			setSessionVar($_SESSION['rlvs'][$module][$relmodule],$noofrows,$list_max_entries_per_page,$module,$relmodule);
+		}
+	}
+	$start = $_SESSION['rlvs'][$module][$relatedmodule]['start'];
+
 	$navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
+	
+	$start_rec = $navigation_array['start'];
+	$end_rec = $navigation_array['end_val'];
+
+	//limiting the query
+	if ($start_rec ==0) 
+		$limit_start_rec = 0;
+	else
+		$limit_start_rec = $start_rec -1;
+
+	if( $adb->dbType == "pgsql")
+ 	    $list_result = $adb->query($query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+ 	else
+ 	    $list_result = $adb->query($query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);	
 
 	//Retreive the List View Table Header
 	if($noofrows == 0)
@@ -128,14 +186,15 @@ function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,
 	}
 	else
 	{
-		$listview_header = getListViewHeader($focus,$relatedmodule,'','','','relatedlist');//"Accounts");
+		$id = $_REQUEST['record'];
+		$listview_header = getListViewHeader($focus,$relatedmodule,'',$sorder,$order_by,$id,'',$module);//"Accounts");
 		if ($noofrows > 15)
 		{
 			$smarty->assign('SCROLLSTART','<div style="overflow:auto;height:315px;width:100%;">');
 			$smarty->assign('SCROLLSTOP','</div>');
 		}
 		$smarty->assign("LISTHEADER", $listview_header);
-
+															
 		if($module == 'PriceBook' && $relatedmodule == 'Products')
 		{
 			$listview_entries = getListViewEntries($focus,$relatedmodule,$list_result,$navigation_array,'relatedlist',$returnset,$edit_val,$del_val);
@@ -151,14 +210,29 @@ function GetRelatedList($module,$relatedmodule,$focus,$query,$button,$returnset,
 		{
 			$listview_entries = getListViewEntries($focus,$relatedmodule,$list_result,$navigation_array,'relatedlist',$returnset);
 		}
-		$related_entries = array('header'=>$listview_header,'entries'=>$listview_entries);
-		$navigationOutput = getTableHeaderNavigation($navigation_array, $url_qry,$relatedmodule);
+
+		$navigationOutput = Array();
+		$navigationOutput[] = $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
+		$module_rel = $module.'&relmodule='.$relatedmodule.'&record='.$id;
+		$navigationOutput[] = getRelatedTableHeaderNavigation($navigation_array, $url_qry,$module_rel);
+		$related_entries = array('header'=>$listview_header,'entries'=>$listview_entries,'navigation'=>$navigationOutput);
+		$log->debug("Exiting GetRelatedList method ...");
 		return $related_entries;
 	}
 }
 
+/** Function to get related list entries in detailed array format
+  * @param $parentmodule -- parentmodulename:: Type string
+  * @param $query -- query:: Type string
+  * @param $id -- id:: Type string
+  * @returns $entries_list -- entries list:: Type string array
+  *
+  */
+
 function getAttachmentsAndNotes($parentmodule,$query,$id,$sid='')
 {
+	global $log;
+	$log->debug("Entering getAttachmentsAndNotes(".$parentmodule.",".$query.",".$id.",".$sid.") method ...");
 	global $theme;
 
 	$list = '<script>
@@ -193,7 +267,7 @@ function getAttachmentsAndNotes($parentmodule,$query,$id,$sid='')
 	while($row = $adb->fetch_array($result))
 	{
 		$entries = Array();
-		if($row['activitytype'] == 'Notes')
+		if(trim($row['activitytype']) == 'Notes')
 		{
 			$module = 'Notes';
 			$editaction = 'EditView';
@@ -205,7 +279,6 @@ function getAttachmentsAndNotes($parentmodule,$query,$id,$sid='')
 			$editaction = 'upload';
 			$deleteaction = 'deleteattachments';
 		}
-
 		if($row['createdtime'] != '0000-00-00 00:00:00')
 		{
 			$created_arr = explode(" ",getDisplayDate($row['createdtime']));
@@ -219,7 +292,6 @@ function getAttachmentsAndNotes($parentmodule,$query,$id,$sid='')
 		}
 
 		$entries[] = $created_date;
-
 		if($module == 'Notes')
 		{
 			$entries[] = '<a href="index.php?module='.$module.'&action=DetailView&return_module='.$parentmodule.'&return_action='.$return_action.'&record='.$row["crmid"].'&filename='.$row['filename'].'&fileid='.$row['attachmentsid'].'&return_id='.$_REQUEST["record"].'">'.$row['title'].'</a>';
@@ -228,37 +300,52 @@ function getAttachmentsAndNotes($parentmodule,$query,$id,$sid='')
 		{
 			$entries[] = "";
 		}
-
+		
+		if(strlen($row['description']) > 40)
+		{
+			$row['description'] = substr($row['description'],0,40).'...';
+		}
 		$entries[] = nl2br($row['description']); 
-		$attachmentname = ltrim($row['filename'],$id.'_');//explode('_',$row['filename'],2);
+		$attachmentname = ltrim($row['filename'],$row['attachmentsid'].'_');//explode('_',$row['filename'],2);
 
 		$entries[] = '<a href="index.php?module=uploads&action=downloadfile&entityid='.$id.'&fileid='.$row['attachmentsid'].'">'.$attachmentname.'</a>';
 
 		$entries[] = $row['activitytype'];	
 
-		$del_param = 'index.php?module='.$module.'&action='.$deleteaction.'&return_module='.$parentmodule.'&return_action='.$_REQUEST['action'].'&record='.$row["crmid"].'&filename='.$row['filename'].'&return_id='.$_REQUEST["record"];
+		$del_param = 'index.php?module='.$module.'&action='.$deleteaction.'&return_module='.$parentmodule.'&return_action='.$_REQUEST['action'].'&record='.$row["crmid"].'&return_id='.$_REQUEST["record"];
 
 		if($module == 'Notes')
 		{
 			$edit_param = 'index.php?module='.$module.'&action='.$editaction.'&return_module='.$parentmodule.'&return_action='.$_REQUEST['action'].'&record='.$row["crmid"].'&filename='.$row['filename'].'&fileid='.$row['attachmentsid'].'&return_id='.$_REQUEST["record"];
 
-			$entries[] .= '<a href="'.$edit_param.'">'.$app_strings['LNK_EDIT'].'</a> | <a href="javascript:;" onclick=confirmdelete("'.$del_param.'")>'.$app_strings['LNK_DELETE'].'</a>';
+			$entries[] .= '<a href="'.$edit_param.'">'.$app_strings['LNK_EDIT'].'</a> | <a href=\'javascript:confirmdelete("'.$del_param.'")\'>'.$app_strings['LNK_DELETE'].'</a>';
 		}
 		else
 		{
-			$entries[] = '<a href="javascript:;" onclick=confirmdelete("'.$del_param.'")>'.$app_strings['LNK_DELETE'].'</a>';
+			$entries[] = '<a href=\'javascript:confirmdelete("'.$del_param.'")\'>'.$app_strings['LNK_DELETE'].'</a>';
 		}
 		$entries_list[] = $entries;
 	}
 
 	if($entries_list !='')
 		$return_data = array('header'=>$header,'entries'=>$entries_list);
+	$log->debug("Exiting getAttachmentsAndNotes method ...");
 	return $return_data;
 
 }
 
+/** Function to get related list entries in detailed array format
+  * @param $parentmodule -- parentmodulename:: Type string
+  * @param $query -- query:: Type string
+  * @param $id -- id:: Type string
+  * @returns $return_data -- return data:: Type string array
+  *
+  */
+
 function getHistory($parentmodule,$query,$id)
 {
+	global $log;
+	$log->debug("Entering getHistory(".$parentmodule.",".$query.",".$id.") method ...");
 	$parentaction = $_REQUEST['action'];
 	global $theme;
 	$theme_path="themes/".$theme."/";
@@ -270,17 +357,16 @@ function getHistory($parentmodule,$query,$id)
 	global $app_strings;
 
 	//Appending the security parameter
-	global $others_permission_id;
 	global $current_user;
-	$rel_tab_id = getTabid("Activities");
+	$rel_tab_id = getTabid("Calendar");
 
 	global $current_user;
         require('user_privileges/user_privileges_'.$current_user->id.'.php');
         require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
-        $tab_id=getTabid('Activities');
+        $tab_id=getTabid('Calendar');
        if($is_admin==false && $profileGlobalPermission[1] == 1 && $profileGlobalPermission[2] == 1 && $defaultOrgSharingPermission[$tab_id] == 3)
        {
-       		$sec_parameter=getListViewSecurityParameter('Activities');
+       		$sec_parameter=getListViewSecurityParameter('Calendar');
                 $query .= ' '.$sec_parameter;
 
         }
@@ -348,7 +434,7 @@ function getHistory($parentmodule,$query,$id)
 
 // begin: Armando Lüscher 14.07.2005 -> §scrollableTables
 // Desc: 'X'
-//			 Insert new table with 1 cell where all entries are in a new table.
+//			 Insert new vtiger_table with 1 cell where all entries are in a new vtiger_table.
 //			 This cell will be scrollable when too many entries exist
 		$list .= ($noofrows>15) ? '<tr><td colspan="'.$colspan.'"><div style="overflow:auto;height:315px;width:100%;"><table cellspacing="0" cellpadding="0" border="0" width="100%">':'';
 // end: Armando Lüscher 14.07.2005 -> §scrollableTables
@@ -385,8 +471,8 @@ function getHistory($parentmodule,$query,$id)
 
 			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td>';
 			$list .= '<td valign="top" colspan="3" width="30%" height="21" class="visibleDescriptionLink" style="padding:0px 3px 0px 3px;">'; // Armando Lüscher 26.09.2005 -> §visibleDescription -> Desc: Changed width from 25% to 30%, inserted colspan="3" valign="top" class="visibleDescriptionLink"
-			$list .= '<a href="index.php?module=Activities&action=DetailView&return_module='.$parentmodule.'&return_action=DetailView&record='.$row["activityid"] .'&activity_mode='.$activitymode.'&return_id='.$_REQUEST['record'].'" title="'.$row['description'].'">'.$row['subject'].'</a></td>';
-			$entries[] = $row['subject'];
+			$activity = '<a href="index.php?module=Calendar&action=DetailView&return_module='.$parentmodule.'&return_action=DetailView&record='.$row["activityid"] .'&activity_mode='.$activitymode.'&return_id='.$_REQUEST['record'].'" title="'.$row['description'].'">'.$row['subject'].'</a></td>';
+			$entries[] = $activity;
 			$list .= '</td>';
 	
 			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td>';
@@ -403,9 +489,9 @@ function getHistory($parentmodule,$query,$id)
 			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
 			$list .= '<td valign="top" width="80" height="21" style="padding:0px 3px 0px 3px;" noWrap>'; // Armando Lüscher 26.09.2005 -> §visibleDescription -> Desc: Changed width from 18% to 80, inserted valign="top" noWrap
 			// Armando Lüscher 26.09.2005 -> §visibleDescription -> Desc: This if-statement replaces the line above
-			if(isPermitted("Activities",1,$row["activityid"]) == 'yes')
+			if(isPermitted("Calendar",1,$row["activityid"]) == 'yes')
 			{
-				$list .= '<a href="index.php?module=Activities&action=EditView&return_module='.$parentmodule.'&return_action='.$parentaction.'&activity_mode='.$activitymode.'&record='.$row["activityid"].'&return_id='.$_REQUEST["record"].'">'.$app_strings['LNK_EDIT'].'</a>';
+				$list .= '<a href="index.php?module=Calendar&action=EditView&return_module='.$parentmodule.'&return_action='.$parentaction.'&activity_mode='.$activitymode.'&record='.$row["activityid"].'&return_id='.$_REQUEST["record"].'">'.$app_strings['LNK_EDIT'].'</a>';
 			
 			}
 			$list .= '</td>';
@@ -415,7 +501,7 @@ function getHistory($parentmodule,$query,$id)
 			$list .= '</tr><tr class="'.$trowclass.'">';
 			// end: Armando Lüscher 26.09.2005 -> §visibleDescription 
 
-			$parentname = getRelatedTo('Activities',$result,$i-1);
+			$parentname = getRelatedTo('Calendar',$result,$i-1);
 
 			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td>';
 			
@@ -464,9 +550,9 @@ function getHistory($parentmodule,$query,$id)
 			
 			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td>';
 			$list .= '<td valign="top" width="80" style="padding:0px 3px 0px 3px;">';
-			if(isPermitted("Activities",2,$row["activityid"]) == 'yes')
+			if(isPermitted("Calendar",2,$row["activityid"]) == 'yes')
 			{
-				$list .= '<a href="index.php?module=Activities&action=Delete&return_module='.$parentmodule.'&return_action='.$parentaction.'&record='.$row["activityid"].'&return_id='.$_REQUEST["record"].'">'.$app_strings['LNK_DELETE'].'</a>';
+				$list .= '<a href="index.php?module=Calendar&action=Delete&return_module='.$parentmodule.'&return_action='.$parentaction.'&record='.$row["activityid"].'&return_id='.$_REQUEST["record"].'">'.$app_strings['LNK_DELETE'].'</a>';
 			}
 			$list .= '</td>';
 			
@@ -481,7 +567,7 @@ function getHistory($parentmodule,$query,$id)
 		}
 
 // begin: Armando Lüscher 14.07.2005 -> §scrollableTables
-// Desc: Close table from 
+// Desc: Close vtiger_table from 
 		$list .= ($noofrows>15) ? '</table></div></td></tr>':'';
 // end: Armando Lüscher 14.07.2005 -> §scrollableTables
 
@@ -489,13 +575,22 @@ function getHistory($parentmodule,$query,$id)
 
 		$list .= '</table>';
 		$return_data = array('header'=>$header,'entries'=>$entries_list);
+		$log->debug("Exiting getHistory method ...");
 		return $return_data; 
 	}
 }
 
+/**	Function to display the Products which are related to the PriceBook
+ *	@param string $query - query to get the list of products which are related to the current PriceBook
+ *	@param object $focus - PriceBook object which contains all the information of the current PriceBook
+ *	@param string $returnset - return_module, return_action and return_id which are sequenced with & to pass to the URL which is optional
+ *	return array $return_data which will be formed like array('header'=>$header,'entries'=>$entries_list) where as $header contains all the header columns and $entries_list will contain all the Product entries
+ */
 function getPriceBookRelatedProducts($query,$focus,$returnset='')
 {
-	require_once('Smarty_setup.php');
+	global $log;
+	$log->debug("Entering getPriceBookRelatedProducts(".$query.",".$focus.",".$returnset.") method ...");
+
 	global $adb;
 	global $app_strings;
 	global $mod_strings;
@@ -505,83 +600,47 @@ function getPriceBookRelatedProducts($query,$focus,$returnset='')
 	global $list_max_entries_per_page;
 	global $urlPrefix;
 
-
 	global $theme;
 	$pricebook_id = $_REQUEST['record'];
 	$theme_path="themes/".$theme."/";
 	$image_path=$theme_path."images/";
 	require_once($theme_path.'layout_utils.php');
-	$list_result = 	$adb->query($query);
+
+	//Retreive the list from Database
+	$list_result = $adb->query($query);
 	$num_rows = $adb->num_rows($list_result);
-	$smarty = new vtigerCRM_Smarty;
-	$smarty->assign("MOD", $mod_strings);
-	$smarty->assign("APP", $app_strings);
-	$smarty->assign("IMAGE_PATH",$image_path);
-	$other_text = '<table width="100%" border="0" cellpadding="1" cellspacing="0">
-	<form name="selectproduct" method="POST">
-	<tr>
-	<input name="action" type="hidden" value="AddProductsToPriceBook">
-	<input name="module" type="hidden" value="Products">
-	<input name="return_module" type="hidden" value="PriceBooks">
-	<input name="return_action" type="hidden" value="DetailView">
-	<input name="pricebook_id" type="hidden" value="'.$_REQUEST["record"].'">';
 
-        $other_text .='<td><input title="Select Products" accessyKey="F" class="button" onclick="this.form.action.value=\'AddProductsToPriceBook\';this.form.module.value=\'Products\';this.form.return_module.value=\'PriceBooks\';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$app_strings["LBL_SELECT_PRODUCT_BUTTON_LABEL"].'"></td>';
-		$other_text .='</tr></table>';
+	$header=array();
+	$header[]=$mod_strings['LBL_LIST_PRODUCT_NAME'];
+	$header[]=$mod_strings['LBL_PRODUCT_CODE'];
+	$header[]=$mod_strings['LBL_PRODUCT_UNIT_PRICE'];
+	$header[]=$mod_strings['LBL_PB_LIST_PRICE'];
+	$header[]=$mod_strings['LBL_ACTION'];
 
-//Retreive the list from Database
-$list_result = $adb->query($query);
-$num_rows = $adb->num_rows($list_result);
-
-//Retreive the List View Table Header
-
-// Armando Lüscher 15.07.2005 -> §scrollableTables
-// Desc: class="blackLine" deleted because of vertical line in title <tr>
-
-//		$list .= $app_strings['LBL_ICON'].'Icon</td>';
-		$class_black="";
-		if($num_rows<15)
-		{
-			$class_black='class="blackLine"';	
-		}
-
-$header=array();
-$header[]=$mod_strings['LBL_LIST_PRODUCT_NAME'];
-$header[]=$mod_strings['LBL_PRODUCT_CODE'];
-$header[]=$mod_strings['LBL_PRODUCT_UNIT_PRICE'];
-$header[]=$mod_strings['LBL_PB_LIST_PRICE'];
-$header[]=$mod_strings['LBL_ACTION'];
-
-$smarty->assign("LISTHEADER", $list_header);
-
-// begin: Armando Lüscher 14.07.2005 -> §scrollableTables
-// Desc: 'X'
-//			 Insert new table with 1 cell where all entries are in a new table.
-//			 This cell will be scrollable when too many entries exist
-		$list_body .= ($num_rows>15) ? '<tr><td colspan="12"><div style="overflow:auto;height:315px;width:100%;"><table cellspacing="0" cellpadding="0" border="0" width="100%">':'';
-// end: Armando Lüscher 14.07.2005 -> §scrollableTablEs
-
-for($i=0; $i<$num_rows; $i++)
-{
-	$entity_id = $adb->query_result($list_result,$i,"crmid");
+	for($i=0; $i<$num_rows; $i++)
+	{
+		$entity_id = $adb->query_result($list_result,$i,"crmid");
 
 		$unit_price = 	$adb->query_result($list_result,$i,"unit_price");
 		$listprice = $adb->query_result($list_result,$i,"listprice");
 		$field_name=$entity_id."_listprice";
+		
 		$entries = Array();
 		$entries[] = $adb->query_result($list_result,$i,"productname");
 		$entries[] = $adb->query_result($list_result,$i,"productcode");
 		$entries[] = $unit_price;
 		$entries[] = $listprice;
-		$entries[] = '<a href="index.php?module=Products&action=EditListPrice&record='.$entity_id.'&pricebook_id='.$pricebook_id.'&listprice='.$listprice.'">edit</a>&nbsp;|&nbsp;<a href="index.php?module=Products&action=DeletePriceBookProductRel'.$returnset.'&record='.$entity_id.'&pricebook_id='.$pricebook_id.'">del</a>';
-	$list_body .='<td WIDTH="1" class="blackLine" NOWRAP><IMG SRC="'.$image_path.'blank.gif"></td></tr>';
+		$entries[] = '<img style="cursor:pointer;" src="'.$image_path.'editfield.gif" border="0" onClick="fnvshobj(this,\'editlistprice\'),editProductListPrice(\''.$entity_id.'\',\''.$pricebook_id.'\',\''.$listprice.'\')" alt="'.$app_strings["LBL_EDIT_BUTTON"].'" title="'.$app_strings["LBL_EDIT_BUTTON"].'"/><!--a href="index.php?module=Products&action=EditListPrice&record='.$entity_id.'&pricebook_id='.$pricebook_id.'&listprice='.$listprice.'">edit</a-->&nbsp;|&nbsp;<img src="'.$image_path.'delete.gif" onclick="if(confirm(\'Are you sure?\')) deletePriceBookProductRel('.$entity_id.','.$pricebook_id.');" alt="'.$app_strings["LBL_DELETE"].'" title="'.$app_strings["LBL_DELETE"].'" style="cursor:pointer;" border="0">';
+
 		$entries_list[] = $entries;
-}
-		if($num_rows>0)
-		{
-			$return_data = array('header'=>$header,'entries'=>$entries_list);
-			return $return_data; 
-		}
+	}
+	if($num_rows>0)
+	{
+		$return_data = array('header'=>$header,'entries'=>$entries_list);
+
+		$log->debug("Exiting getPriceBookRelatedProducts method ...");
+		return $return_data; 
+	}
 }
 
 ?>

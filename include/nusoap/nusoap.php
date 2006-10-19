@@ -1,5 +1,6 @@
 <?php
 
+require_once('include/logging.php');
 /*
 $Id: nusoap.php,v 1.94 2005/08/04 01:27:42 snichol Exp $
 
@@ -53,7 +54,8 @@ require_once('class.soap_server.php');*/
 // class variable emulation
 // cf. http://www.webkreator.com/php/techniques/php-static-class-variables.html
 $GLOBALS['_transient']['static']['nusoap_base']->globalDebugLevel = 9;
-
+global $soap_log;
+$soap_log =& LoggerManager::getLogger('SOAP');
 /**
 *
 * nusoap_base
@@ -112,7 +114,7 @@ class nusoap_base {
 	 * @var	integer
 	 * @access private
 	 */
-	var $debugLevel;
+	var $debugLevel = 9;
 
     /**
 	* set schema version
@@ -128,8 +130,8 @@ class nusoap_base {
 	* @var      string
 	* @access   public
 	*/
-    var $soap_defencoding = 'ISO-8859-1';
-	//var $soap_defencoding = 'UTF-8';
+    	//var $soap_defencoding = 'ISO-8859-1';
+	var $soap_defencoding = 'UTF-8';
 
 	/**
 	* namespaces in an array of prefix => uri
@@ -196,6 +198,8 @@ class nusoap_base {
 	*/
 	var $xmlEntities = array('quot' => '"','amp' => '&',
 		'lt' => '<','gt' => '>','apos' => "'");
+	
+	
 
 	/**
 	* constructor
@@ -268,6 +272,8 @@ class nusoap_base {
 		if ($this->debugLevel > 0) {
 			// it would be nice to use a memory stream here to use
 			// memory more efficiently
+			global $soap_log;
+			$soap_log->debug($string);
 			$this->debug_str .= $string;
 		}
 	}
@@ -2824,7 +2830,7 @@ class soap_transport_http extends nusoap_base {
 			($http_status >= 400 && $http_status <= 417) ||
 			($http_status >= 501 && $http_status <= 505)
 		   ) {
-			$this->setError("Unsupported HTTP response status $http_status $http_reason (soapclient->response has contents of the response)");
+			$this->setError("Unsupported HTTP response status $http_status $http_reason (soapclient2->response has contents of the response)");
 			return false;
 		}
 
@@ -3322,7 +3328,12 @@ class soap_server extends nusoap_base {
 
 		$this->request = '';
 		$this->SOAPAction = '';
-		if(function_exists('getallheaders')){
+
+		//Commented to fix the issue in PHP 5 Windows system ---Jeri
+		//when we use getallheaders function  we are geting an error description invalid gzip crc value when parsing the response in VB
+		// hence the function is commented out and $_SERVER is used to get all the header informations.
+		
+		/*if(function_exists('getallheaders')){
 			$this->debug("In parse_http_headers, use getallheaders");
 			$headers = getallheaders();
 			foreach($headers as $k=>$v){
@@ -3347,7 +3358,7 @@ class soap_server extends nusoap_base {
 				// should be US-ASCII for HTTP 1.0 or ISO-8859-1 for HTTP 1.1
 				$this->xml_encoding = 'ISO-8859-1';
 			}
-		} elseif(isset($_SERVER) && is_array($_SERVER)){
+		} else*/if(isset($_SERVER) && is_array($_SERVER)){
 			$this->debug("In parse_http_headers, use _SERVER");
 			foreach ($_SERVER as $k => $v) {
 				if (substr($k, 0, 5) == 'HTTP_') {
@@ -6387,24 +6398,24 @@ class soap_parser extends nusoap_base {
 
 /**
 *
-* soapclient higher level class for easy usage.
+* soapclient2 higher level class for easy usage.
 *
 * usage:
 *
 * // instantiate client with server info
-* $soapclient = new soapclient( string path [ ,boolean wsdl] );
+* $soapclient2 = new soapclient2( string path [ ,boolean wsdl] );
 *
 * // call method, get results
-* echo $soapclient->call( string methodname [ ,array parameters] );
+* echo $soapclient2->call( string methodname [ ,array parameters] );
 *
 * // bye bye client
-* unset($soapclient);
+* unset($soapclient2);
 *
 * @author   Dietrich Ayala <dietrich@ganx4.com>
 * @version  $Id: nusoap.php,v 1.94 2005/08/04 01:27:42 snichol Exp $
 * @access   public
 */
-class soapclient extends nusoap_base  {
+class soapclient2 extends nusoap_base  {
 
 	var $username = '';
 	var $password = '';
@@ -6471,7 +6482,7 @@ class soapclient extends nusoap_base  {
 	* @param	integer $response_timeout set the response timeout
 	* @access   public
 	*/
-	function soapclient($endpoint,$wsdl = false,$proxyhost = false,$proxyport = false,$proxyusername = false, $proxypassword = false, $timeout = 0, $response_timeout = 30){
+	function soapclient2($endpoint,$wsdl = false,$proxyhost = false,$proxyport = false,$proxyusername = false, $proxypassword = false, $timeout = 0, $response_timeout = 30){
 		parent::nusoap_base();
 		$this->endpoint = $endpoint;
 		$this->proxyhost = $proxyhost;
@@ -7051,7 +7062,7 @@ class soapclient extends nusoap_base  {
 				unset($paramCommentStr);
 			}
 		}
-		$evalStr = 'class soap_proxy_'.$r.' extends soapclient {
+		$evalStr = 'class soap_proxy_'.$r.' extends soapclient2 {
 	'.$evalStr.'
 }';
 		return $evalStr;

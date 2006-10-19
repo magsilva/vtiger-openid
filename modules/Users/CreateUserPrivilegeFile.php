@@ -1,4 +1,14 @@
 <?php
+/*********************************************************************************
+** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+*
+ ********************************************************************************/
+
 require_once('config.php');
 require_once('modules/Users/User.php');
 require_once('include/utils/UserInfoUtil.php');
@@ -7,7 +17,10 @@ require_once('include/utils/GetUserGroups.php');
 require_once('include/utils/GetGroupUsers.php');
 
 
-//$userid=1;
+/** Creates a file with all the user, user-role,user-profile, user-groups informations 
+  * @param $userid -- user id:: Type integer
+  * @returns user_privileges_userid file under the user_privileges directory
+ */
 
 function createUserPrivilegesfile($userid)
 {
@@ -20,9 +33,11 @@ function createUserPrivilegesfile($userid)
 		$newbuf .="\n";		
 		$newbuf .= "//This is the access privilege file\n";
 		$user_focus= new User();
-		$user_focus->retrieve($userid);
+		$user_focus->retrieve_entity_info($userid,"Users");
 		$userInfo=Array();
-		foreach($user_focus->column_fields as $field)
+		$user_focus->column_fields["id"] = '';
+		$user_focus->id = $userid; 
+		foreach($user_focus->column_fields as $field=>$value_iter)
         	{
                		$userInfo[$field]= $user_focus->$field;
         	}
@@ -89,11 +104,14 @@ function createUserPrivilegesfile($userid)
 	}
 }
 
-
+/** Creates a file with all the organization default sharing permissions and custom sharing permissins specific for the specified user. In this file the information of the other users whose data is shared with the specified user is stored.   
+  * @param $userid -- user id:: Type integer
+  * @returns sharing_privileges_userid file under the user_privileges directory
+ */
 function createUserSharingPrivilegesfile($userid)
 {
 	global $adb;
-	require_once('user_privileges/user_privileges_'.$userid.'.php');
+	require('user_privileges/user_privileges_'.$userid.'.php');
 	$handle=@fopen($root_directory.'user_privileges/sharing_privileges_'.$userid.'.php',"w+");
 
 	if($handle)
@@ -103,7 +121,7 @@ function createUserSharingPrivilegesfile($userid)
 		$newbuf .="\n";		
 		$newbuf .= "//This is the sharing access privilege file\n";
 		$user_focus= new User();
-		$user_focus->retrieve($userid);
+		$user_focus->retrieve_entity_info($userid,"Users");
 		if($user_focus->is_admin == 'on')
 		{
 			$newbuf .= "\n";
@@ -122,7 +140,7 @@ function createUserSharingPrivilegesfile($userid)
 
 			//Constructing the Related Module Sharing Array
 			$relModSharArr=Array();	
-			$query ="select * from datashare_relatedmodules";
+			$query ="select * from vtiger_datashare_relatedmodules";
                 	$result=$adb->query($query);
                 	$num_rows = $adb->num_rows($result);
                 	for($i=0;$i<$num_rows;$i++)
@@ -282,6 +300,13 @@ function createUserSharingPrivilegesfile($userid)
 			$email_share_write_per=$email_share_per_array['write'];
 			$newbuf .= "\$Emails_share_read_permission=array('ROLE'=>".constructTwoDimensionalCharIntSingleValueArray($email_share_read_per['ROLE']).",'GROUP'=>".constructTwoDimensionalValueArray($email_share_read_per['GROUP']).");\n\n";	
 			$newbuf .= "\$Emails_share_write_permission=array('ROLE'=>".constructTwoDimensionalCharIntSingleValueArray($email_share_write_per['ROLE']).",'GROUP'=>".constructTwoDimensionalValueArray($email_share_write_per['GROUP']).");\n\n";
+
+			//Constructing Campaigns Sharing Rules
+			$campaign_share_per_array=getUserModuleSharingObjects("Campaigns",$userid,$def_org_share,$current_user_roles,$parent_roles,$current_user_groups);
+			$campaign_share_read_per=$campaign_share_per_array['read'];
+			$campaign_share_write_per=$campaign_share_per_array['write'];
+			$newbuf .= "\$Campaigns_share_read_permission=array('ROLE'=>".constructTwoDimensionalCharIntSingleValueArray($campaign_share_read_per['ROLE']).",'GROUP'=>".constructTwoDimensionalValueArray($campaign_share_read_per['GROUP']).");\n\n";	
+			$newbuf .= "\$Campaigns_share_write_permission=array('ROLE'=>".constructTwoDimensionalCharIntSingleValueArray($campaign_share_write_per['ROLE']).",'GROUP'=>".constructTwoDimensionalValueArray($campaign_share_write_per['GROUP']).");\n\n";
 	
 
 			//Constructing Quotes Sharing Rules
@@ -348,10 +373,21 @@ function createUserSharingPrivilegesfile($userid)
 	}
 }
 
+
+/** Gives an array which contains the information for what all roles, groups and user data is to be shared with the spcified user for the specified module 
+
+  * @param $module -- module name:: Type varchar
+  * @param $userid -- user id:: Type integer
+  * @param $def_org_share -- default organization sharing permission array:: Type array
+  * @param $current_user_roles -- roleid:: Type varchar
+  * @param $parent_roles -- parent roles:: Type varchar
+  * @param $current_user_groups -- user id:: Type integer
+  * @returns $mod_share_permission -- array which contains the id of roles,group and users data shared with specifed user for the specified module
+ */
 function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_user_roles,$parent_roles,$current_user_groups)
 {
 	global $adb;
-	
+
 	$mod_tabid=getTabid($module);
 
 	$mod_share_permission;
@@ -373,8 +409,8 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 		$rs_write_per=Array();
 		$grp_read_per=Array();
 		$grp_write_per=Array();
-		//Retreiving from role to role
-		$query="select datashare_role2role.* from datashare_role2role inner join datashare_module_rel on datashare_module_rel.shareid=datashare_role2role.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_role2role.to_roleid='".$current_user_roles."'";
+		//Retreiving from vtiger_role to vtiger_role
+		$query="select vtiger_datashare_role2role.* from vtiger_datashare_role2role inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_role2role.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_role2role.to_roleid='".$current_user_roles."'";
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -429,7 +465,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 			$parRoleList .= "'".$par_role_id."',";		
 		}
 		$parRoleList .= "'".$current_user_roles."')";
-		$query="select datashare_role2rs.* from datashare_role2rs inner join datashare_module_rel on datashare_module_rel.shareid=datashare_role2rs.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_role2rs.to_roleandsubid in ".$parRoleList;
+		$query="select vtiger_datashare_role2rs.* from vtiger_datashare_role2rs inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_role2rs.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_role2rs.to_roleandsubid in ".$parRoleList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -490,7 +526,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 		}
 		$groupList .= ")";
 
-		$query="select datashare_role2group.* from datashare_role2group inner join datashare_module_rel on datashare_module_rel.shareid=datashare_role2group.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_role2group.to_groupid in ".$groupList;
+		$query="select vtiger_datashare_role2group.* from vtiger_datashare_role2group inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_role2group.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_role2group.to_groupid in ".$groupList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -537,8 +573,8 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 
 
 
-		//Retreiving from rs to role
-		$query="select datashare_rs2role.* from datashare_rs2role inner join datashare_module_rel on datashare_module_rel.shareid=datashare_rs2role.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_rs2role.to_roleid='".$current_user_roles."'";
+		//Retreiving from rs to vtiger_role
+		$query="select vtiger_datashare_rs2role.* from vtiger_datashare_rs2role inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_rs2role.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_rs2role.to_roleid='".$current_user_roles."'";
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -597,7 +633,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 			$parRoleList .= "'".$par_role_id."',";		
 		}
 		$parRoleList .= "'".$current_user_roles."')";
-		$query="select datashare_rs2rs.* from datashare_rs2rs inner join datashare_module_rel on datashare_module_rel.shareid=datashare_rs2rs.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_rs2rs.to_roleandsubid in ".$parRoleList;
+		$query="select vtiger_datashare_rs2rs.* from vtiger_datashare_rs2rs inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_rs2rs.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_rs2rs.to_roleandsubid in ".$parRoleList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -652,7 +688,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 		//Get roles from Rs2Grp
 
 
-		$query="select datashare_rs2grp.* from datashare_rs2grp inner join datashare_module_rel on datashare_module_rel.shareid=datashare_rs2grp.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_rs2grp.to_groupid in ".$groupList;
+		$query="select vtiger_datashare_rs2grp.* from vtiger_datashare_rs2grp inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_rs2grp.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_rs2grp.to_groupid in ".$groupList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -709,7 +745,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 		$mod_share_write_permission['ROLE']=$role_write_per;
 		
 		//Retreiving from the grp2role sharing
-		$query="select datashare_grp2role.* from datashare_grp2role inner join datashare_module_rel on datashare_module_rel.shareid=datashare_grp2role.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_grp2role.to_roleid='".$current_user_roles."'";
+		$query="select vtiger_datashare_grp2role.* from vtiger_datashare_grp2role inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_grp2role.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_grp2role.to_roleid='".$current_user_roles."'";
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -721,8 +757,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 			$share_id_grp_members=Array();
 			$share_id_grps=Array();
 			$share_id_grps[]=$share_grpid;
-			$share_id_grp_members['GROUP']=$share_id_grps;
-			$share_id_members[$shareid]=$share_id_grp_members;
+			
 
 			if($share_permission == 1)
 			{
@@ -733,7 +768,20 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 						$focusGrpUsers = new GetGroupUsers();
 						$focusGrpUsers->getAllUsersInGroup($share_grpid);
 						$share_grp_users=$focusGrpUsers->group_users;
+						$share_grp_subgroups=$focusGrpUsers->group_subgroups;
 						$grp_read_per[$share_grpid]=$share_grp_users;
+						foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+						{
+							if(! array_key_exists($subgrpid,$grp_read_per))
+							{
+								$grp_read_per[$subgrpid]=$subgrpusers;	
+							}
+							if(! in_array($subgrpid,$share_id_grps))
+							{
+								$share_id_grps[]=$subgrpid;
+							}
+							
+						}	
 					}
 				}
 				if(! array_key_exists($share_grpid,$grp_write_per))
@@ -742,6 +790,18 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_write_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_write_per))
+						{
+							$grp_write_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}	
+
+					}	
 
 				}
 			}
@@ -753,16 +813,30 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_read_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_read_per))
+						{
+							$grp_read_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}	
+
+					}
 				}
 
 			}
+			$share_id_grp_members['GROUP']=$share_id_grps;
+			$share_id_members[$shareid]=$share_id_grp_members;
 
 		}
 
 		//Retreiving from the grp2rs sharing
 
 
-		$query="select datashare_grp2rs.* from datashare_grp2rs inner join datashare_module_rel on datashare_module_rel.shareid=datashare_grp2rs.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_grp2rs.to_roleandsubid in ".$parRoleList;
+		$query="select vtiger_datashare_grp2rs.* from vtiger_datashare_grp2rs inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_grp2rs.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_grp2rs.to_roleandsubid in ".$parRoleList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -774,8 +848,7 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 			$share_id_grp_members=Array();
 			$share_id_grps=Array();
 			$share_id_grps[]=$share_grpid;
-			$share_id_grp_members['GROUP']=$share_id_grps;
-			$share_id_members[$shareid]=$share_id_grp_members;
+			
 
 			if($share_permission == 1)
 			{
@@ -787,6 +860,19 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 						$focusGrpUsers->getAllUsersInGroup($share_grpid);
 						$share_grp_users=$focusGrpUsers->group_users;
 						$grp_read_per[$share_grpid]=$share_grp_users;
+
+						foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+						{
+							if(! array_key_exists($subgrpid,$grp_read_per))
+							{
+								$grp_read_per[$subgrpid]=$subgrpusers;	
+							}
+							if(! in_array($subgrpid,$share_id_grps))
+							{
+								$share_id_grps[]=$subgrpid;
+							}
+							
+						}	
 					}
 				}
 				if(! array_key_exists($share_grpid,$grp_write_per))
@@ -795,6 +881,18 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_write_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_write_per))
+						{
+								$grp_write_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}
+					
+					}
 
 				}
 			}
@@ -806,15 +904,29 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_read_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_read_per))
+						{
+								$grp_read_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}
+					
+					}
 				}
 
 			}
+			$share_id_grp_members['GROUP']=$share_id_grps;
+			$share_id_members[$shareid]=$share_id_grp_members;
 
 		}
 
 		//Retreiving from the grp2grp sharing
 
-		$query="select datashare_grp2grp.* from datashare_grp2grp inner join datashare_module_rel on datashare_module_rel.shareid=datashare_grp2grp.shareid where datashare_module_rel.tabid=".$mod_tabid." and datashare_grp2grp.to_groupid in ".$groupList;
+		$query="select vtiger_datashare_grp2grp.* from vtiger_datashare_grp2grp inner join vtiger_datashare_module_rel on vtiger_datashare_module_rel.shareid=vtiger_datashare_grp2grp.shareid where vtiger_datashare_module_rel.tabid=".$mod_tabid." and vtiger_datashare_grp2grp.to_groupid in ".$groupList;
 		$result=$adb->query($query);
 		$num_rows=$adb->num_rows($result);
 		for($i=0;$i<$num_rows;$i++)
@@ -826,8 +938,6 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 			$share_id_grp_members=Array();
 			$share_id_grps=Array();
 			$share_id_grps[]=$share_grpid;
-			$share_id_grp_members['GROUP']=$share_id_grps;
-			$share_id_members[$shareid]=$share_id_grp_members;
 
 			if($share_permission == 1)
 			{
@@ -839,6 +949,19 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 						$focusGrpUsers->getAllUsersInGroup($share_grpid);
 						$share_grp_users=$focusGrpUsers->group_users;
 						$grp_read_per[$share_grpid]=$share_grp_users;
+						foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+						{
+							if(! array_key_exists($subgrpid,$grp_read_per))
+							{
+								$grp_read_per[$subgrpid]=$subgrpusers;	
+							}
+							if(! in_array($subgrpid,$share_id_grps))
+							{
+								$share_id_grps[]=$subgrpid;
+							}
+							
+							
+						}
 					}
 				}
 				if(! array_key_exists($share_grpid,$grp_write_per))
@@ -847,6 +970,18 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_write_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_write_per))
+						{
+							$grp_write_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}
+							
+					}
 
 				}
 			}
@@ -858,9 +993,23 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 					$focusGrpUsers->getAllUsersInGroup($share_grpid);
 					$share_grp_users=$focusGrpUsers->group_users;
 					$grp_read_per[$share_grpid]=$share_grp_users;
+					foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+					{
+						if(! array_key_exists($subgrpid,$grp_read_per))
+						{
+							$grp_read_per[$subgrpid]=$subgrpusers;	
+						}
+						if(! in_array($subgrpid,$share_id_grps))
+						{
+							$share_id_grps[]=$subgrpid;
+						}
+
+					}
 				}
 
 			}
+			$share_id_grp_members['GROUP']=$share_id_grps;
+			$share_id_members[$shareid]=$share_id_grp_members;
 
 		}
 		$mod_share_read_permission['GROUP']=$grp_read_per;
@@ -872,9 +1021,20 @@ function getUserModuleSharingObjects($module,$userid,$def_org_share,$current_use
 	return $mod_share_permission;
 }
 
+/** Gives an array which contains the information for what all roles, groups and user's related module data that is to be shared  for the specified parent module and shared module 
 
+  * @param $par_mod -- parent module name:: Type varchar
+  * @param $share_mod -- shared module name:: Type varchar
+  * @param $userid -- user id:: Type integer
+  * @param $def_org_share -- default organization sharing permission array:: Type array
+  * @param $mod_sharingrule_members -- Sharing Rule Members array:: Type array
+  * @param $$mod_share_read_per -- Sharing Module Read Permission array:: Type array
+  * @param $$mod_share_write_per -- Sharing Module Write Permission array:: Type array
+  * @returns $related_mod_sharing_permission; -- array which contains the id of roles,group and users related module data to be shared 
+ */
 function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_members,$mod_share_read_per,$mod_share_write_per,$def_org_share)
 {
+
 	global $adb;
 	$related_mod_sharing_permission=Array();
 	$mod_share_read_permission=Array();
@@ -900,7 +1060,7 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 
 		foreach($mod_sharingrule_members as $sharingid => $sharingInfoArr)
 		{
-			$query = "select datashare_relatedmodule_permission.* from datashare_relatedmodule_permission inner join datashare_relatedmodules on datashare_relatedmodules.datashare_relatedmodule_id=datashare_relatedmodule_permission.datashare_relatedmodule_id where datashare_relatedmodule_permission.shareid=".$sharingid." and datashare_relatedmodules.tabid=".$par_mod_id." and datashare_relatedmodules.relatedto_tabid=".$share_mod_id;
+			$query = "select vtiger_datashare_relatedmodule_permission.* from vtiger_datashare_relatedmodule_permission inner join vtiger_datashare_relatedmodules on vtiger_datashare_relatedmodules.datashare_relatedmodule_id=vtiger_datashare_relatedmodule_permission.datashare_relatedmodule_id where vtiger_datashare_relatedmodule_permission.shareid=".$sharingid." and vtiger_datashare_relatedmodules.tabid=".$par_mod_id." and vtiger_datashare_relatedmodules.relatedto_tabid=".$share_mod_id;
 			$result = $adb->query($query);
 			$share_permission=$adb->query_result($result,0,'permission');	
 
@@ -908,7 +1068,6 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 			{
 				foreach($shareEntArr as $key=>$shareEntId)
 				{
-						
 					if($shareType == 'ROLE')
 					{
 						if($share_permission == 1)
@@ -986,7 +1145,8 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 						if($share_permission == 1)
 						{
 							if($def_org_share[$share_mod_id] == 3)
-							{	
+							{
+									
 								if(! array_key_exists($shareEntId,$grp_read_per))
 								{
 									if(array_key_exists($shareEntId,$mod_share_read_per['GROUP']))
@@ -1002,6 +1162,15 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 										$focusGrpUsers = new GetGroupUsers();
 										$focusGrpUsers->getAllUsersInGroup($shareEntId);
 										$share_grp_users=$focusGrpUsers->group_users;
+										
+										foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+										{
+											if(! array_key_exists($subgrpid,$grp_read_per))
+											{
+												$grp_read_per[$subgrpid]=$subgrpusers;	
+											}
+
+										}
 
 									}
 
@@ -1026,6 +1195,14 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 										$focusGrpUsers = new GetGroupUsers();
 										$focusGrpUsers->getAllUsersInGroup($shareEntId);
 										$share_grp_users=$focusGrpUsers->group_users;
+										foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+										{
+											if(! array_key_exists($subgrpid,$grp_write_per))
+											{
+												$grp_write_per[$subgrpid]=$subgrpusers;	
+											}
+
+										}
 
 									}
 
@@ -1051,6 +1228,14 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 									$focusGrpUsers = new GetGroupUsers();
 									$focusGrpUsers->getAllUsersInGroup($shareEntId);
 									$share_grp_users=$focusGrpUsers->group_users;
+									foreach($focusGrpUsers->group_subgroups as $subgrpid=>$subgrpusers)
+									{
+										if(! array_key_exists($subgrpid,$grp_read_per))
+										{
+											$grp_read_per[$subgrpid]=$subgrpusers;	
+										}
+
+									}
 
 								}
 
@@ -1078,7 +1263,11 @@ function getRelatedModuleSharingArray($par_mod,$share_mod,$mod_sharingrule_membe
 }
 
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
 
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructArray($var)
 {
 	if (is_array($var))
@@ -1086,13 +1275,18 @@ function constructArray($var)
        		$code = 'array(';
        		foreach ($var as $key => $value)
 		{
-           		$code .= $key.'=>'.$value.',';
+           		$code .= "'".$key."'=>".$value.',';
        		}
        		$code .= ')';
        		return $code;
    	}
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructSingleStringValueArray($var)
 {
 
@@ -1118,6 +1312,43 @@ function constructSingleStringValueArray($var)
         }
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
+function constructSingleStringKeyAndValueArray($var)
+{
+
+        $size = sizeof($var);
+        $i=1;
+        if (is_array($var))
+        {
+                $code = 'array(';
+                foreach ($var as $key => $value)
+                {
+                        if($i<$size)
+                        {
+                                $code .= "'".$key."'=>".$value.",";
+                        }
+                        else
+                        {
+                                $code .= "'".$key."'=>".$value;
+                        }
+                        $i++;
+                }
+                $code .= ')';
+                return $code;
+        }
+}
+
+
+
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructSingleStringKeyValueArray($var)
 {
 
@@ -1144,7 +1375,11 @@ function constructSingleStringKeyValueArray($var)
 }
 
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
 
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructSingleArray($var)
 {
 	if (is_array($var))
@@ -1159,6 +1394,11 @@ function constructSingleArray($var)
    	}
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructSingleCharArray($var)
 {
 	if (is_array($var))
@@ -1173,6 +1413,12 @@ function constructSingleCharArray($var)
    	}
 }
 
+
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructTwoDimensionalArray($var)
 {
 	if (is_array($var))
@@ -1192,6 +1438,11 @@ function constructTwoDimensionalArray($var)
    	}
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructTwoDimensionalValueArray($var)
 {
 	if (is_array($var))
@@ -1211,6 +1462,11 @@ function constructTwoDimensionalValueArray($var)
    	}
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructTwoDimensionalCharIntSingleArray($var)
 {
 	if (is_array($var))
@@ -1230,6 +1486,11 @@ function constructTwoDimensionalCharIntSingleArray($var)
    	}
 }
 
+/** Converts the input array  to a single string to facilitate the writing of the input array in a flat file 
+
+  * @param $var -- input array:: Type array
+  * @returns $code -- contains the whole array in a single string:: Type array 
+ */
 function constructTwoDimensionalCharIntSingleValueArray($var)
 {
 	if (is_array($var))
@@ -1250,12 +1511,16 @@ function constructTwoDimensionalCharIntSingleValueArray($var)
 }
 
 
+/** Function to populate the read/wirte Sharing permissions data of user/groups for the specified user into the database 
+  * @param $userid -- user id:: Type integer
+ */
+
 function populateSharingtmptables($userid)
 {
 	global $adb;
 	require('user_privileges/sharing_privileges_'.$userid.'.php');
-	//Deleting from the existing tables
-	$table_arr=Array('tmp_read_user_sharing_per', 'tmp_write_user_sharing_per','tmp_read_group_sharing_per','tmp_write_group_sharing_per','tmp_read_user_rel_sharing_per','tmp_write_user_rel_sharing_per','tmp_read_group_rel_sharing_per','tmp_write_group_rel_sharing_per');
+	//Deleting from the existing vtiger_tables
+	$table_arr=Array('vtiger_tmp_read_user_sharing_per', 'vtiger_tmp_write_user_sharing_per','vtiger_tmp_read_group_sharing_per','vtiger_tmp_write_group_sharing_per','vtiger_tmp_read_user_rel_sharing_per','vtiger_tmp_write_user_rel_sharing_per','vtiger_tmp_read_group_rel_sharing_per','vtiger_tmp_write_group_rel_sharing_per');
 	foreach($table_arr as $tabname)
 	{
 		$query = "delete from ".$tabname." where userid=".$userid;
@@ -1263,7 +1528,7 @@ function populateSharingtmptables($userid)
 	}
 
 	//Populating Values into the tmp sharing tables
-	$sharingArray=Array('Leads','Accounts','Contacts','Potentials','HelpDesk','Emails','Quotes','PurchaseOrder','SalesOrder','Invoice');
+	$sharingArray=Array('Leads','Accounts','Contacts','Potentials','HelpDesk','Emails','Campaigns','Quotes','PurchaseOrder','SalesOrder','Invoice');
 	foreach($sharingArray as $module)
 	{
 		populateSharingPrivileges('USER',$userid,$module,'read');
@@ -1287,6 +1552,12 @@ function populateSharingtmptables($userid)
 	}			 
 }
 
+/** Function to populate the read/wirte Sharing permissions data for the specified user into the database 
+  * @param $userid -- user id:: Type integer
+  * @param $enttype -- can have the value of User or Group:: Type varchar
+  * @param $module -- module name:: Type varchar
+  * @param $pertype -- can have the value of read or write:: Type varchar
+ */
 function populateSharingPrivileges($enttype,$userid,$module,$pertype)
 {
 	global $adb;	
@@ -1296,12 +1567,12 @@ function populateSharingPrivileges($enttype,$userid,$module,$pertype)
 	{
 		if($pertype =='read')
 		{
-			$table_name='tmp_read_user_sharing_per';
+			$table_name='vtiger_tmp_read_user_sharing_per';
 			$var_name=$module.'_share_read_permission';
 		}
 		elseif($pertype == 'write')
 		{
-			$table_name='tmp_write_user_sharing_per';
+			$table_name='vtiger_tmp_write_user_sharing_per';
 			$var_name=$module.'_share_write_permission';
 		}
 		$var_name_arr=$$var_name;	
@@ -1344,12 +1615,12 @@ function populateSharingPrivileges($enttype,$userid,$module,$pertype)
 	{
 		if($pertype =='read')
 		{
-			$table_name='tmp_read_group_sharing_per';
+			$table_name='vtiger_tmp_read_group_sharing_per';
 			$var_name=$module.'_share_read_permission';
 		}
 		elseif($pertype == 'write')
 		{
-			$table_name='tmp_write_group_sharing_per';
+			$table_name='vtiger_tmp_write_group_sharing_per';
 			$var_name=$module.'_share_write_permission';
 		}
 		$var_name_arr=$$var_name;
@@ -1373,6 +1644,14 @@ function populateSharingPrivileges($enttype,$userid,$module,$pertype)
 }
 
 
+/** Function to populate the read/wirte Sharing permissions related module data for the specified user into the database 
+  * @param $userid -- user id:: Type integer
+  * @param $enttype -- can have the value of User or Group:: Type varchar
+  * @param $module -- module name:: Type varchar
+  * @param $relmodule -- related module name:: Type varchar
+  * @param $pertype -- can have the value of read or write:: Type varchar
+ */
+
 function populateRelatedSharingPrivileges($enttype,$userid,$module,$relmodule,$pertype)
 {
 	global $adb;	
@@ -1384,12 +1663,12 @@ function populateRelatedSharingPrivileges($enttype,$userid,$module,$relmodule,$p
 	{
 		if($pertype =='read')
 		{
-			$table_name='tmp_read_user_rel_sharing_per';
+			$table_name='vtiger_tmp_read_user_rel_sharing_per';
 			$var_name=$module.'_'.$relmodule.'_share_read_permission';
 		}
 		elseif($pertype == 'write')
 		{
-			$table_name='tmp_write_user_rel_sharing_per';
+			$table_name='vtiger_tmp_write_user_rel_sharing_per';
 			$var_name=$module.'_'.$relmodule.'_share_write_permission';
 		}
 		$var_name_arr=$$var_name;	
@@ -1432,12 +1711,12 @@ function populateRelatedSharingPrivileges($enttype,$userid,$module,$relmodule,$p
 	{
 		if($pertype =='read')
 		{
-			$table_name='tmp_read_group_rel_sharing_per';
+			$table_name='vtiger_tmp_read_group_rel_sharing_per';
 			$var_name=$module.'_'.$relmodule.'_share_read_permission';
 		}
 		elseif($pertype == 'write')
 		{
-			$table_name='tmp_write_group_rel_sharing_per';
+			$table_name='vtiger_tmp_write_group_rel_sharing_per';
 			$var_name=$module.'_'.$relmodule.'_share_write_permission';
 		}
 		$var_name_arr=$$var_name;

@@ -26,7 +26,8 @@ require_once('modules/Quotes/Quote.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
-global $mod_strings,$app_strings,$currentModule,$theme,$profile_id;
+require_once('user_privileges/default_module_view.php');
+global $mod_strings,$app_strings,$currentModule,$theme,$singlepane_view;
 $focus = new Quote();
 
 if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) {
@@ -57,41 +58,57 @@ $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_st
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
 
-$smarty->assign("BLOCKS", getBlocks("Quotes","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
-$smarty->assign("SINGLE_MOD","Quotes");
+$smarty->assign("SINGLE_MOD",'Quote');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Quotes",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Quotes","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
 	
 $smarty->assign("CREATEPDF","permitted");
 
-if(isPermitted("SalesOrder",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("SalesOrder","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("CONVERTSALESORDER","permitted");
 
-if(isPermitted("Invoice",1,$_REQUEST['record']) == 'yes')
+if(isPermitted("Invoice","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("CONVERTINVOICE","permitted");
 
-if(isPermitted("Quotes",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Quotes","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
 
-//Security check for related list
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
 $smarty->assign("CONVERTMODE",'quotetoinvoice');
 $smarty->assign("MODULE", $currentModule);
 
 //Get the associated Products and then display above Terms and Conditions
 $smarty->assign("ASSOCIATED_PRODUCTS",getDetailAssociatedProducts('Quotes',$focus));
 
-$smarty->display("DetailView.tpl");
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+ $tabid = getTabid("Quotes");
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
+ $data = split_validationdataArray($validationData);
+
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
+$smarty->display("Inventory/InventoryDetailView.tpl");
 
 ?>

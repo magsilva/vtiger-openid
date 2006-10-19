@@ -13,12 +13,14 @@ require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
 
 /**
- * Function to get field typename
+ * Function to get vtiger_field typename
  * @param $uitype :: uitype -- Type integer
- * returns the field type name -- Type string
+ * returns the vtiger_field type name -- Type string
  */
 function getCustomFieldTypeName($uitype)
 {
+	global $log;
+	$log->debug("Entering getCustomFieldTypeName(".$uitype.") method ...");
 	global $log;
         $log->info("uitype is ".$uitype);
 	$fldname = '';
@@ -34,10 +36,6 @@ function getCustomFieldTypeName($uitype)
 	elseif($uitype == 9)
 	{
 		$fldname = 'Percent';
-	}
-	elseif($uitype == 3)
-	{
-		$fldname = 'Currency';
 	}
 	elseif($uitype == 5)
 	{
@@ -75,18 +73,21 @@ function getCustomFieldTypeName($uitype)
 	{
 		$fldname = 'Multi-Select Combo Box';
 	}
+$log->debug("Exiting getCustomFieldTypeName method ...");
 	return $fldname;
 }
 
 /**
- * Function to get custom fields
- * @param $module :: table name -- Type string
+ * Function to get custom vtiger_fields
+ * @param $module :: vtiger_table name -- Type string
  * returns customfields in key-value pair array format
  */
 function getCustomFieldArray($module)
 {
+	global $log;
+	$log->debug("Entering getCustomFieldArray(".$module.") method ...");
 	global $adb;
-	$custquery = "select * from field where tablename='".$module."'";
+	$custquery = "select * from vtiger_field where tablename='".$module."'";
 	$custresult = $adb->query($custquery);
 	$custFldArray = Array();
 	$noofrows = $adb->num_rows($custresult);
@@ -95,21 +96,24 @@ function getCustomFieldArray($module)
 		$colName=$adb->query_result($custresult,$i,"column_name");
 		$custFldArray[$colName] = $i;
 	}
+	$log->debug("Exiting getCustomFieldArray method ...");
 	return $custFldArray;
 	
 }
 
 /**
- * Function to get columnname and fieldlabel from field table
+ * Function to get columnname and vtiger_fieldlabel from vtiger_field vtiger_table
  * @param $module :: module name -- Type string
- * @param $trans_array :: translated column fields -- Type array
+ * @param $trans_array :: translated column vtiger_fields -- Type array
  * returns trans_array in key-value pair array format
  */
 function getCustomFieldTrans($module, $trans_array)
 {
+	global $log;
+	$log->debug("Entering getCustomFieldTrans(".$module.",". $trans_array.") method ...");
 	global $adb;
 	$tab_id = getTabid($module);	
-	$custquery = "select columnname,fieldlabel from field where generatedtype=2 and tabid=".$tab_id;
+	$custquery = "select columnname,fieldlabel from vtiger_field where generatedtype=2 and tabid=".$tab_id;
 	$custresult = $adb->query($custquery);
 	$custFldArray = Array();
 	$noofrows = $adb->num_rows($custresult);
@@ -119,35 +123,41 @@ function getCustomFieldTrans($module, $trans_array)
 		$fldLbl = $adb->query_result($custresult,$i,"fieldlabel");
 		$trans_array[$colName] = $fldLbl;
 	}	
+	$log->debug("Exiting getCustomFieldTrans method ...");
 }
 
 
 /**
- * Function to get customfield record from field table
+ * Function to get customfield record from vtiger_field vtiger_table
  * @param $tab :: Tab ID -- Type integer
- * @param $datatype :: field name -- Type string
- * @param $id :: field Id -- Type integer
+ * @param $datatype :: vtiger_field name -- Type string
+ * @param $id :: vtiger_field Id -- Type integer
  * returns the data result in string format
  */
 function getCustomFieldData($tab,$id,$datatype)
 {
+	global $log;
+	$log->debug("Entering getCustomFieldData(".$tab.",".$id.",".$datatype.") method ...");
 	global $adb;
-	$query = "select * from field where tabid=".$tab." and fieldid=".$id;
+	$query = "select * from vtiger_field where tabid=".$tab." and fieldid=".$id;
 	$result = $adb->query($query);
 	$return_data=$adb->fetch_array($result);
+	$log->debug("Exiting getCustomFieldData method ...");
 	return $return_data[$datatype];
 }
 
 
 /**
  * Function to get customfield type,length value,decimal value and picklist value
- * @param $label :: field typename -- Type string
+ * @param $label :: vtiger_field typename -- Type string
  * @param $typeofdata :: datatype -- Type string
- * returns the field type,length,decimal
+ * returns the vtiger_field type,length,decimal
  * and picklist value in ';' separated array format
  */
 function getFldTypeandLengthValue($label,$typeofdata)
 {
+	global $log;
+	$log->debug("Entering getFldTypeandLengthValue(".$label.",".$typeofdata.") method ...");
 	if($label == 'Text')
 	{
 		$types = explode("~",$typeofdata);
@@ -171,7 +181,7 @@ function getFldTypeandLengthValue($label,$typeofdata)
 	{
 		$types = explode("~",$typeofdata);
 		$data_decimal = explode(",",$types[2]);
-		$data_array=array('3',$data_decimal);
+		$data_array=array('71',$data_decimal[0],$data_decimal[1]);
 		$fieldtype = implode(";",$data_array);
 	}
 	elseif($label == 'Date')
@@ -206,6 +216,7 @@ function getFldTypeandLengthValue($label,$typeofdata)
         {
                 $fieldtype = '11';
         }
+	$log->debug("Exiting getFldTypeandLengthValue method ...");
 	return $fieldtype;
 }
 ?>

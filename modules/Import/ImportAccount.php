@@ -29,7 +29,7 @@ require_once('modules/Emails/Email.php');
 require_once('modules/Accounts/Account.php');
 require_once('include/ComboUtil.php');
 
-// Account is used to store account information.
+// Account is used to store vtiger_account information.
 class ImportAccount extends Account {
 	 var $db;
 
@@ -39,7 +39,7 @@ class ImportAccount extends Account {
 	//$comboFieldArray = getComboArray($comboFieldNames);
 
 
-	// This is the list of fields that are required.
+	// This is the list of vtiger_fields that are required.
 	var $required_fields =  array("accountname"=>1);
 	
 	// This is the list of the functions to run when importing
@@ -49,7 +49,7 @@ class ImportAccount extends Account {
 						//,"fix_website"
 				       );
 
-
+	/*
 	function fix_website()
 	{
 		if ( isset($this->website) &&
@@ -118,9 +118,9 @@ class ImportAccount extends Account {
 				" ". $this->shipping_address_street_4; 
 		} 
 	}
+	*/
 
-
-	// This is the list of fields that are importable.
+	// This is the list of vtiger_fields that are importable.
 	// some if these do not map directly to database columns
 	/*var $importable_fields = Array(
 		"id"=>1
@@ -162,6 +162,8 @@ class ImportAccount extends Account {
 
 		var $importable_fields = Array();
 
+		/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
+		 */
 	function ImportAccount() {
 		
 		$this->log = LoggerManager::getLogger('import_account');

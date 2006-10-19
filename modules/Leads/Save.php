@@ -19,12 +19,13 @@ require_once('include/database/PearDatabase.php');
 require_once('include/utils/UserInfoUtil.php');
 
 $local_log =& LoggerManager::getLogger('index');
-global $log;
+global $log,$adb;
 $focus = new Lead();
 global $current_user;
 $currencyid=fetchCurrency($current_user->id);
-$curr_symbol=getCurrencySymbol($currencyid);
-$rate = getConversionRate($currencyid,$curr_symbol);
+$rate_symbol = getCurrencySymbolandCRate($currencyid);
+$rate = $rate_symbol['rate'];
+$curr_symbol=$rate_symbol['symbol'];
 
 if(isset($_REQUEST['record']))
 {
@@ -57,6 +58,7 @@ $focus->save("Leads");
 
 $return_id = $focus->id;
 	 $log->info("the return id is ".$return_id);
+if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
 if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
 else $return_module = "Leads";
 if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
@@ -67,12 +69,26 @@ $local_log->debug("Saved record with id of ".$return_id);
 //code added for returning back to the current view after edit from list view
 if($_REQUEST['return_viewname'] == '') $return_viewname='0';
 if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
 
-//Code to save the custom field info into database
+if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] == "Campaigns")
+{
+	if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "")
+	{
+		$sql = "insert into vtiger_campaignleadrel values (".$_REQUEST['return_id'].",".$focus->id.")";
+		$adb->query($sql);
+	}
+}
+
+
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&parenttab=$parenttab&viewname=$return_viewname");
+
+/** Function to save the Lead custom fields info into database
+ *  @param integer $entity_id - leadid
+*/
 function save_customfields($entity_id)
 {
-	 $log->debug("save custom field invoked ".$entity_id);
+	$log->debug("Entering save_customfields(".$entity_id.") method ...");
+	 $log->debug("save custom vtiger_field invoked ".$entity_id);
 	global $adb;
 	$dbquery="select * from customfields where module='Leads'";
 	$result = $adb->query($dbquery);
@@ -145,5 +161,6 @@ function save_customfields($entity_id)
 		}
 		
 	}
+	$log->debug("Exiting save_customfields method ...");	
 }
 ?>

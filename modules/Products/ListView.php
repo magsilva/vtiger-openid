@@ -11,6 +11,7 @@
 require_once('include/database/PearDatabase.php');
 require_once('Smarty_setup.php');
 require_once('modules/Products/Product.php');
+require_once('include/ListView/ListView.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
@@ -36,20 +37,30 @@ $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 $other_text = Array();
 
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
+
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
 $url_string = '&smodule=PRODUCTS'; // assigning http url string
 
 $focus = new Product();
 
 //<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['PRODUCTS_ORDER_BY'] != '')?($_SESSION['PRODUCTS_ORDER_BY']):($focus->default_order_by));
-
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['PRODUCTS_SORT_ORDER'] != '')?($_SESSION['PRODUCTS_SORT_ORDER']):($focus->default_sort_order));
+$sorder = $focus->getSortOrder();
+$order_by = $focus->getOrderBy();
 
 $_SESSION['PRODUCTS_ORDER_BY'] = $order_by;
 $_SESSION['PRODUCTS_SORT_ORDER'] = $sorder;
@@ -58,22 +69,11 @@ $_SESSION['PRODUCTS_SORT_ORDER'] = $sorder;
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] != '' && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
-	
-	$url_string .="&query=true";
-	
-	if (isset($_REQUEST['productname'])) $productname = $_REQUEST['productname'];
-        if (isset($_REQUEST['productcode'])) $productcode = $_REQUEST['productcode'];
-        if (isset($_REQUEST['commissionrate'])) $commissionrate = $_REQUEST['commissionrate'];
-	if (isset($_REQUEST['qtyperunit'])) $qtyperunit = $_REQUEST['qtyperunit'];
-        if (isset($_REQUEST['unitprice'])) $unitprice = $_REQUEST['unitprice'];
-        if (isset($_REQUEST['manufacturer'])) $manufacturer = $_REQUEST['manufacturer'];
-        if (isset($_REQUEST['productcategory'])) $productcategory = $_REQUEST['productcategory'];
-	if (isset($_REQUEST['start_date'])) $start_date = $_REQUEST['start_date'];
-        if (isset($_REQUEST['expiry_date'])) $expiry_date = $_REQUEST['expiry_date'];
-        if (isset($_REQUEST['purchase_date'])) $purchase_date = $_REQUEST['purchase_date'];
-
-	$log->info("Here is the where clause for the list view: $where");
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
+        // we have a query
+        $url_string .="&query=true".$ustring;
+        $log->info("Here is the where clause for the list view: $where");
+	$smarty->assign("SEARCH_URL",$url_string);
 }
 
 //<<<<cutomview>>>>>>>
@@ -82,12 +82,14 @@ $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
 //<<<<<customview>>>>>
+
+$smarty->assign("CHANGE_OWNER",getUserslist());
 if($viewnamedesc['viewname'] == 'All')
 {
 	$smarty->assign("ALL", 'All');
 }
 
-if(isPermitted('Products',2,'') == 'yes')
+if(isPermitted('Products','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
 }
@@ -119,24 +121,18 @@ if(isset($order_by) && $order_by != '')
         $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 }
 
-$list_result = $adb->query($list_query);
-
-
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query("select count(*) count ".substr($list_query, strpos($list_query,'FROM'),strlen($list_query)));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-        $start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-        $start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
+
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
 
@@ -145,6 +141,13 @@ $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
 
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+$list_result = $adb->query($list_query. " limit ".$limit_start_rec.",".$list_max_entries_per_page);
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
@@ -164,6 +167,10 @@ $smarty->assign("SELECT_SCRIPT", $view_script);
 
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Products","index",$viewid);
 $alphabetical = AlphabeticalSearch($currentModule,'index','productname','true','basic',"","","","",$viewid);
+$fieldnames = getAdvSearchfields($module);
+$criteria = getcriteria_options();
+$smarty->assign("CRITERIA", $criteria);
+$smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
@@ -171,6 +178,8 @@ $smarty->assign("CUSTOMVIEW_OPTION",$customviewcombo_html);
 $smarty->assign("VIEWID", $viewid);
 $smarty->assign("BUTTONS", $other_text);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

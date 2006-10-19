@@ -33,9 +33,9 @@ $mod_strings = Array(
 'LBL_LIST_DATE'=>'Date Sent',
 'LBL_LIST_TIME'=>'Time Sent',
 
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
 'LBL_DATE_SENT'=>'Date Sent:',
-'LBL_SUBJECT'=>'Subject:',
+'LBL_SUBJECT'=>'Subject :',
 'LBL_BODY'=>'Body:',
 'LBL_DATE_AND_TIME'=>'Date & Time Sent:',
 'LBL_DATE'=>'Date Sent:',
@@ -45,6 +45,27 @@ $mod_strings = Array(
 'LBL_CONTACT_NAME'=>' Contact Name: ',
 'LBL_EMAIL'=>'Email:',  
 'LBL_COLON'=>':',
+'LBL_CHK_MAIL'=>'Check Mail',
+'LBL_COMPOSE'=>'Compose',
+'LBL_SETTINGS'=>'Settings',
+'LBL_EMAIL_FOLDERS'=>'Email Folders',
+'LBL_INBOX'=>'Inbox',
+'LBL_SENT_MAILS'=>'Sent Mails',
+'LBL_TRASH'=>'Trash',
+'LBL_JUNK_MAILS'=>'Junk Mails',
+'LBL_TO_LEADS'=>'To Leads',
+'LBL_TO_CONTACTS'=>'To Contacts',
+'LBL_TO_ACCOUNTS'=>'To Accounts',
+'LBL_MY_MAILS'=>'My Mails',
+'LBL_QUAL_CONTACT'=>'Qualified Mails (As Contacts)',
+'LBL_MAILS'=>'Mails',
+'LBL_QUALIFY_BUTTON'=>'Qualify',
+'LBL_REPLY_BUTTON'=>'Reply',
+'LBL_FORWARD_BUTTON'=>'Forward',
+'LBL_DOWNLOAD_ATTCH_BUTTON'=>'Download Attachments',
+'LBL_FROM'=>'From :',
+'LBL_CC'=>'Cc :',
+'LBL_BCC'=>'Bcc :',
 
 'NTC_REMOVE_INVITEE'=>'Are you sure you want to remove this recipient from the email?',
 'LBL_INVITEE'=>'Recipients',
@@ -78,7 +99,7 @@ $mod_strings = Array(
 'LBL_NEW_ACCOUNT'=>'New Account',
 'LBL_ACCOUNT_TITLE'=>'Accounts',
 
-// Added fields after vtiger4 - Beta
+// Added vtiger_fields after vtiger4 - Beta
 'LBL_USER_TITLE'=>'Users',
 'LBL_NEW_USER'=>'New User',
 
@@ -113,7 +134,20 @@ $mod_strings = Array(
 'LBL_WEBMAILS_TITLE'=>'WebMails',
 'LBL_EMAILS_TITLE'=>'Emails',
 'LBL_MAIL_CONNECT_ERROR_INFO'=>'Error connecting mail server!<br> Check in My Accounts->List Mail Server -> List Mail Account',
-
+'LBL_ALLMAILS'=>'All Mails',
+'LBL_TO_USERS'=>'To Users',
+'LBL_TO'=>'To:',
+'LBL_IN_SUBJECT'=>'in Subject',
+'LBL_IN_SENDER'=>'in Sender',
+'LBL_IN_SUBJECT_OR_SENDER'=>'in Subject or Sender',
+'SELECT_EMAIL'=>'Select Email IDs',
+'Sender'=>'Sender',
+'LBL_CONFIGURE_MAIL_SETTINGS'=>'Your Incoming Mail Server is not configured',
+'LBL_MAILSELECT_INFO'=>'has the follwoing Email IDs associated.Please Select the Email IDs to which,the mail should be sent',
+'LBL_MAILSELECT_INFO1'=>'The following Email ID types are associated to the selected',
+'LBL_MAILSELECT_INFO2'=>'Select the Email ID types to which,the email should be sent',
+'LBL_MULTIPLE'=>'Multiple',
+'LBL_COMPOSE_EMAIL'=>'Compose E-Mail',
 );
 
 ?>

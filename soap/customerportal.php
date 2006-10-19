@@ -25,7 +25,7 @@ $server->configureWSDL('vtigersoap');
 
 
 
-//Field array for troubletickets
+//Field array for vtiger_troubletickets
 $server->wsdl->addComplexType(
 	'tickets_list_array',
 	'complexType',
@@ -148,6 +148,36 @@ $server->wsdl->addComplexType(
              )
 );
 
+//Added for ticket vtiger_attachments
+$server->wsdl->addComplexType(
+        'get_ticket_attachments_array',
+        'complexType',
+        'array',
+        '',
+        array(
+                'files' => array(
+					'fileid'=>'xsd:string','type'=>'tns:xsd:string',
+					'filename'=>'xsd:string','type'=>'tns:xsd:string',
+					'filesize'=>'xsd:string','type'=>'tns:xsd:string',
+					'filetype'=>'xsd:string','type'=>'tns:xsd:string',
+					'filecontents'=>'xsd:string','type'=>'tns:xsd:string'
+				),
+             )
+);
+
+$server->wsdl->addComplexType(
+        'add_ticket_attachment_array',
+        'complexType',
+        'array',
+        '',
+        array(
+                'ticketid' => array('name'=>'ticketid','type'=>'xsd:string'),
+                'filename' => array('name'=>'filename','type'=>'xsd:string'),
+                'filetype' => array('name'=>'filetype','type'=>'xsd:string'),
+                'filesize' => array('name'=>'filesize','type'=>'xsd:string'),
+                'filecontents' => array('name'=>'filecontents','type'=>'xsd:string'),
+             )
+);
 
 
 
@@ -240,8 +270,24 @@ $server->register(
 	array('return'=>'tns:get_picklists_array'),
 	$NAMESPACE);
 
+$server->register(
+	'get_ticket_attachments',
+	array('id'=>'xsd:string','ticketid'=>'xsd:string'),
+	array('return'=>'tns:get_ticket_attachments_array'),
+	$NAMESPACE);
+
+$server->register(
+	'add_ticket_attachment',
+	array('ticketid'=>'xsd:string','filename'=>'xsd:string','filetype'=>'xsd:string','filesize'=>'xsd:string','filecontents'=>'xsd:string'),
+	array('return'=>'tns:add_ticket_attachment_array'),
+	$NAMESPACE);
 
 
+
+/**	function used to get the list of ticket comments
+ *	@param int $ticketid - ticket id
+ *	return array $response - ticket comments and details as a array with elements comments, owner and createdtime which will be returned from the function get_ticket_comments_list
+ */
 function get_ticket_comments($ticketid)
 {
 	$seed_ticket = new HelpDesk();
@@ -251,11 +297,16 @@ function get_ticket_comments($ticketid)
 
 	return $response;
 }
+
+/**	function used to get the combo values ie., picklist values of the HelpDesk module and also the list of products
+ *	@param string $id - empty string (we wont use this value, just an input element)
+ *	return array $output - array which contains the product id, product name, ticketpriorities, ticketseverities, ticketcategories and module owners list
+ */
 function get_combo_values($id)
 {
 	global $adb;
 	$output = Array();
-	$sql = "select * from products inner join crmentity on crmentity.crmid=products.productid where crmentity.deleted=0";
+	$sql = "select * from vtiger_products inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_products.productid where vtiger_crmentity.deleted=0";
 	$result = $adb->query($sql);
 	$noofrows = $adb->num_rows($result);
 	for($i=0;$i<$noofrows;$i++)
@@ -264,26 +315,26 @@ function get_combo_values($id)
                 $output['productname']['productname'][$i] = $adb->query_result($result,$i,"productname");
         }
 
-	$result1 = $adb->query("select * from ticketpriorities");
+	$result1 = $adb->query("select * from vtiger_ticketpriorities");
 	for($i=0;$i<$adb->num_rows($result1);$i++)
 	{
 		$output['ticketpriorities']['ticketpriorities'][$i] = $adb->query_result($result1,$i,"ticketpriorities");
 	}
 
-        $result2 = $adb->query("select * from ticketseverities");
+        $result2 = $adb->query("select * from vtiger_ticketseverities");
         for($i=0;$i<$adb->num_rows($result2);$i++)
         {
                 $output['ticketseverities']['ticketseverities'][$i] = $adb->query_result($result2,$i,"ticketseverities");
         }
 
-        $result3 = $adb->query("select * from ticketcategories");
+        $result3 = $adb->query("select * from vtiger_ticketcategories");
         for($i=0;$i<$adb->num_rows($result3);$i++)
         {
                 $output['ticketcategories']['ticketcategories'][$i] = $adb->query_result($result3,$i,"ticketcategories");
         }
 
 	//Added to get the modules list -- september 10 2005
-        $sql2 = "select moduleowners.*,tab.name from moduleowners inner join tab on moduleowners.tabid = tab.tabid order by tab.tabsequence";
+        $sql2 = "select vtiger_moduleowners.*,vtiger_tab.name from vtiger_moduleowners inner join vtiger_tab on vtiger_moduleowners.tabid = vtiger_tab.tabid order by vtiger_tab.tabsequence";
         $result4 = $adb->query($sql2);
 	for($i=0;$i<$adb->num_rows($result4);$i++)
         {
@@ -292,11 +343,16 @@ function get_combo_values($id)
 
 	return $output;
 }
+
+/**	function to get the Knowledge base details
+ *	@param string $id - empty string (we wont use this value, just an input element)
+ *	return array $result - array which contains the faqcategory, all product ids , product names and all faq details
+ */
 function get_KBase_details($id='')
 {
 	global $adb;
 
-	$category_query = "select * from faqcategories";
+	$category_query = "select * from vtiger_faqcategories";
 	$category_result = $adb->query($category_query);
 	$category_noofrows = $adb->num_rows($category_result);
 	for($j=0;$j<$category_noofrows;$j++)
@@ -305,7 +361,7 @@ function get_KBase_details($id='')
 		$result['faqcategory'][$j] = $faqcategory;
 	}
 
-	$product_query = "select * from products inner join crmentity on crmentity.crmid=products.productid where crmentity.deleted=0";
+	$product_query = "select * from vtiger_products inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_products.productid where vtiger_crmentity.deleted=0";
         $product_result = $adb->query($product_query);
         $product_noofrows = $adb->num_rows($product_result);
         for($i=0;$i<$product_noofrows;$i++)
@@ -316,7 +372,7 @@ function get_KBase_details($id='')
                 $result['product'][$i]['productname'] = $productname;
 	}
 
-	$faq_query = "select faq.*, crmentity.createdtime, crmentity.modifiedtime from faq inner join crmentity on crmentity.crmid=faq.id where crmentity.deleted=0 and faq.status='Published' order by crmentity.modifiedtime DESC";
+	$faq_query = "select vtiger_faq.*, vtiger_crmentity.createdtime, vtiger_crmentity.modifiedtime from vtiger_faq inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_faq.id where vtiger_crmentity.deleted=0 and vtiger_faq.status='Published' order by vtiger_crmentity.modifiedtime DESC";
 	$faq_result = $adb->query($faq_query);
 	$faq_noofrows = $adb->num_rows($faq_result);
 	for($k=0;$k<$faq_noofrows;$k++)
@@ -330,7 +386,7 @@ function get_KBase_details($id='')
 		$result['faq'][$k]['faqcreatedtime'] = $adb->query_result($faq_result,$k,'createdtime');
 		$result['faq'][$k]['faqmodifiedtime'] = $adb->query_result($faq_result,$k,'modifiedtime');
 
-		$faq_comment_query = "select * from faqcomments where faqid=".$faqid." order by createdtime DESC";
+		$faq_comment_query = "select * from vtiger_faqcomments where faqid=".$faqid." order by createdtime DESC";
 		$faq_comment_result = $adb->query($faq_comment_query);
 		$faq_comment_noofrows = $adb->num_rows($faq_comment_result);
 		for($l=0;$l<$faq_comment_noofrows;$l++)
@@ -348,16 +404,31 @@ function get_KBase_details($id='')
 	return $result;
 }
 
-
+/**	function to save the faq comment
+ *	@param int $faqid - faq id
+ *	@param string $comment - comment to be added with the FAQ
+ *	return array $result - This function will call get_KBase_details and return that array
+ */
 function save_faq_comment($faqid,$comment)
 {
 	global $adb;
-	$createdtime = date('Y-m-d H:i:s');
-	$faq_query = "insert into faqcomments values('',".$faqid.",'".$comment."','".$createdtime."')";
-	$adb->query($faq_query);
+	$createdtime = $adb->formatDate(date('YmdHis'));	
+	if(trim($comment) != '')
+	{
+		$faq_query = "insert into vtiger_faqcomments values('',".$faqid.",'".$comment."',".$createdtime.")";
+		$adb->query($faq_query);
+	}
 	$result = get_KBase_details('');
 	return $result;
 }
+
+/**	function used to get the tickets list
+ *	@param string $user_name - customer name who has loggedin in the customer portal
+ *	@param int $id - customer id ie., contact id who has loggedin in the customer portal
+ *	@param string $where - where condition to get the tickets based on this condition if the customer enter the search criteria where as this is optional
+ *	@param string $match - all or any, which will be entered when the customer entered multiple search conditions and whether we want to search all or any of the give conditions
+ *	return array $output_list - This function will call get_user_tickets_list function and return the array with the ticket details
+ */
 function get_tickets_list($user_name,$id,$where='',$match='')
 {
 
@@ -395,6 +466,18 @@ function get_tickets_list($user_name,$id,$where='',$match='')
     return $output_list;
 }
 
+/**	function used to create ticket which has been created from customer portal
+ *	@param string $title - title of the ticket
+ *	@param string $description - description of the ticket
+ *	@param string $priority - priority of the ticket
+ *	@param string $severity - severity of the ticket
+ *	@param string $category - category of the ticket
+ *	@param string $user_name - customer name
+ *	@param string $parent_id - parent id ie., customer id as this customer is the parent for this ticket
+ *	@param string $product_id - product id for the ticket
+ *	@param string $module - module name where as based on this module we will get the module owner and assign this ticket to that corresponding user
+ *	return array - currently created ticket array, if this is not created then all tickets list will be returned
+ */
 function create_ticket($title,$description,$priority,$severity,$category,$user_name,$parent_id,$product_id,$module)
 {
 	global $adb;
@@ -414,11 +497,11 @@ function create_ticket($title,$description,$priority,$severity,$category,$user_n
 	$ticket->column_fields[parent_id]=$parent_id;
 	$ticket->column_fields[product_id]=$product_id;
 
-	//Added to get the user based on module from moduleowners -- 10-11-2005
+	//Added to get the user based on module from vtiger_moduleowners -- 10-11-2005
 	$user_id = 1;//Default admin user id
 	if($module != '')
 	{
-		$res = $adb->query("select moduleowners.*, tab.name from moduleowners inner join tab on moduleowners.tabid = tab.tabid where name='".$module."'");
+		$res = $adb->query("select vtiger_moduleowners.*, vtiger_tab.name from vtiger_moduleowners inner join vtiger_tab on vtiger_moduleowners.tabid = vtiger_tab.tabid where name='".$module."'");
 		if($adb->num_rows($res) > 0)
 		{
 			$user_id = $adb->query_result($res,0,"user_id");
@@ -433,7 +516,7 @@ function create_ticket($title,$description,$priority,$severity,$category,$user_n
 	$contents = ' Ticket ID : '.$ticket->id.'<br> Ticket Title : '.$title.'<br><br>'.$description;
 
 	//get the contact email id who creates the ticket from portal and use this email as from email id in email
-	$result = $adb->query("select email from contactdetails where contactid=".$parent_id);
+	$result = $adb->query("select email from vtiger_contactdetails where contactid=".$parent_id);
 	$contact_email = $adb->query_result($result,0,'email');
 	$from_email = $contact_email;
 
@@ -468,32 +551,52 @@ function create_ticket($title,$description,$priority,$severity,$category,$user_n
 	//return $tickets_list;
 	//return $ticket->id;
 }
+
+/**	function used to update the ticket comment which is added from the customer portal
+ *	@param int $ticketid - ticket id
+ *	@param int $ownerid - customer ie., contact id who has added this ticket comment
+ *	@param string $comments - comment which is added from the customer portal
+ *	return void
+ */
 function update_ticket_comment($ticketid,$ownerid,$comments)
 {
 	global $adb;
-	$servercreatedtime = date("Y-m-d H:i:s");
-	$sql = "insert into ticketcomments values('',".$ticketid.",'".$comments."','".$ownerid."','customer','".$servercreatedtime."')";
-	$adb->query($sql);
-
-	$updatequery = "update crmentity set modifiedtime = '".$servercreatedtime."' where crmid=".$ticketid;
-	$adb->query($updatequery);
+	$servercreatedtime = $adb->formatDate(date('YmdHis'));
+  	if(trim($comments) != '')
+  	{
+ 		$sql = "insert into vtiger_ticketcomments values('',".$ticketid.",'".$comments."','".$ownerid."','customer',".$servercreatedtime.")";
+  		$adb->query($sql);
+  
+ 		$updatequery = "update vtiger_crmentity set modifiedtime=".$servercreatedtime." where crmid=".$ticketid;
+  		$adb->query($updatequery);
+  	}	
 }
 
+/**	function used to close the ticket
+ *	@param int $ticketid - ticket id
+ *	return string - success or failure message will be returned based on the ticket close update query
+ */
 function close_current_ticket($ticketid)
 {
 	global $adb;
-	$sql = "update troubletickets set status='Closed' where ticketid=".$ticketid;
+	$sql = "update vtiger_troubletickets set status='Closed' where ticketid=".$ticketid;
 	$result = $adb->query($sql);
 	if($result)
 		return "<br><b>Ticket status is updated as 'Closed'.</b>";
 	else
 		return "<br><b>Ticket could not be closed.</br>";
 }
+
+/**	function used to authenticate whether the customer has access or not
+ *	@param string $username - customer name for the customer portal
+ *	@param string $password - password for the customer portal
+ *	return array $list - returns array with all the customer details
+ */
 function authenticate_user($username,$password)
 {
 	global $adb;
 	$current_date = date("Y-m-d");
-	$sql = "select id, user_name, user_password,last_login_time, support_start_date, support_end_date from portalinfo inner join customerdetails on portalinfo.id=customerdetails.customerid inner join crmentity on crmentity.crmid=portalinfo.id where crmentity.deleted=0 and user_name='".$username."' and user_password = '".$password."' and isactive=1 and customerdetails.support_end_date >= '".$current_date."'";
+	$sql = "select id, user_name, user_password,last_login_time, support_start_date, support_end_date from vtiger_portalinfo inner join vtiger_customerdetails on vtiger_portalinfo.id=vtiger_customerdetails.customerid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_portalinfo.id where vtiger_crmentity.deleted=0 and user_name='".$username."' and user_password = '".$password."' and isactive=1 and vtiger_customerdetails.support_end_date >= '".$current_date."'";
 	$result = $adb->query($sql);	
 	$list['id'] = $adb->query_result($result,0,'id');
 	$list['user_name'] = $adb->query_result($result,0,'user_name');
@@ -505,49 +608,66 @@ function authenticate_user($username,$password)
 	return $list;
 }
 
+/**	function used to change the password for the customer portal
+ *	@param int $id - customer id ie., contact id
+ *	@param string $username - customer name
+ *	@param string $password - new password to change
+ *	return array $list - returns array with all the customer details
+ */
 function change_password($id,$username,$password)
 {
 	global $adb;
-	$sql = "update portalinfo set user_password='".$password."' where id=".$id." and user_name='".$username."'";
+	$sql = "update vtiger_portalinfo set user_password='".$password."' where id=".$id." and user_name='".$username."'";
 	$result = $adb->query($sql);
 
 	$list = authenticate_user($username,$password);
 
         return $list;
 }
+
+/**	function used to update the login details for the customer
+ *	@param int $id - customer id
+ *	@param $flag - login/logout, based on the login login or logout time will be updated for the customer
+ *	return $list - empty value
+ */
 function update_login_details($id,$flag)
 {
         global $adb;
-	$current_time = date("Y-m-d H:i:s");
+	$current_time = $adb->formatDate(date('YmdHis'));	
 
 	if($flag == 'login')
 	{
-	        $sql = "update portalinfo set login_time='".$current_time."' where id=".$id;
+	       	$sql = "update vtiger_portalinfo set login_time=".$current_time." where id=".$id; 
 	        $result = $adb->query($sql);
 	}
 	elseif($flag == 'logout')
 	{
-		$sql = "select * from portalinfo where id=".$id;
+		$sql = "select * from vtiger_portalinfo where id=".$id;
                 $result = $adb->query($sql);
                 if($adb->num_rows($result) != 0)
                         $last_login = $adb->query_result($result,0,'login_time');
 
-		$sql = "update portalinfo set logout_time = '".$current_time."', last_login_time='".$last_login."' where id=".$id;
+		$sql = "update vtiger_portalinfo set logout_time=".$current_time.", last_login_time='".$last_login."' where id=".$id;	
 		$result = $adb->query($sql);
 	}
 
         return $list;
 }
+
+/**	function used to send mail to the customer when he forgot the password and want to retrieve the password
+ *	@param string $mailid - email address of the customer
+ *	return message about the mail sending whether entered mail id is correct or not or is there any problem in mail sending
+ */
 function send_mail_for_password($mailid)
 {
 	global $adb;
 
-	$sql = "select * from portalinfo  where user_name='".$mailid."'";
+	$sql = "select * from vtiger_portalinfo  where user_name='".$mailid."'";
 	$user_name = $adb->query_result($adb->query($sql),0,'user_name');
 	$password = $adb->query_result($adb->query($sql),0,'user_password');
 	$isactive = $adb->query_result($adb->query($sql),0,'isactive');
 
-	$fromquery = "select users.user_name, users.email1 from users inner join crmentity on users.id = crmentity.smownerid inner join contactdetails on contactdetails.contactid=crmentity.crmid where contactdetails.email ='".$mailid."'";
+	$fromquery = "select vtiger_users.user_name, vtiger_users.email1 from vtiger_users inner join vtiger_crmentity on vtiger_users.id = vtiger_crmentity.smownerid inner join vtiger_contactdetails on vtiger_contactdetails.contactid=vtiger_crmentity.crmid where vtiger_contactdetails.email ='".$mailid."'";
 	$initialfrom = $adb->query_result($adb->query($fromquery),0,'user_name');
 	$from = $adb->query_result($adb->query($fromquery),0,'email1');
 
@@ -561,7 +681,7 @@ function send_mail_for_password($mailid)
         $mail->Body    = $contents;
         $mail->IsSMTP();
 
-        $mailserverresult = $adb->query("select * from systems where server_type='email'");
+        $mailserverresult = $adb->query("select * from vtiger_systems where server_type='email'");
         $mail_server = $adb->query_result($mailserverresult,0,'server');
         $mail_server_username = $adb->query_result($mailserverresult,0,'server_username');
         $mail_server_password = $adb->query_result($mailserverresult,0,'server_password');
@@ -602,29 +722,117 @@ function send_mail_for_password($mailid)
 
 }
 
+/**	function used to get the ticket creater 
+ *	@param int $ticketid - ticket id
+ *	return int $creator - ticket created user id will be returned ie., smcreatorid from crmentity table
+ */
 function get_ticket_creator($ticketid)
 {
 	global $adb;
 
-	$res = $adb->query("select smcreatorid from crmentity where crmid=".$ticketid);
+	$res = $adb->query("select smcreatorid from vtiger_crmentity where crmid=".$ticketid);
 	$creator = $adb->query_result($res,0,'smcreatorid');
 
 	return $creator;
 }
 
+/**	function used to get the picklist values
+ *	@param string $picklist_name - picklist name you want to retrieve from database
+ *	return array $picklist_array - all values of the corresponding picklist will be returned as a array
+ */
 function get_picklists($picklist_name)
 {
-	global $adb;
+	global $adb, $log;
+	$log->debug("Entering into function get_picklists($picklist_name)");
+	
 	$picklist_array = Array();
 
-	$res = $adb->query("select * from ".$picklist_name);
+	$res = $adb->query("select * from vtiger_".$picklist_name);
 	for($i=0;$i<$adb->num_rows($res);$i++)
 	{
 		$picklist_val = $adb->query_result($res,$i,$picklist_name);
 		$picklist_array[$i] = $picklist_val;
 	}
 
+	$log->debug("Exit from function get_picklists($picklist_name)");
 	return $picklist_array;
+}
+
+/**	function to get the attachments of a ticket
+ *	@param int $userid - customer id
+ *	@param int $ticketid - ticket id
+ *	return array $output - This will return all the file details related to the ticket
+ */
+function get_ticket_attachments($userid,$ticketid)
+{
+
+	global $adb;
+
+	$query = "select vtiger_troubletickets.ticketid, vtiger_attachments.* from vtiger_troubletickets inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.crmid = vtiger_troubletickets.ticketid inner join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid where vtiger_troubletickets.ticketid=".$ticketid;
+	$res = $adb->query($query);
+	$noofrows = $adb->num_rows($res);
+
+	for($i=0;$i<$noofrows;$i++)
+	{
+		$filename = $adb->query_result($res,$i,'name');
+		$filepath = $adb->query_result($res,$i,'path');
+
+		$fileid = $adb->query_result($res,$i,'attachmentsid');
+		$filesize = filesize($filepath.$fileid."_".$filename);
+		$filetype = $adb->query_result($res,$i,'type');
+
+		$filecontents = base64_encode(file_get_contents($filepath.$fileid."_".$filename));//fread(fopen($filepath.$filename, "r"), $filesize));
+
+		$output[$i]['fileid'] = $fileid;
+		$output[$i]['filename'] = $filename;
+		$output[$i]['filetype'] = $filetype;
+		$output[$i]['filesize'] = $filesize;
+		$output[$i]['filecontents'] = $filecontents;
+	}
+
+	return $output;
+}
+
+/**	function to add attachment for a ticket ie., the passed contents will be write in a file and the details will be stored in database
+ *	@param int $ticketid - ticket id
+ *	@param string $filename - file name to be attached with the ticket
+ *	@param string $filetype - file type
+ *	@param int $filesize - file size
+ *	@param string $filecontents - file contents as base64 encoded format
+ *	return void
+ */
+function add_ticket_attachment($ticketid, $filename, $filetype, $filesize, $filecontents)
+{
+	global $adb;
+	global $root_directory;
+
+	//decide the file path where we should upload the file in the server
+	$upload_filepath = decideFilePath();
+
+	$attachmentid = $adb->getUniqueID("vtiger_crmentity");
+
+	$new_filename = $attachmentid.'_'.$filename;
+
+	$data = base64_decode($filecontents);
+
+	//write a file with the passed content
+	$handle = @fopen($upload_filepath.$new_filename,'w');
+	fputs($handle, $data);
+	fclose($handle);	
+
+	//Now store this file information in db and relate with the ticket
+	$date_var = $adb->formatDate(date('YmdHis'));
+  	$description = 'CustomerPortal Attachment';
+  
+ 	$crmquery = "insert into vtiger_crmentity (crmid,setype,description,createdtime) values('".$attachmentid."','HelpDesk Attachment','".$description."',".$date_var.")";
+	$crmresult = $adb->query($crmquery);
+
+	$attachmentquery = "insert into vtiger_attachments values(".$attachmentid.",'".$filename."','".$description."','".$filetype."','".$upload_filepath."')";
+	$attachmentreulst = $adb->query($attachmentquery);
+
+	$relatedquery = $sql1 = "insert into vtiger_seattachmentsrel values('".$ticketid."','".$attachmentid."')";
+	$relatedresult = $adb->query($relatedquery);
+
 }
 
 /* Begin the HTTP listener service and exit. */ 

@@ -550,8 +550,7 @@ class dbTable extends dbObject {
 					}
 				}
 			}
-		}
-		
+		}		
 		if( empty( $legacy_fields ) && !isset($this->alter)) { // GS Fix for constraint impl
 			// Create the new table
 			$sql[] = $xmls->dict->CreateTableSQL( $this->name, $fldarray, $this->opts );

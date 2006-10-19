@@ -18,7 +18,7 @@ require_once('modules/HelpDesk/HelpDesk.php');
 $log = &LoggerManager::getLogger('webforms');
 
 //$serializer = new XML_Serializer();
-$NAMESPACE = 'http://www.vtigercrm.com/vtigercrm';
+$NAMESPACE = 'http://www.vtiger.com/vtigercrm/';
 $server = new soap_server;
 
 $server->configureWSDL('vtigersoap');
@@ -52,7 +52,25 @@ $server->register(
 	array('return'=>'xsd:string'),
 	$NAMESPACE);
 
+$server->register(
+	'unsubscribe_email',
+	array(
+		'email_address'=>'xsd:string'
+	     ),
+	array('return'=>'xsd:string'),
+	$NAMESPACE);
 
+
+/**	function used to create lead from webform from the passed details
+ *	@param string $lastname	- last name of the lead
+ *	@param string $email - email of the lead
+ *	@param string $phone - phone number of the lead
+ *	@param string $company - company name of the lead
+ *	@param string $country - country name of the lead
+ *	@param string $description - description to create a lead
+ *	@param int $assigned_user_id - assigned to user for the lead
+ *	return message success or failure about the lead creation 
+ */
 function create_lead_from_webform($lastname, $email, $phone, $company, $country, $description, $assigned_user_id)
 {
 	global $adb;
@@ -61,7 +79,7 @@ function create_lead_from_webform($lastname, $email, $phone, $company, $country,
 	if($assigned_user_id == '')
 	{
 		//if the user id is empty then assign it to the admin user
-		$assigned_user_id = $adb->query_result($adb->query("select id from users where user_name='admin'"),0,'id');
+		$assigned_user_id = $adb->query_result($adb->query("select id from vtiger_users where user_name='admin'"),0,'id');
 	}
 
 	require_once("modules/Leads/Lead.php");
@@ -87,6 +105,16 @@ function create_lead_from_webform($lastname, $email, $phone, $company, $country,
 	return $msg;
 }
 
+/**	function used to create contact from webform from the passed details
+ *	@param string $first_name	- first name to create contact
+ *	@param string $last_name	- last name to create contact
+ *	@param string $email_address - email address to create contact
+ *	@param string $home_phone - phone number of home to create contact
+ *	@param string $department - department to create contact
+ *	@param string $description - description to create contact
+ *	@param int $assigned_user_id - assigned to user for the contact
+ *	return message success or failure about the contact creation 
+ */
 function create_contact_from_webform($first_name, $last_name, $email_address, $home_phone, $department,$description, $assigned_user_id)
 {
 	global $adb;
@@ -95,7 +123,7 @@ function create_contact_from_webform($first_name, $last_name, $email_address, $h
 	if($assigned_user_id == '')
 	{
 		//if the user id is empty then assign it to the admin user
-		$assigned_user_id = $adb->query_result($adb->query("select id from users where user_name='admin'"),0,'id');
+		$assigned_user_id = $adb->query_result($adb->query("select id from vtiger_users where user_name='admin'"),0,'id');
 	}
 
 	require_once('modules/Contacts/Contact.php');
@@ -122,7 +150,39 @@ function create_contact_from_webform($first_name, $last_name, $email_address, $h
 	return $msg;
 }
 
+/**	function used to unsubscribe the mail
+ *	@param string $emailid - email address to unsubscribe
+ *	return message about the success or failure status about the unsubscribe
+ */
+function unsubscribe_email($emailid)
+{
+	global $adb;
+	$adb->println("Enter into the function unsubscribe_email($emailid)");
+	
+	$contact_res = $adb->query("select emailoptout from vtiger_contactdetails where email=\"$emailid\"");
+	$contact_noofrows = $adb->num_rows($contact_res);
+	$emailoptout = $adb->query_result($contact_res,0,'emailoptout');
 
+	if($contact_noofrows > 0)
+	{
+		if($emailoptout != 1)
+		{
+			$adb->query("update vtiger_contactdetails set emailoptout=1 where email=\"$emailid\"");
+			$msg = "You have been unsubscribed.";
+		}
+		else
+		{
+			$msg = "You are already unsubscribed.";
+		}
+	}
+	else
+	{
+		$msg = "There are no record available for this mail address.";
+	}
+
+	$adb->println("Exit from the function unsubscribe_email($emailid)");
+	return $msg;
+}
 
 
 //$log->fatal("In soap.php");

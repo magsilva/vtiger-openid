@@ -15,15 +15,15 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Leads/Lead.php');
-require_once('modules/Leads/Forms.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/utils/UserInfoUtil.php');
+require_once('user_privileges/default_module_view.php');
 
 global $mod_strings;
 global $app_strings;
-
+global $currentModule, $singlepane_view;
     global $log;
 $focus = new Lead();
 
@@ -54,39 +54,41 @@ $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
 $smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$smarty->assign("IMAGE_PATH", $image_path);
+$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $smarty->assign("ID", $focus->id);
-$smarty->assign("SINGLE_MOD","Lead");
+$smarty->assign("SINGLE_MOD", 'Lead');
 $smarty->assign("REDIR_MOD","leads");
 
 $smarty->assign("NAME",$focus->lastname.' '.$focus->firstname);
 
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
-$smarty->assign("BLOCKS", getBlocks("Leads","detail_view",'',$focus->column_fields));
+$smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 
+if(useInternalMailer() == 1)
+        $smarty->assign("INT_MAILER","true");
 
-$val = isPermitted("Leads",1,$_REQUEST['record']);
 
-$permissionData = $_SESSION['action_permission_set'];
-if(isPermitted("Leads",1,$_REQUEST['record']) == 'yes')
+$val = isPermitted("Leads","EditView",$_REQUEST['record']);
+
+if(isPermitted("Leads","EditView",$_REQUEST['record']) == 'yes')
 	$smarty->assign("EDIT_DUPLICATE","permitted");
 
-//Security check for Convert Lead Button
-global $profile_id;
-$tab_per_Data = getAllTabsPermission($profile_id);
-$permissionData = $_SESSION['action_permission_set'];
 
-if(isPermitted("Leads",1,$_REQUEST['record']) == 'yes' && $tab_per_Data[getTabid("Accounts")] == 0 && $tab_per_Data[getTabid("Contacts")] == 0 && $permissionData[getTabid("Accounts")][1] == 0 && $permissionData[getTabid("Contacts")][1] ==0)
+if(isPermitted("Leads","ConvertLead") =='yes' && isPermitted("Accounts","EditView") =='yes' && isPermitted("Contacts","EditView"))
+{
 	$smarty->assign("CONVERTLEAD","permitted");
+}
+
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
 
-if(isPermitted("Leads",2,$_REQUEST['record']) == 'yes')
+if(isPermitted("Leads","Delete",$_REQUEST['record']) == 'yes')
 	$smarty->assign("DELETE","permitted");
 
-if(isPermitted("Emails",1,'') == 'yes')
+if(isPermitted("Emails","EditView",'') == 'yes')
 {
 	//Added to pass the parents list as hidden for Emails -- 09-11-2005
 	$parent_email = getEmailParentsList('Leads',$_REQUEST['record']);
@@ -94,7 +96,7 @@ if(isPermitted("Emails",1,'') == 'yes')
 	$smarty->assign("SENDMAILBUTTON","permitted");
 }
 
-if(isPermitted("Leads",8,'') == 'yes') 
+if(isPermitted("Leads","Merge",'') == 'yes') 
 {
 	$smarty->assign("MERGEBUTTON","permitted");
 	$wordTemplateResult = fetchWordTemplateList("Leads");
@@ -102,14 +104,35 @@ if(isPermitted("Leads",8,'') == 'yes')
 	$tempVal = $adb->fetch_array($wordTemplateResult);
 	for($templateCount=0;$templateCount<$tempCount;$templateCount++)
 	{
-		$optionString[] =$tempVal["filename"];
+		$optionString[$tempVal["templateid"]] =$tempVal["filename"];
 		$tempVal = $adb->fetch_array($wordTemplateResult);
 	}
 	$smarty->assign("WORDTEMPLATEOPTIONS",$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']);
         $smarty->assign("TOPTIONS",$optionString);
 }
 
-$smarty->assign("MODULE", $module);
+$tabid = getTabid("Leads");
+$validationData = getDBValidationData($focus->tab_name,$tabid);
+$data = split_validationdataArray($validationData);
+
+$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
+$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
+$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+      
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
+$smarty->assign("MODULE", $currentModule);
+$smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if($singlepane_view == 'true')
+{
+	$related_array = getRelatedLists($currentModule,$focus);
+	$smarty->assign("RELATEDLISTS", $related_array);
+}
+
+$smarty->assign("SinglePane_View", $singlepane_view);
+
 $smarty->display("DetailView.tpl");
 
 ?>

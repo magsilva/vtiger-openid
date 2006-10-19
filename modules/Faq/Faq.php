@@ -28,25 +28,21 @@ require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
 require_once('include/utils/utils.php');
 
-// Faq is used to store faq information.
+// Faq is used to store vtiger_faq information.
 class Faq extends CRMEntity {
 	var $log;
 	var $db;
 
-	// Stored fields
-	var $id;
-	var $mode;
-	
-	var $tab_name = Array('crmentity','faq','faqcomments');
-	var $tab_name_index = Array('crmentity'=>'crmid','faq'=>'id','faqcomments'=>'faqid');
+	var $tab_name = Array('vtiger_crmentity','vtiger_faq','vtiger_faqcomments');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_faq'=>'id','vtiger_faqcomments'=>'faqid');
 				
-	var $entity_table = "crmentity";
+	var $entity_table = "vtiger_crmentity";
 	
 	var $column_fields = Array();
 		
 	var $sortby_fields = Array('question','category','id');		
 
-	// This is the list of fields that are in the lists.
+	// This is the list of vtiger_fields that are in the lists.
 	var $list_fields = Array(
 				'FAQ Id'=>Array('faq'=>'id'),
 				'Question'=>Array('faq'=>'question'),
@@ -66,9 +62,6 @@ class Faq extends CRMEntity {
 				      );
 	var $list_link_field= 'question';
 
-	var $list_mode;
-        var $popup_type;
-
 	var $search_fields = Array(
 				'Account Name'=>Array('account'=>'accountname'),
 				'City'=>Array('accountbillads'=>'bill_city'), 
@@ -83,39 +76,52 @@ class Faq extends CRMEntity {
 	var $default_order_by = 'id';
 	var $default_sort_order = 'DESC';
 
+	/**	Constructor which will set the column_fields in this object
+	 */
 	function Faq() {
-		$this->log =LoggerManager::getLogger('account');
+		$this->log =LoggerManager::getLogger('faq');
+		$this->log->debug("Entering Faq() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Faq');
+		$this->log->debug("Exiting Faq method ...");
 	}
 
 	/**     Function to get the list of comments for the given FAQ id
          *      @param  int  $faqid - FAQ id
-         *      @return list $list - the list of comments which are formed as boxed info with div tags.
+	 *      @return list $list - return the list of comments and comment informations as a html output where as these comments and comments informations will be formed in div tag.
         **/	
 	function getFAQComments($faqid)
 	{
+		global $log;
+		$log->debug("Entering getFAQComments(".$faqid.") method ...");
 		global $mod_strings;
-		$sql = "select * from faqcomments where faqid=".$faqid;
+		$sql = "select * from vtiger_faqcomments where faqid=".$faqid;
 		$result = $this->db->query($sql);
 		$noofrows = $this->db->num_rows($result);
 
 		if($noofrows == 0)
+		{
+			$log->debug("Exiting getFAQComments method ...");
 			return '';
+		}
 
-		$list .= '<div style="overflow: scroll;height:150;width:100%;">';
+		$list .= '<div style="overflow: auto;height:200px;width:100%;">';
 		for($i=0;$i<$noofrows;$i++)
 		{
 			$comment = $this->db->query_result($result,$i,'comments');
 			$createdtime = $this->db->query_result($result,$i,'createdtime');
 			if($comment != '')
 			{
-				$list .= '<div valign="top" width="70%" class="dataField">&nbsp;&nbsp;'.$comment.'</div>';
-				$list .= '<div valign="top" width="70%" class="dataLabel">'.$mod_strings['Created Time'];
-				$list .= ' : '.$createdtime.'</div>';
+				//this div is to display the comment
+				$list .= '<div valign="top" style="width:99%;padding-top:10px;" class="dataField">'.make_clickable(nl2br($comment)).'</div>';
+				
+				//this div is to display the created time
+				$list .= '<div valign="top" style="width:99%;border-bottom:1px dotted #CCCCCC;padding-bottom:5px;" class="dataLabel"><font color=darkred>'.$mod_strings['Created Time'];
+				$list .= ' : '.$createdtime.'</font></div>';
 			}
 		}
 		$list .= '</div>';
+		$log->debug("Exiting getFAQComments method ...");
 		return $list;
 	}
 	

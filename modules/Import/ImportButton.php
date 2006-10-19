@@ -20,15 +20,15 @@ global $allow_exports;
 <table width="100%" cellpadding="6">
 <tr>
 -->
-<?php 
+<?php
+require_once('include/utils/UserInfoUtil.php'); 
 if ($_REQUEST['module'] == 'Products' ||
 	$_REQUEST['module'] == 'Contacts' ||
 	$_REQUEST['module'] == 'Potentials' ||
 	$_REQUEST['module'] == 'Accounts' ||
 	$_REQUEST['module'] == 'Leads')
 {
-	$permissionData = $_SESSION['action_permission_set'];
-	if($permissionData[$tabid]['5'] == 0)
+	if(isPermitted($_REQUEST['module'],'Import') == 0)
 	{
 ?>
 <!--
@@ -51,10 +51,9 @@ if ($_REQUEST['module'] == 'Products' ||
 if  ( $allow_exports=='all' || 
 	(  $allow_exports=='admin' &&  is_admin($current_user))  ) 
 	{
-		if($_REQUEST['module'] != 'Activities')
+		if($_REQUEST['module'] != 'Calendar')
 		{
-			$permissionData = $_SESSION['action_permission_set'];
-			if($permissionData[$tabid]['6'] == 0)
+			if(isPermitted($_REQUEST['module'],'Export') == 'yes')
 			{
 ?>
 <!--

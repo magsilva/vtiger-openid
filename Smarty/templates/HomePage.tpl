@@ -1,248 +1,303 @@
-<script language="javascript" type="text/javascript">
-	var Sele= '{$HOMEDEFAULTVIEW}';
-	divarray = new Array('home_myaccount','home_mypot','home_mytopquote','home_metrics','home_mytkt','home_myact','home_mygrp','home_mytopso','home_mytopinv','home_mynewlead' );
-	trarray = new Array('My Top Accounts','My Top Open Potentials','My Top Open Quotes','Key Metrics','My Tickets','My Upcoming and Pending Activities','My Group Allocation ','My Top Open Sales Orders','My Top Open Invoice','My New Leads'); 	
-	var selrow ;
-
-	function toggleshowhide(currentselected,rowselected)
-	{ldelim}
-		for(i = 0; i < divarray.length ;i++)
-		{ldelim}
-			if(Sele == divarray[i])
-			{ldelim}
-				selrow = trarray[i];			
-				break;	
-			{rdelim}
-		{rdelim}
-		hide (Sele);
-		document.getElementById(selrow).className="mnuUnSel";
-		Sele = currentselected;
-		selrow = rowselected;
-		document.getElementById(selrow).className="mnuSel";
-		show (Sele);
-	{rdelim}
-
-	function ajaxResponse(response)
-        {ldelim}
-                document.getElementById('headlines').innerHTML = response.responseText;
-                document.getElementById('headlines').style.display="block";
-        {rdelim}
-	
-	function getHeadLines(Ticker)
-        {ldelim}
-                if(Ticker!='')
-                {ldelim}
-                        var ajaxObj = new Ajax(ajaxResponse);
-                        var urlstring = "module=Accounts&action=HeadLines&tickersymbol="+Ticker;
-                        ajaxObj.process("index.php?",urlstring);
-                {rdelim}
-        {rdelim}
-</script>
-
-
-<script type="text/javascript" language="JavaScript" src="smiletag/smiletag-script.js"></script>
-
+{*<!--
+/*********************************************************************************
+  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
+   * ("License"); You may not use this file except in compliance with the License
+   * The Original Code is:  vtiger CRM Open Source
+   * The Initial Developer of the Original Code is vtiger.
+   * Portions created by vtiger are Copyright (C) vtiger.
+   * All Rights Reserved.
+  *
+ ********************************************************************************/
+-->*}
+<script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/scriptaculous.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/effects.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/builder.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/dragdrop.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/controls.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/slider.js"></script>
+<script language="javascript" type="text/javascript" src="include/scriptaculous/dom-drag.js"></script>
 <script type="text/javascript" language="JavaScript" src="include/js/general.js"></script>
 
 
 {*<!--Home Page Entries  -->*}
-{if isset($LOGINHISTORY.0)}
-    <div id="loginhistory" style="float:left;position:absolute;left:300px;top:150px;height:100px:width:200px;overflow:auto;border:1px solid #dadada;">
-    <table border="0" cellpadding="4" cellspacing="0" width="100%">
-        <tr><td class=tblPro1ColHeader>ID</td><td class=tblPro1ColHeader>Type</td><td class=tblPro1ColHeader>Modified By</t
-d><td class=tblPro1ColHeader nowrap><img src="{$IMAGE_PATH}tblPro1BtnHide.gif" alt="Close" align="right" border="0" onClick
-="document.getElementById('loginhistory').style.display='none';">Modified Time</td></tr>
-        {foreach key=label item=detail from=$LOGINHISTORY}
-            <tr><td class=tblPro1DataCell>{$detail.crmid}</td><td class=tblPro1DataCell>{$detail.setype}</td><td class=tblP
-ro1DataCell>{$detail.modifiedby}</td><td class=tblPro1DataCell>{$detail.modifiedtime}</td></tr>
-        {/foreach}
-    </table>
-    </div>
-{/if}
 
-<TABLE border=0 cellspacing=0 cellpadding=0 width=100% class=small>
- 	<tr><td style="height:2px"></td></tr>
- 	<tr>
-     <td style="padding-left:10px;padding-right:10px" class="moduleName" nowrap>My Home </td>
-     <td class="sep1" style="width:1px"></td>
-     <td class=small >
-     	<table border=0 cellspacing=0 cellpadding=0>
-  		<tr>
-        <td>
-    		<table border=0 cellspacing=0 cellpadding=5>
-			<tr>
-			<td style="padding-right:0px">&nbsp;</td>
-			</tr>
-			</table>
+	<TABLE border=0 cellspacing=0 cellpadding=0 width=100% class=small>
+	<tr>
+		<td style="height:2px" colspan="2"></td>
+	</tr>
+	<tr>
+		<td style="padding-left:10px;padding-right:50px" class="moduleName" nowrap>{$APP.$CATEGORY} >
+			<a class="hdrLink" href="index.php?action=index&module={$MODULE}">{$APP.$MODULE}</a>
 		</td>
-		<td nowrap width=50>&nbsp;</td>
-		<td>
-			<table border=0 cellspacing=0 cellpadding=5>
+		<td width=100% nowrap>
+					<table border="0" cellspacing="0" cellpadding="0" >
+				<tr>
+					<td class="sep1" style="width:1px;"></td>
+					<td class=small >
+							<table border=0 cellspacing=0 cellpadding=0>
+							<tr>
+								<td>
+										<table border=0 cellspacing=0 cellpadding=5>
 			<tr>
-			<td style="padding-right:0px"><a href="#"><img src="{$IMAGE_PATH}btnL3Calendar.gif" alt="Open Calendar..." title="Open Calendar..." border=0></a></a></td>
-            <td style="padding-right:0px"><a href="#"><img src="{$IMAGE_PATH}btnL3Clock.gif" alt="Show World Clock..." title="Show World Clock..." border=0 onClick="fnvshobj(this,'wclock')"></a></a></td>
-            <td style="padding-right:0px"><a href="#"><img src="{$IMAGE_PATH}btnL3Calc.gif" alt="Open Calculator..." title="Open Calculator..." border=0 onClick="fnvshobj(this,'calc')"></a></a></td>
+					<td style="padding-right:5px;padding-left:5px;"><img src="{$IMAGE_PATH}btnL3Add-Faded.gif" border=0></td>	
+					<td style="padding-right:5px"><img src="{$IMAGE_PATH}btnL3Search-Faded.gif" border=0></td>
 			</tr>
-			</table>
-		</td>
-		<td>
-			<table border=0 cellspacing=0 cellpadding=5>
-			<tr>
-			</tr>
-			</table>
-		</td>
-		</tr>
 		</table>
-	</td>
-	<td nowrap style="width:50%;padding:10px">&nbsp;</td>
-   </tr>
-   <tr><td style="height:2px"></td></tr>
-
+								</td>
+						</tr>
+						</table>
+					</td>
+					<td style="width:20px;">&nbsp;</td>
+					<td class="small">
+							<table border=0 cellspacing=0 cellpadding=5>
+								<tr>
+									{if $CHECK.Calendar eq 'yes'}
+									<td style="padding-right:5px;padding-left:5px;"><a href="javascript:;" onClick='fnvshobj(this,"miniCal");getMiniCal();'><img src="{$IMAGE_PATH}btnL3Calendar.gif" alt="{$APP.LBL_CALENDAR_ALT}" title="{$APP.LBL_CALENDAR_TITLE}" border=0></a></a></td>
+									{else}
+									<td style="padding-right:5px;padding-left:5px;"><img src="{$IMAGE_PATH}btnL3Calendar-Faded.gif" border=0></td>
+									{/if}
+									<td style="padding-right:5px"><a href="javascript:;"><img src="{$IMAGE_PATH}btnL3Clock.gif" alt="{$APP.LBL_CLOCK_ALT}" title="{$APP.LBL_CLOCK_TITLE}" border=0 onClick="fnvshobj(this,'wclock');"></a></a></td>
+									<td style="padding-right:5px"><a href="#"><img src="{$IMAGE_PATH}btnL3Calc.gif" alt="{$APP.LBL_CALCULATOR_ALT}" title="{$APP.LBL_CALCULATOR_TITLE}" border=0 onClick="fnvshobj(this,'calculator_cont');fetch_calc();"></a></td>
+									<td style="padding-right:5px"><a href="javascript:;" onClick='return window.open("index.php?module=Contacts&action=vtchat","Chat","width=600,height=450,resizable=1,scrollbars=1");'><img src="{$IMAGE_PATH}tbarChat.gif" alt="{$APP.LBL_CHAT_ALT}" title="{$APP.LBL_CHAT_TITLE}" border=0></a></td>	
+									<td style="padding-right:5px"><img src="{$IMAGE_PATH}btnL3Tracker.gif" alt="{$APP.LBL_LAST_VIEWED}" title="{$APP.LBL_LAST_VIEWED}" border=0 onClick="fnvshobj(this,'tracker');"></td>
+								</tr>
+							</table>
+					</td>
+					<td style="width:20px;">&nbsp;</td>
+					<td class="small">
+						<table border=0 cellspacing=0 cellpadding=5>
+							<tr>
+							<td style="padding-right:5px;padding-left:10px;"><img src="{$IMAGE_PATH}tbarImport-Faded.gif" border="0"></td>	
+							<td style="padding-right:5px"><img src="{$IMAGE_PATH}tbarExport-Faded.gif" border="0"></td>
+							</tr>
+							</table>	
+					</td>
+					<td style="width:20px;">&nbsp;</td>
+					<td class="small">
+							<table border=0 cellspacing=0 cellpadding=5>
+							<tr>
+							<td style="padding-left:5px;"><a href="javascript:;" onmouseout="fninvsh('allMenu');" onClick="fnvshobj(this,'allMenu')"><img src="{$IMAGE_PATH}btnL3AllMenu.gif" alt="{$APP.LBL_ALL_MENU_ALT}" title="{$APP.LBL_ALL_MENU_TITLE}" border="0"></a></td>
+							</tr>
+							</table>
+					</td>			
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr><td style="height:2px"></td></tr>
 </TABLE>
 
+
+
 {* Main Contents Start Here *}
-
-<table width="100%"  border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td width="75%" style="padding:10px;" valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-      <tr>
-        <td colspan="3" class="hometop">
-		
-		<div>		
-			<table width="100%" border="0" cellpadding="0" cellspacing="0">
-				<tr><td>My Home - <b>At a Glance</b></td>
-					<td align="right" style="padding-right:10px; ">
-						<select class="frmSelect">
-							<option>Show Top 10</option>
-							<option>Show Top 20</option>
-							<option>Show Top 40</option>
-							<option>Show All</option>
-						</select>
-
-					</td>
-				
-		{* {foreach item=hometab from=$HOMEDETAILS} 
-	  		{if $hometab.Title.3 neq ''}	
-				<td align="right" style="padding-right:10px; ">
-					{$hometab.Title.3}
-				</td>
-			{/if}
-		{/foreach} *}
-				</tr>
-		
-
-		</table>
-		</div>
-		</td>
-        </tr>
-      <tr>
-        <td colspan="3" class="homeBtm" >&nbsp;</td>
-        </tr>
-	   <tr>
-
-        <td bgcolor="#959595" height="300" width="8"></td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0" height="300">
-          <tr>
-            <td width="24%" bgcolor="#D7D7D7" valign="top">
-				<table class="mnuTabH"  cellspacing="0" cellpadding="5">
-				{foreach item=hometab from=$HOMEDETAILS}
-	             		{if $hometab neq ''}
-				{if $hometab.Title.2 eq $HOMEDEFAULTVIEW}  
-				   <tr id="{$hometab.Title.1}" class="mnuSel" onclick = "toggleshowhide('{$hometab.Title.2}','{$hometab.Title.1}');">
-    	           			 <td><img src="{$IMAGE_PATH}{$hometab.Title.0}" width="24" height="24" /></td>
-
-        	        		 <td>{$hometab.Title.1}</td>
-            	  		   </tr>
-				{else}
-					<tr id="{$hometab.Title.1}" class="mnuUnSel" onclick = "toggleshowhide('{$hometab.Title.2}','{$hometab.Title.1}');">
-    	           			 <td><img src="{$IMAGE_PATH}{$hometab.Title.0}" width="24" height="24"/></td>
-        	        		 <td>{$hometab.Title.1}</td>
-            	  		   </tr>
-			{/if}
-			{/if}
-	              		{/foreach}		  
-	            </table>
-			</td>
-			<td id ="headlines"></td>
-			<td class="padTab1">
-				{foreach item=tabledetail from=$HOMEDETAILS}
-				{if $tabledetail neq ''}
-				{if $tabledetail.Title.2 neq $HOMEDEFAULTVIEW}	
-				<div id="{$tabledetail.Title.2}" style="display:none">
-				{else}   
-				<div id="{$tabledetail.Title.2}" style="display:block">
-				{/if}
-				<table border="0" cellpadding="3" cellspacing="0" width="100%">
-				<form name="homepage">
-				<tr>
-				  <td colspan="4"><span class="genHeaderSmall">{$tabledetail.Title.1}</span> <a href="#">(Mark as Default View)</a></td>
-				</tr>
-				<tr><td colspan="4">&nbsp;</td></tr>
-				<tr>
-				<!--header part-->
-				{foreach key=header item=headerdetail from=$tabledetail.Header}	
-				<td class="tblPro1ColHeader">&nbsp;{$headerdetail}</td>
+<table width="98%" cellpadding="0" cellspacing="0" border="0" class="small showPanelBg" align="center" valign="top">
+	<tr>
+		<td align=right valign=top><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+		<td width="75%" align="center" class="homePageSeperator" valign="top">
+				<div id="MainMatrix">
+					{foreach key=modulename item=tabledetail from=$HOMEDETAILS}
+						{if $modulename neq 'Dashboard'}
+							{if $tabledetail neq ''}
+								<div class="MatrixLayer" style="float:left;" id="{$tabledetail.Title.2}">
+										<table width="100%" border="0" cellpadding="5" cellspacing="0" class="small">
+								<tr style="cursor:move;height:20px;">
+									<td align="left" class="homePageMatrixHdr" ><b>{$tabledetail.Title.1}</b></td>
+									<td align="right" class="homePageMatrixHdr" ><img src="{$IMAGE_PATH}uparrow.gif" align="absmiddle" /></td>
+								</tr>
+								<tr align="left">
+									<td valign=top  colspan=2>
+											<div style="overflow-y:auto;overflow-x:hidden;height:250px;width:99%"> 
+											<table border=0 cellspacing=0 cellpadding=5 width=100%>
+												{foreach item=elements from=$tabledetail.Entries}
+													<tr>
+														{if $tabledetail.Title.2 neq 'home_mytopinv' && $tabledetail.Title.2 neq 'home_mytopso' && $tabledetail.Title.2 neq 'home_mytopquote' && $tabledetail.Title.2 neq 'home_metrics' &&  $tabledetail.Title.2 neq 'home_mytoppo' &&  $tabledetail.Title.2 neq 'home_myfaq'  }
+															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
+														{elseif $tabledetail.Title.2 eq 'home_metrics'}
+															<td><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
+															<td align="absmiddle" /> {$elements.1}</td>
+														{else}	
+															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.1}</td>
+														{/if}
+													</tr>
+												{/foreach}
+											</table>	
+											</div>
+											<table border=0 cellspacing=0 cellpadding=5 width=100%>
+													<tr>
+														<td colspan="2" align="right" valign="bottom">
+															{if $modulename neq 'CustomView' && $modulename neq 'GroupAllocation'}
+																<a href="index.php?module={$modulename}&action=index">{$APP.LBL_MORE}..</a>
+															{else}
+																&nbsp;	
+															{/if}
+														</td>
+													</tr>
+											</table>										
+									</td>
+								</tr>
+							</table>
+								</div>
+							{/if}	
+							{else}
+								<div class="MatrixLayer" style="float:left;width:61%;" id="homepagedb">
+									<table width="100%" border="0" cellpadding="5" cellspacing="0" class="small">
+										<tr style="cursor:move;">
+											<td align="left" class="homePageMatrixHdr"><b>{$APP.LBL_HOMEPAGE_DASHBOARD}</b></td>
+											<td align="right" class="homePageMatrixHdr"><img src="{$IMAGE_PATH}uparrow.gif" align="absmiddle" /></td>
+										</tr>
+										<tr>	
+											<td colspan="2">
+											<div style="overflow:hidden;height:255px;width:99%"> 
+												<table border=0 cellspacing=0 cellpadding=5 width=100%>
+													<tr><td id="dashborad_cont" style="height:250px;">&nbsp;</td></tr>
+												</table>
+											</div>
+											<table border=0 cellspacing=0 cellpadding=5 width=100%>
+													<tr>
+														<td colspan="2" align="right" valign="bottom">
+															&nbsp;	
+														</td>
+													</tr>
+											</table>
+											</td>
+										</tr>
+									</table>
+								</div>
+						{/if}
 				{/foreach}
-				<!--end of header Part-->	
-				</tr>
-				<!--row of entries	-->
-				{foreach key=row item=detail from=$tabledetail.Entries}
-				<tr>
-				<!--entries-->
-				{foreach key=label item=entries from=$detail}
-				<td class="tblPro1DataCell">{$entries}</td>
-				{/foreach}
-				<!--end of entries -->
-				</tr>
-				{/foreach}
-				</form>
-			</table>
 			</div>
-{/if}
-{/foreach}
-			</td>
-			<td class="tabRht"></td>
-          </tr>
-        </table></td>
-
-        <td bgcolor="#959595" width="8"></td>
-      </tr>
-	   <tr>
-        <td height="8" colspan="3" bgcolor="#959595"></td>
-	</tr>
-
-       <tr>
-        <td colspan="3" background="{$IMAGE_PATH}Home_15.gif" height="18">&nbsp;</td>
-      </tr>
-	  
-    </table></td>
-
-    <td width="25%" valign="top"><br>
-	
-		{if $TAGCLOUD_JS ne ''}
-	            <link href="{$TAGCLOUD_CSS}" rel="stylesheet" type="text/css">
-        	    <script language="JavaScript"  type="text/javascript" src="{$TAGCLOUD_JS}"></script>
-        	{/if}
-        	<br>
 		</td>
-		</tr>
-		</table>
-	</td>
-	<td valign=top><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
-	</tr>
+		<td width="25%" valign="top" style="padding:5px;">
+			{if $ACTIVITIES.0.Entries.noofactivities > 0}	
+				<table width="100%" border="0" cellpadding="0" cellspacing="0">
+					<tr>
+						<td><img src="{$IMAGE_PATH}upcoming_left.gif" align="top"  /></td>
+						<td width="100%" background="{$IMAGE_PATH}upcomingEvents.gif" style="background-repeat:repeat-x; "></td>
+						<td><img src="{$IMAGE_PATH}upcoming_right.gif" align="top"  /></td>
+					</tr>		
+					<tr>
+						<td colspan="3" bgcolor="#FFFFCF" style="border-left:2px solid #A6A4A5;border-right:2px solid #A6A4A5;padding-left:10px;"><b class="fontBold">{$MOD.LBL_UPCOMING_EVENTS}</b><br />
+						<!-- Check for Single/Multiple Event(s) -->
+						{if $ACTIVITIES.0.Entries.noofactivities eq 1}
+						{$ACTIVITIES.0.Entries.noofactivities} {$APP.Event} {$APP.LBL_FOR} {$MOD[$ACTIVITIES.0.Title.0]}
+						{else}	
+							{$ACTIVITIES.0.Entries.noofactivities} {$APP.Events} {$APP.LBL_FOR} {$MOD[$ACTIVITIES.0.Title.0]}
+						{/if}
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3" bgcolor="#FFFFCF" style="border-left:2px solid #A6A4A5;border-right:2px solid #A6A4A5;border-bottom:2px solid #A6A4A5;">
+							<table width="100%" border="0" cellpadding="5" cellspacing="0" style="border-bottom:1px dashed #aaaaaa;">
+								
+						
+						{foreach item=entries from=$ACTIVITIES.0.Entries}
+						<tr bgcolor="#FFFFCF">
+						<td style="border-bottom:1px dotted #dddddd;" align="right" width="20" valign=top>{$entries.IMAGE}</td>
+						<td style="border-bottom:1px dotted #dddddd;" align="left" valign="middle" colspan="2" width="85%"><b>{$entries.0}</b><br />{$entries.ACCOUNT_NAME}</td>
+					</tr>
+						{/foreach}
+						</table>
+						</td>
+					</tr>
+				</table>
+				<br>
+			{/if}
+		
+
+{if $ACTIVITIES.1.Entries.noofactivities > 0}	
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="small">
+	<tr>
+		<td><img src="{$IMAGE_PATH}pending_left.gif"></td>
+		<td width="100%" background="{$IMAGE_PATH}pendingEvents.gif" valign="bottom" style="background-repeat:repeat-x;">
+			<b class="fontBold">{$MOD.LBL_PENDING_EVENTS}</b><br />
+				<!-- Check for Single/Multiple Event(s) --> 
+	 	                {if $ACTIVITIES.1.Entries.noofactivities eq 1}   
+	 	                        {$ACTIVITIES.1.Entries.noofactivities} {$MOD.LBL_SINGLE_PENDING_EVENT} 
+	 	                {else} 
+	 	                        {$ACTIVITIES.1.Entries.noofactivities} {$MOD.LBL_MULTIPLE_PENDING_EVENTS} 
+	 	                {/if}    
+	 	        </td> 
+		
+		<td><img src="{$IMAGE_PATH}pending_right.gif"></td>
+	</tr>		
+	<tr>
+		<td colspan="3" bgcolor="#FEF7C1" style="border-left:2px solid #A6A4A5;border-right:2px solid #A6A4A5;border-bottom:2px solid #A6A4A5;">
+			<table width="100%" border="0" cellpadding="5" cellspacing="0">
+				{foreach item=entries from=$ACTIVITIES.1.Entries}
+				<tr>	
+					<td  style="border-bottom:1px dotted #dddddd;"  align="right" width="20">{$entries.IMAGE}</td>
+					<td  style="border-bottom:1px dotted #dddddd;" align="left" valign="middle" colspan="2" width="85%"><b class="style_Gray">{$entries.0}</b><br />{$entries.ACCOUNT_NAME}</td>
+				</tr>
+				{/foreach}
+			</table>
+		</td>
+</tr>
 </table>
-	
-</td></tr></table>
+
+<br>
+{/if}
+
+<table border=0 cellspacing=0 cellpadding=0 width=100% class="tagCloud">
+<tr>
+<td class="tagCloudTopBg"><img src="{$IMAGE_PATH}tagCloudName.gif" border=0></td>
+</tr>
+<tr>
+<td class="tagCloudDisplay" valign=top> <span id="tagfields">{$ALL_TAG}</span></td>
+</tr>
+</table>
+
+
+
+
+</td>
+<td align=right valign=top><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+
+</tr>
+</table>
+
+{literal}
+<script  language="javascript">
+Sortable.create("MainMatrix",
+{constraint:false,tag:'div',overlap:'horizontal',
+onUpdate:function(){
+//	alert(Sortable.serialize('MainMatrix')); 
+}
+});
+
+//new Sortable.create('MainMatrix','div');
+
+function fetch_homeDB()
+{
+new Ajax.Request(
+'index.php',
+{queue: {position: 'end', scope: 'command'},
+method: 'post',
+postBody: 'module=Dashboard&action=DashboardAjax&file=HomepageDB',
+onComplete: function(response)
+{
+$("dashborad_cont").style.display = 'none';
+$("dashborad_cont").innerHTML=response.responseText;
+Effect.Appear("dashborad_cont");
+}
+}
+);
+}
+</script>
+{/literal}
 <script>
 function showhide(tab)
 {ldelim}
-//alert(document.getElementById(tab))
 var divid = document.getElementById(tab);
 if(divid.style.display!='none')
-	hide(tab)
+hide(tab)
 else
-	show(tab)
+show(tab)
 {rdelim}
+
+{if $IS_HOMEDASH eq 'true'}
+fetch_homeDB();
+{/if}
 </script>
 
 	

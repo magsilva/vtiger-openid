@@ -23,7 +23,9 @@
 $mod_strings = Array(
 // Added in release 5.0
 'LBL_CAMPAIGN_INFORMATION'=>'Campaign Information',
+'LBL_CUSTOM_INFORMATION'=>'Custom Information',
 'LBL_DESCRIPTION_INFORMATION'=>'Description Information',
+'LBL_EXPECTATIONS_AND_ACTUALS'=>'Expectations & Actuals',
 
 'Campaign Name'=>'Campaign Name',
 'Campaign Type'=>'Campaign Type',
@@ -39,7 +41,47 @@ $mod_strings = Array(
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
 'Description'=>'Description',
+'Product'=>'Product',
+'Target Audience'=>'Target Audience',
+'TargetSize'=>'TargetSize',
+'Sponsor'=>'Sponsor',
 
+'Expected Sales Count'=>'Expected Sales Count',
+'Expected Response Count'=>'Expected Response Count',
+'Expected ROI'=>'Expected ROI',
+
+'Actual Sales Count'=>'Actual Sales Count',
+'Actual Response Count'=>'Actual Response Count',
+'Actual ROI'=>'Actual ROI',
+'Select One'=>'Select One',
+'LBL_LOAD_LIST'=>'Load List',
+
+//Added for existing Picklist Entries
+
+'Conference'=>'Conference',
+'Webinar'=>'Webinar',
+'Trade Show'=>'Trade Show',				    
+'Public Relations'=>'Public Relations',
+'Partners'=>'Partners',
+'Referral Program'=>'Referral Program',
+'Advertisement'=>'Advertisement',
+'Banner Ads'=>'Banner Ads',
+'Direct Mail'=>'Direct Mail',
+'Email'=>'Email',
+'Telemarketing'=>'Telemarketing',
+'Others'=>'Others',
+
+'Planning'=>'Planning',						      	    
+'Active'=>'Active',	
+'Inactive'=>'Inactive',
+'Complete'=>'Complete',
+'Cancelled'=>'Cancelled',							      
+
+'Excellent'=>'Excellent',
+'Good'=>'Good',
+'Average'=>'Average',
+'Poor'=>'Poor',
+			      
 
 );
 

@@ -15,14 +15,13 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Leads/Lead.php');
-require_once('modules/Leads/Forms.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/FormValidationUtil.php');
 
-global $mod_strings,$app_strings,$theme;
+global $mod_strings,$app_strings,$theme,$currentModule;
 
 $focus = new Lead();
 $smarty = new vtigerCRM_Smarty;
@@ -41,11 +40,11 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Leads",$disp_view,$mode,$focus->column_fields));	
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));	
 else
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Leads",$disp_view,$mode,$focus->column_fields,'BAS'));
-	$smarty->assign("ADVBLOCKS",getBlocks("Leads",$disp_view,$mode,$focus->column_fields,'ADV'));
+	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
+	$smarty->assign("ADVBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV'));
 }
 $smarty->assign("OP_MODE",$disp_view);
 
@@ -88,10 +87,9 @@ if (isset($_REQUEST['return_viewname']))
 $smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
 $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id());
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 $smarty->assign("ID", $focus->id);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Lead");
+$smarty->assign("SINGLE_MOD",$app_strings['Lead']);
 
 
 $smarty->assign("HEADER", get_module_title("Leads", "{MOD.LBL_LEAD}  ".$focus->firstname." ".$focus->lastname, true));
@@ -100,14 +98,16 @@ $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
 
- $lead_tables = Array('leaddetails','crmentity','leadsubdetails','leadaddress','leadscf'); 
  $tabid = getTabid("Leads");
- $validationData = getDBValidationData($lead_tables,$tabid);
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);
 
  $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
  $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
  $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if($focus->mode == 'edit')
 $smarty->display("salesEditView.tpl");

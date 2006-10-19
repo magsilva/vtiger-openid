@@ -29,14 +29,31 @@ require_once('include/ListView/ListView.php');
 require_once('include/utils/utils.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
+require_once('include/database/Postgres8.php');
+require_once('include/DatabaseUtil.php');
 
 global $app_strings,$mod_strings,$list_max_entries_per_page;
 
 $log = LoggerManager::getLogger('note_list');
 
 global $currentModule,$image_path,$theme;
+if($_REQUEST['parenttab'] != '')
+{
+	$category = $_REQUEST['parenttab'];
+}
+else
+{
+	$category = getParentTab();	
+}	
 
-$category = getParentTab();
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
 
 //<<<<cutomview>>>>>>>
 $oCustomView = new CustomView("Notes");
@@ -53,6 +70,15 @@ $focus = new Note();
 $smarty = new vtigerCRM_Smarty;
 $other_text = Array();
 
+
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
 //<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
 if($_REQUEST['order_by'] != '')
 	$order_by = $_REQUEST['order_by'];
@@ -71,14 +97,14 @@ $_SESSION['NOTES_SORT_ORDER'] = $sorder;
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
 	// we have a query
-	$url_string .="&query=true";
-	
+	$url_string .="&query=true".$ustring;
 	$log->info("Here is the where clause for the list view: $where");
+	$smarty->assign("SEARCH_URL",$url_string);
 
 }
-if(isPermitted('Notes',2,'') == 'yes')
+if(isPermitted('Notes','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
 }
@@ -117,42 +143,54 @@ if(isset($where) && $where != '')
         $query .= ' and '.$where;
 }
 
-$query .= ' group by notes.notesid';
-
 if(isset($order_by) && $order_by != '')
 {
 	$tablename = getTableNameForField('Notes',$order_by);
 	$tablename = (($tablename != '')?($tablename."."):'');
 
+	if( $adb->dbType == "pgsql")
+ 	    $query .= ' GROUP BY '.$tablename.$order_by;
+
         $query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 }
 
-$list_result = $adb->query($query);
 
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query( mkCountQuery( $query));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-        $start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-        $start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
+
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
+//Postgres 8 fixes
+if( $adb->dbType == "pgsql")
+     $query = fixPostgresQuery( $query, $log, 0);
+
+
 
 // Setting the record count string
 //modified by rdhital
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By raju Ends
+
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+ if( $adb->dbType == "pgsql")
+     $list_result = $adb->query($query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+ else
+     $list_result = $adb->query($query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
 
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
@@ -173,11 +211,17 @@ $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
 
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Notes","index",$viewid);
-$alphabetical = AlphabeticalSearch($currentModule,'index','title','true','basic',"","","","",$viewid);
+$alphabetical = AlphabeticalSearch($currentModule,'index','notes_title','true','basic',"","","","",$viewid);
+$fieldnames = getAdvSearchfields($module);
+$criteria = getcriteria_options();
+$smarty->assign("CRITERIA", $criteria);
+$smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
 
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

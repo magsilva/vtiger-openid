@@ -27,6 +27,9 @@ require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
+require_once('include/database/Postgres8.php');
+require_once('include/DatabaseUtil.php');
+
 
 global $app_strings;
 global $list_max_entries_per_page;
@@ -49,16 +52,27 @@ $url_string = ''; // assigning http url string
 $focus = new Lead();
 $smarty = new vtigerCRM_Smarty;
 $other_text=Array();
-//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['LEADS_ORDER_BY'] != '')?($_SESSION['LEADS_ORDER_BY']):($focus->default_order_by));
 
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['LEADS_SORT_ORDER'] != '')?($_SESSION['LEADS_SORT_ORDER']):($focus->default_sort_order));
+if(!$_SESSION['lvs'][$currentModule])
+{
+	unset($_SESSION['lvs']);
+	$modObj = new ListViewSession();
+	$modObj->sorder = $sorder;
+	$modObj->sortby = $order_by;
+	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+}
+
+if($_REQUEST['errormsg'] != '')
+{
+        $errormsg = $_REQUEST['errormsg'];
+        $smarty->assign("ERROR","The User does not have permission to Change/Delete ".$errormsg." ".$currentModule);
+}else
+{
+        $smarty->assign("ERROR","");
+}
+//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
+$sorder = $focus->getSortOrder();
+$order_by = $focus->getOrderBy();
 
 $_SESSION['LEADS_ORDER_BY'] = $order_by;
 $_SESSION['LEADS_SORT_ORDER'] = $sorder;
@@ -67,54 +81,18 @@ $_SESSION['LEADS_SORT_ORDER'] = $sorder;
 //for change owner and change status
 $change_status = get_select_options_with_id($comboFieldArray['leadstatus_dom'], $focus->lead_status);
 $smarty->assign("CHANGE_STATUS",$change_status);
-$result=$adb->query("select * from users");
-for($i=0;$i<$adb->num_rows($result);$i++)
-{
-       $useridlist[$i]=$adb->query_result($result,$i,'id');
-       $usernamelist[$useridlist[$i]]=$adb->query_result($result,$i,'user_name');
-}
-$change_owner = get_select_options_with_id($usernamelist, $focus->lead_owner);
-$smarty->assign("CHANGE_OWNER",$change_owner);
+
+$smarty->assign("CHANGE_OWNER",getUserslist());
 	
 
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	if($_REQUEST['searchtype']=='advance')
-	{
-		$adv_string='';
-		if(isset($_REQUEST['search_cnt']))
-		$tot_no_criteria = $_REQUEST['search_cnt'];
-		if($_REQUEST['matchtype'] == 'all')
-			$matchtype = "or";
-		else
-			$matchtype = "and";
-		
-		for($i=0; $i<=$tot_no_criteria; $i++)
-		{
-			if($i == $tot_no_criteria-1)
-			$matchtype= "";
-			
-			$table_colname = 'Fields'.$i;
-			$search_condition = 'Condition'.$i;
-			$search_value = 'Srch_value'.$i;
-
-			$tab_col = str_replace('\'','',stripslashes($_REQUEST[$table_colname]));
-			$srch_cond = str_replace('\'','',stripslashes($_REQUEST[$search_condition]));
-			$srch_val = $_REQUEST[$search_value];
-			$adv_string .= " ".getSearch_criteria($srch_cond,$srch_val,$tab_col)." ".$matchtype;	
-		}
-		$where=$adv_string;
-	}
-	else
-	{
- 		$where=Search($currentModule);
-	}
+	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
 	// we have a query
-	$url_string .="&query=true";
-
+	$url_string .="&query=true".$ustring;
 	$log->info("Here is the where clause for the list view: $where");
-
+	$smarty->assign("SEARCH_URL",$url_string);
 }
 
 //<<<<cutomview>>>>>>>
@@ -131,14 +109,15 @@ if($viewid != 0)
 // Buttons and View options
 //Modified by Raju
 //raju
-if(isPermitted('Leads',2,'') == 'yes')
+if(isPermitted('Leads','Delete','') == 'yes')
 {
 	$other_text['del'] =	$app_strings[LBL_MASS_DELETE];	
 
 }
-$other_text['s_mail'] = $app_strings[LBL_SEND_MAIL_BUTTON];
+if(isPermitted('Emails','EditView','') == 'yes')
+	$other_text['s_mail'] = $app_strings[LBL_SEND_MAIL_BUTTON];
 
-if(isPermitted('Leads',1,'') == 'yes')
+if(isPermitted('Leads','EditView','') == 'yes')
 {
 	$other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 	$other_text['c_status'] = $app_strings[LBL_CHANGE_STATUS];
@@ -191,29 +170,43 @@ if(isset($order_by) && $order_by != '')
 {
 	$tablename = getTableNameForField('Leads',$order_by);
 	$tablename = (($tablename != '')?($tablename."."):'');
+	if( $adb->dbType == "pgsql")
+ 	    $query .= ' GROUP BY '.$tablename.$order_by;
 
+	
         $query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 }
 
-$list_result = $adb->query($query);
-
 //Retreiving the no of rows
-$noofrows = $adb->num_rows($list_result);
+$count_result = $adb->query( mkCountQuery( $query));
+$noofrows = $adb->query_result($count_result,0,"count");
 
-//Retreiving the start value from request
-if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+//Storing Listview session object
+if($_SESSION['lvs'][$currentModule])
 {
-        $start = $_REQUEST['start'];
+	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+}
 
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
-}
-else
-{
-        $start = 1;
-}
+$start = $_SESSION['lvs'][$currentModule]['start'];
+
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
+
+//Postgres 8 fixes
+if( $adb->dbType == "pgsql")
+    $query = fixPostgresQuery( $query, $log, 0);
+
+
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+ if( $adb->dbType == "pgsql")
+     $list_result = $adb->query($query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+ else
+     $list_result = $adb->query($query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
 
 
 //mass merge for word templates -- *Raj*17/11
@@ -223,11 +216,11 @@ while($row = $adb->fetch_array($list_result))
 }
 if(isset($ids))
 {
-	echo "<input name='allids' type='hidden' value='".implode($ids,";")."'>";
+	$smarty->assign("ALLIDS", implode($ids,";"));
 }
-if(isPermitted("Leads",8,'') == 'yes') 
+if(isPermitted("Leads","Merge") == 'yes') 
 {
-	$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"small\" onclick=\"return massMerge()\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
+	$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('Leads')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
 	$wordTemplateResult = fetchWordTemplateList("Leads");
 	$tempCount = $adb->num_rows($wordTemplateResult);
 	$tempVal = $adb->fetch_array($wordTemplateResult);
@@ -245,6 +238,17 @@ if(isPermitted("Leads",8,'') == 'yes')
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
+
+//limiting the query
+if ($start_rec ==0) 
+	$limit_start_rec = 0;
+else
+	$limit_start_rec = $start_rec -1;
+	
+ if( $adb->dbType == "pgsql")
+     $list_result = $adb->query($query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+ else
+     $list_result = $adb->query($query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
@@ -271,6 +275,10 @@ $smarty->assign("FIELDNAMES", $fieldnames);
 $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
+
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");
 else	

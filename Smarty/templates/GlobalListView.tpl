@@ -18,20 +18,26 @@
 {if $MODULE eq 'Contacts'}
 {$IMAGELISTS}
 <script language="JavaScript" type="text/javascript" src="include/js/thumbnail.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/conveyor.js"></script>
 <div id="dynloadarea" style=float:left;position:absolute;left:350px;top:150px;></div>
 {/if}
 <script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
 
-
+{if $SEARCH_MODULE eq 'All'}
+<script>
+displayModuleList(document.getElementById('global_search_module'));
+</script>
+{/if}
 
 {*<!-- Contents -->*}
+
 {if $MODULE eq $SEARCH_MODULE && $SEARCH_MODULE neq ''}
 	<div id="global_list_{$SEARCH_MODULE}" style="display:block">
 {elseif $MODULE eq 'Contacts' && $SEARCH_MODULE eq ''}
 	<div id="global_list_{$MODULE}" style="display:block">
-{else}
+{elseif $SEARCH_MODULE neq ''}
 	<div id="global_list_{$MODULE}" style="display:none">
+{else}
+	<div id="global_list_{$MODULE}" style="display:block">
 {/if}
 <table border=0 cellspacing=0 cellpadding=0 width=98% align=center>
      <form name="massdelete" method="POST">
@@ -39,17 +45,16 @@
      <input name="change_owner" type="hidden">
      <input name="change_status" type="hidden">
      <tr>
-	<td valign=top><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
-
-	<td class="showPanelBg" valign=top width=100%>
+		<td>
 	   <!-- PUBLIC CONTENTS STARTS-->
-	   <div class="small" style="padding:20px">
+	   <br>
+	   <div class="small" style="padding:2px">
         	<table border=0 cellspacing=1 cellpadding=0 width=100% class="lvtBg">
-	           <tr style="background-color:#efefef">
+	           <tr >
 			<td>
 				<table border=0 cellspacing=0 cellpadding=2 width=100% class="small">
 				   <tr>
-					<td style="padding-right:20px" nowrap><b>{$MODULE}</b></td>
+					<td style="padding-right:20px" nowrap ><b class=big>{$APP.$MODULE}</b>{$SEARCH_CRITERIA}</td>
 					<!-- Not used, may be used in future when we do the pagination and customeviews
 						<td style="padding-right:20px" class="small" nowrap>{$RECORD_COUNTS}</td>
 						<td nowrap >
@@ -65,21 +70,21 @@
 					-->
 				   </tr>
 				</table>
-                         	<div  style="width:100%; border-top:1px solid #999999;border-bottom:1px solid #999999">
-			 	<table border=0 cellspacing=1 cellpadding=3 width=100% style="background-color:#cccccc;" class="small">
+                 <div  class="searchResults">
+			 	<table border=0 cellspacing=0 cellpadding=3 width=100% class="small">
 				   <tr>
 					{if $DISPLAYHEADER eq 1}
 						{foreach item=header from=$LISTHEADER}
-							<td class="lvtCol">{$header}</td>
+							<td class="mailSubHeader">{$header}</td>
 			         		{/foreach}
 					{else}
-						<td colspan=$HEADERCOUNT> Please try another search criteria for this module</td>
+						<td class="searchResultsRow" colspan=$HEADERCOUNT> {$APP.LBL_NO_DATA} </td>
 					{/if}
 				   </tr>
 				   {foreach item=entity key=entity_id from=$LISTENTITY}
 				   <tr bgcolor=white onMouseOver="this.className='lvtColDataHover'" onMouseOut="this.className='lvtColData'"  >
 					{foreach item=data from=$entity}	
-					<td>{$data}</td>
+						<td>{$data}</td>
 					{/foreach}
 				   </tr>
 				   {/foreach}
@@ -102,10 +107,12 @@
 		   </tr>
 		</table>
 	   </div>
+	   
 	</td>
 	</form>	
    </tr>
 </table>
+
 </div>
 {$SELECT_SCRIPT}
 

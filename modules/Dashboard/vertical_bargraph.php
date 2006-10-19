@@ -15,7 +15,7 @@ require_once('include/utils/GraphUtils.php');
 include_once ('Image/Graph.php');
 include_once ('Image/Canvas.php');
 
-$tmp_dir=$root_directory."cache/images/";
+//$tmp_dir=$root_directory."cache/images/";
 
 /** Function to render the Horizontal Graph
         * Portions created by vtiger are Copyright (C) vtiger.
@@ -25,25 +25,28 @@ $tmp_dir=$root_directory."cache/images/";
 function vertical_graph($referdata,$refer_code,$width,$height,$left,$right,$top,$bottom,$title,$target_val,$cache_file_name,$html_image_name)
 {
 
-	global $log,$root_directory,$lang_crm,$theme;
+	global $log,$root_directory,$lang_crm,$theme,$app_strings;
 //We'll be getting the values in the form of a string separated by commas
-	$datay=explode(",",$referdata); // The datay values  
-	$datax=explode(",",$refer_code); // The datax values  
+	$datay=explode("::",$referdata); // The datay values  
+	$datax=explode("::",$refer_code); // The datax values  
 
 // The links values are given as string in the encoded form, here we are decoding it
 	$target_val=urldecode($target_val);
-	$target=explode(",",$target_val);
+	$target=explode("::",$target_val);
 
 	$alts=array();
 	$temp=array();
 	for($i=0;$i<count($datax);$i++)
 	{
-		$name=$datax[$i];
+		if($app_strings[$datax[$i]] != '') //HomePage Dashboard Strings i18nized - ahmed
+			$name=$app_strings[$datax[$i]];
+		else
+			$name=$datax[$i];
 		$pos = substr_count($name," ");
 		$alts[]=$name."=%d";
 //If the daatx value of a string is greater, adding '\n' to it so that it'll cme inh 2nd line
-		 if(strlen($name)>=14)
-                        $name=substr($name, 0, 14);
+		 if(strlen($name)>=15)
+                        $name=substr($name, 0, 15);
 		if($pos>=2)
 		{
 			$val=explode(" ",$name);
@@ -152,11 +155,12 @@ function vertical_graph($referdata,$refer_code,$width,$height,$left,$right,$top,
 	// Add some grace to y-axis so the bars doesn't go
 	// all the way to the end of the plot area
 	$yaxis->forceMaximum(round(($max * 1.1) + 0.5));
+	$ticks = get_tickspacing($max);
 
 	// First make the labels look right
-	$yaxis->setLabelInterval(1);
+	$yaxis->setLabelInterval($ticks[0]);
 	$yaxis->setTickOptions(5,0);
-	$yaxis->setLabelInterval(0.5,2);
+	$yaxis->setLabelInterval($ticks[1],2);
 	$yaxis->setTickOptions(2,0,2);
 	
 	// Create the xaxis labels

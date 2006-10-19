@@ -23,13 +23,12 @@
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Contacts/Contact.php');
-require_once('modules/Contacts/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/FormValidationUtil.php');
 
-global $log,$mod_strings,$app_strings,$theme;
+global $log,$mod_strings,$app_strings,$theme,$currentModule;
 
 //added for contact image
 $encode_val=$_REQUEST['encode_val'];
@@ -96,16 +95,16 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks("Contacts",$disp_view,$mode,$focus->column_fields));
+	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
 else
 {
-	$smarty->assign("BASBLOCKS",getBlocks("Contacts",$disp_view,$mode,$focus->column_fields,'BAS'));
-	$smarty->assign("ADVBLOCKS",getBlocks("Contacts",$disp_view,$mode,$focus->column_fields,'ADV'));
+	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
+	$smarty->assign("ADVBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV'));
 }
 
 $smarty->assign("OP_MODE",$disp_view);
 
-//needed when creating a new contact with a default account value passed in
+//needed when creating a new contact with a default vtiger_account value passed in
 if (isset($_REQUEST['account_name']) && is_null($focus->account_name)) {
 	$focus->account_name = $_REQUEST['account_name'];
 	
@@ -129,14 +128,13 @@ $log->info("Contact detail view");
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("NAME",$focus->lastname." ".$focus->firstname);
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 if(isset($cust_fld))
 {
         $smarty->assign("CUSTOMFIELD", $cust_fld);
 }
 $smarty->assign("ID", $focus->id);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Contact");
+$smarty->assign("SINGLE_MOD",$app_strings['Contact']);
 
 if($focus->mode == 'edit')
 {
@@ -147,7 +145,7 @@ if($focus->mode == 'edit')
 if(isset($_REQUEST['activity_mode']) && $_REQUEST['activity_mode'] !='')
         $smarty->assign("ACTIVITYMODE",$_REQUEST['activity_mode']);
 
-// Unimplemented until jscalendar language files are fixed
+// Unimplemented until jscalendar language vtiger_files are fixed
 $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
@@ -165,11 +163,8 @@ $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
-
-$contact_tables = Array('contactdetails','crmentity','contactsubdetails','contactscf','contactaddress','customerdetails'); 
-
  $tabid = getTabid("Contacts");
- $validationData = getDBValidationData($contact_tables,$tabid);
+ $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);
 
  $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
@@ -207,6 +202,9 @@ if($errormessage!="")
 {
         $smarty->assign("ERROR_MESSAGE",$errormessage);
 }
+
+$check_button = Button_Check($module);
+$smarty->assign("CHECK", $check_button);
 
 if($focus->mode == 'edit')
 $smarty->display("salesEditView.tpl");

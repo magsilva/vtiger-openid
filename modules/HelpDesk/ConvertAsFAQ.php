@@ -13,7 +13,7 @@ require_once("modules/Faq/Faq.php");
 
 $focus = new FAQ();
 
-//Map the fields like ticket column => faq column where ticket column is the troubletikcets field name & faq - column_fields
+//Map the vtiger_fields like ticket column => vtiger_faq column where ticket column is the troubletikcets vtiger_field name & vtiger_faq - column_fields
 $ticket_faq_mapping_fields = Array(
 			'title'=>'question',
 			'product_id'=>'product_id',
@@ -22,7 +22,7 @@ $ticket_faq_mapping_fields = Array(
 			//'ticketcategories'=>'faqcategory'
 		   );
 
-$sql = "select ticketid, title, product_id, description, solution,status, category from troubletickets where ticketid=".$_REQUEST['record'];
+$sql = "select ticketid, title, product_id, description, solution,status, category from vtiger_troubletickets where ticketid=".$_REQUEST['record'];
 $res = $adb->query($sql);
 
 //set all the ticket values to FAQ
@@ -31,7 +31,7 @@ foreach($ticket_faq_mapping_fields as $ticket_column => $faq_column)
 	$focus->column_fields[$faq_column] = $adb->query_result($res,0,$ticket_column);
 }
 
-$focus->save("FAQ");
+$focus->save("Faq");
 
 if($focus->id != '')
 {
@@ -45,8 +45,8 @@ if($focus->id != '')
 		$answer .= '\r\n\r\nSOLUTION:\r\n'.$solution;
 	}
 
-	//Retrive the ticket comments from the ticketcomments table and added into the faq answer
-	$sql = "select ticketid, comments, createdtime from ticketcomments where ticketid=".$_REQUEST['record'];
+	//Retrive the ticket comments from the vtiger_ticketcomments vtiger_table and added into the vtiger_faq answer
+	$sql = "select ticketid, comments, createdtime from vtiger_ticketcomments where ticketid=".$_REQUEST['record'];
 	$res = $adb->query($sql);
 	$noofrows = $adb->num_rows($res);
 	$answer .= '\r\n\r\nCOMMENTS:';
@@ -59,7 +59,7 @@ if($focus->id != '')
 		}
 	}
 
-	$sql1 = "update faq set answer='".$answer."' where id=".$focus->id;
+	$sql1 = "update vtiger_faq set answer='".$answer."' where id=".$focus->id;
 	$adb->query($sql1);
 }
 

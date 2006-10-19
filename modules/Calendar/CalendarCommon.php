@@ -9,146 +9,16 @@
 *
  ********************************************************************************/
 //Code Added by Minnie -Starts
- include_once $calpath .'webelements.p3';
- include_once $calpath .'permission.p3';
- require_once('include/database/PearDatabase.php');
-
- require_once('modules/Calendar/preference.pinc');
-global $calpath,$callink;
-global $mod_strings;
-global $theme;
-$theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
-$callink = 'index.php?module=Calendar&action=';
-
 /**
- * Create HTML to display calendar header tabs
- * @param $t -- date :: Type string
- * @param $view -- view name(day/week/month) :: Type string
- * Returns the html in string format.
- */
-function getHeaderTab($t,$view)
-{
-        $day_selected = $week_selected = $month_selected = $shared_selected = "dvtUnSelectedCell";
-        if($view == 'day')
-		$day_selected="dvtSelectedCell";
-        if($view == 'week')
-                $week_selected="dvtSelectedCell";
-        if($view == 'month')
-                $month_selected="dvtSelectedCell";
-	if($view == 'shared')
-	        $shared_selected = "dvtSelectedCell";
-        $space_class = "dvtTabCache";
-	$tabhtml = "";
-	$tabhtml .= <<<EOQ
-	<table border="0" cellspacing="0" cellpadding="0" width="95%" align="center">
-        <tr>
-           <form name="Calendar" method="GET" action="index.php">
-           <input type="hidden" name="module" value="Calendar">
-           <input type="hidden" name="action" value="">
-           <input type="hidden" name="t">
-           <td>
-              <table border=0 cellspacing=0 cellpadding=3 width=100%>
-              <tr>
-                 <td class="$space_class" style="width:10px" nowrap>&nbsp;</td>
-                 <td class="$day_selected" align=center nowrap><a href="index.php?module=Calendar&action=new_calendar&sel=day&t=$t">Day</a></td>
-                 <td class="$space_class" style="width:10px">&nbsp;</td>
-                 <td class="$week_selected" align=center nowrap><a href="index.php?module=Calendar&action=new_calendar&sel=week&t=$t">Week</a></td>
-                 <td class="$space_class" style="width:10px">&nbsp;</td>
-                 <td class="$month_selected" align=center nowrap><a href="index.php?module=Calendar&action=new_calendar&sel=month&t=$t">Month</a></td>
-		 <td class="$space_class" style="width:10px">&nbsp;</td>
-		 <td class="$shared_selected" align=center nowrap><a href="index.php?module=Calendar&action=new_calendar&sel=share&t=$t">Share</a></td>
-                 <td class="$space_class" style="width:10px">&nbsp;</td>
-                 <td class="$space_class" style="width:100%">&nbsp;</td>
-              </tr>
-              </table>
-           </td>
-           </form>
-        </tr>
-        <tr>
-           <td valign=top align=left >
-              <table border=0 cellspacing=0 cellpadding=3 width=100% class="dvtContentSpace">
-              <tr>
-                 <td align=left style="padding:5px">
-EOQ;
-return $tabhtml;
-}
-
-/**
- * Create HTML to display calendar heading for each view
- * @params $prev,$next,$day_from,$day_to -- date :: Type string
- * @param $pref -- Object of preference class
- * @param $view -- view name(day/week/month) :: Type string
- * @param $month -- month :: Type string
- * @param $year -- year :: Type string
- * @param $f -- string :: Type string
- * @param $n -- Numeric representation of a month, without leading zeros :: Type string
- * $param $d -- Day of the month, 2 digits with leading zeros :: Type string
- * Returns the html in string format.
- */
-function getCalendarHeader($prev,$next,$view,$day_from,$pref="",$day_to="",$month="",$year="",$d="",$f="",$n="")
-{
-	global $calpath,$callink,$image_path,$mod_strings;
-	$headerhtml = "";
-	$leftimage = $image_path."calTopLeft.gif";
-	$rightimage = $image_path."calTopRight.gif";
-        $calsep_image = $image_path."calSep.gif";
-	if($view == "day")
-	{
-		$submitlink = $callink ."calendar_dayview";
-		$prevlink = $callink ."calendar_dayview&t=".$prev->getYYYYMMDD();
-		$nextlink = $callink ."calendar_dayview&t=".$next->getYYYYMMDD();
-		$linkto_previous = $pref->menulink($prevlink,$pref->getImage(left,'list'),$prev->getDate());
-		$linkto_next = $pref->menulink($nextlink,$pref->getImage(right,'list'),$next->getDate());
-		$label = "&nbsp;". strftime($mod_strings['LBL_DATE_TITLE'],$day_from) ."&nbsp;";
-	}
-	if($view == "week")
-	{
-		$submitlink = $callink ."calendar_weekview";
-		$prevlink = $callink ."calendar_weekview&t=".$prev;
-		$nextlink = $callink ."calendar_weekview&t=".$next;
-		$linkto_previous = $pref->menulink($prevlink,$pref->getImage(left,'list'),$mod_strings['LBL_LAST_WEEK']);
-		$linkto_next = $pref->menulink($nextlink,$pref->getImage(right,'list'),$mod_strings['LBL_NEXT_WEEK']);
-		$label = $mod_strings['LBL_WEEK'] ."&nbsp;of&nbsp;" . $month . "&nbsp;".$day_from."&nbsp;to&nbsp;".$month."&nbsp;".$day_to."&nbsp;". $year ."&nbsp;";
-	}
-	if($view == "month")
-	{
-		$submitlink = $callink ."calendar_monthview";
-		$linkto_previous = "<a href=\"".$submitlink."&f=".$f."&n=".$n."&m=".$prev."&d=".$d."&y=".$day_from."\" title=\"Previous Month\"><img border=\"0\" src=\"".$image_path."left.gif\"></a>";
-		$linkto_next = "<a href=\"". $submitlink ."&f=".$f."&n=".$n."&m=".$next."&d=".$d."&y=".$day_to."\" title=\"Next Month\"><img border=\"0\" src=\"".$image_path."right.gif\"></a>";
-		$label = $month ." ". $year;
-	}
-
-        $headerhtml .= <<<EOQ
-	<table border="0" cellspacing="0" cellpadding="0" width="100%">
-	<form action="$submitlink" method="get" name="calendar">
-	<tr><td>
-	<table border=0 cellspacing=0 cellpadding=0 width=100% class="calTopBg"><tr><td>
-	<img src=$leftimage></td>
-	<td>$linkto_previous</td>
-	<td><img src=$calsep_image></td>
-	<td align="center" width="100%" class="lvtHeaderText">$label</td>
-	<td><img src=$calsep_image></td>
-	<td>$linkto_next</td>
-	<td><img src=$rightimage></td><td>
-	</tr></table></td></tr>
-	
-        
-EOQ;
-return $headerhtml;
-  
-}
-
-/**
- * Function to get the lists of sharedids related in calendar sharing of an user
- * This function accepts the user id as arguments and
- * returns the shared ids related with the user id
- * as an array
+ * To get the lists of sharedids 
+ * @param $id -- The user id :: Type integer
+ * @returns $sharedids -- The shared vtiger_users id :: Type Array
  */
 function getSharedUserId($id)
 {
         global $adb;
-        $query = "SELECT * from sharedcalendar where userid=".$id;
+	$sharedid = Array();
+        $query = "SELECT * from vtiger_sharedcalendar where userid=".$id;
         $result = $adb->query($query);
         $rows = $adb->num_rows($result);
         for($j=0;$j<$rows;$j++)
@@ -159,15 +29,14 @@ function getSharedUserId($id)
 }
 
 /**
- * Function to get the lists of user ids who shared their calendar with an user
- * This function accepts the shared id as arguments and
- * returns the user ids related with the shared id
- * as a comma seperated string
+ * To get the lists of vtiger_users id who shared their calendar with specified user
+ * @param $sharedid -- The shared user id :: Type integer
+ * @returns $shared_ids -- a comma seperated vtiger_users id  :: Type string
  */
 function getSharedCalendarId($sharedid)
 {
 	global $adb;
-	$query = "SELECT * from sharedcalendar where sharedid=".$sharedid;
+	$query = "SELECT * from vtiger_sharedcalendar where sharedid=".$sharedid;
 	$result = $adb->query($query);
 	if($adb->num_rows($result)!=0)
 	{
@@ -179,54 +48,302 @@ function getSharedCalendarId($sharedid)
 }
 
 /**
- * Function to get the label for user lists
- * Returns the label as an array
+ * To get userid and username of all vtiger_users except the current user
+ * @param $id -- The user id :: Type integer
+ * @param $check -- true/false :: Type boolean
+ * @returns $user_details -- Array in the following format:
+ * $user_details=Array($userid1=>$username, $userid2=>$username,............,$useridn=>$username);
  */
-function getSharedUserListViewHeader()
+function getOtherUserName($id,$check)
 {
-	global $mod_strings;
-		$header_label=array($mod_strings['LBL_LIST_NAME'],
-			            $mod_strings['LBL_LIST_USER_NAME'],
-				   );
-	return $header_label;
-}
-
-/**
- * Function to get the entries for user lists
- * This function accepts the shared id as arguments and
- * returns the user entries related with the shared id
- * as an array
- */
-function getSharedUserListViewEntries($sharedid)
-{
-	global $adb;
-	$query = "SELECT * from users where id=".$sharedid;
-	$result =$adb->query($query);
-	$entries[]=$adb->query_result($result,0,'first_name').' '.$adb->query_result($result,0,'last_name');
-	$entries[]='<a href="index.php?action=DetailView&module=Users&parenttab=Settings&record='.$sharedid.'">'.$adb->query_result($result,0,'user_name').'</a>';
-	return $entries;
-
-}
-
-/**
- * Function to get userid and username of all users except the current user
- * @returns $userArray -- User Array in the following format:
- * $userArray=Array($userid1=>$username, $userid2=>$username,............,$useridn=>$username);
- */
-function getOtherUserName($id)
-{
-	global $adb;
-	$query="select * from users where deleted=0 and id!=".$id;
-	$result = $adb->query($query);
-	$num_rows=$adb->num_rows($result);
+	global $adb,$current_user;
+	require('user_privileges/user_privileges_'.$current_user->id.'.php');
+	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	$user_details=Array();
-	for($i=0;$i<$num_rows;$i++)
+	if($check)
 	{
-		$userid=$adb->query_result($result,$i,'id');
-		$username=$adb->query_result($result,$i,'user_name');
- 		$user_details[$userid]=$username;
+		$query="select * from vtiger_users where deleted=0 and status='Active' and id!=".$id;
+		$result = $adb->query($query);
+		$num_rows=$adb->num_rows($result);
+		for($i=0;$i<$num_rows;$i++)
+		{
+			$userid=$adb->query_result($result,$i,'id');
+			$username=$adb->query_result($result,$i,'user_name');
+			$user_details[$userid]=$username;
+		}
+
+	}
+	else
+	{
+		if($is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[getTabid('Calendar')] == 3 or $defaultOrgSharingPermission[getTabid('Calendar')] == 0))
+		{
+			$user_details = get_user_array(FALSE, "Active", $id, 'private');
+			unset($user_details[$id]);
+		}
+		else
+		{
+			$user_details = get_user_array(FALSE, "Active", $id);
+			unset($user_details[$id]);
+		}
 	}
 	return $user_details;
+}
+
+/**
+ * To get hour,minute and format
+ * @param $starttime -- The date&time :: Type string
+ * @param $endtime -- The date&time :: Type string
+ * @param $format -- The format :: Type string
+ * @returns $timearr :: Type Array
+*/
+function getaddEventPopupTime($starttime,$endtime,$format)
+{
+	$timearr = Array();
+	list($sthr,$stmin) = explode(":",$starttime);
+	list($edhr,$edmin)  = explode(":",$endtime);
+	if($format == 'am/pm')
+	{
+		$hr = $sthr+0;
+		if($hr <= 11)
+		{
+			if($hr == 0)
+				$sthr = 12;
+			$timearr['starthour'] = $sthr;
+			$timearr['startfmt'] = 'am';
+		}
+		else
+		{
+			if($hr == 12) $sthr = $hr;
+			else $sthr = $hr - 12;
+				
+			if($sthr <= 9 && strlen(trim($sthr)) < 2)
+                                $hrvalue= '0'.$sthr;
+			else $hrvalue=$sthr;
+			
+			$timearr['starthour'] = $hrvalue;
+			$timearr['startfmt'] = 'pm';
+		}
+		$edhr = $edhr+0;
+                if($edhr <= 11)
+                {
+			if($edhr == 0)
+				$edhr = 12;
+				
+			if($edhr <= 9 && strlen(trim($edhr)) < 2)
+				$edhr = '0'.$edhr;
+			$timearr['endhour'] = $edhr;
+                        $timearr['endfmt'] = 'am';
+                }
+                else
+                {
+			$fmt = 'pm';
+			if($edhr == 12)
+				$edhr =	$edhr;
+			else
+			{
+				$edhr = $edhr - 12;
+				if($edhr == 12)
+					$fmt = 'am';
+			}
+                        if($edhr <= 9 && strlen(trim($edhr)) < 2)
+                                $hrvalue= '0'.$edhr;
+			else $hrvalue=$edhr;
+			
+                        $timearr['endhour'] = $hrvalue;
+                        $timearr['endfmt'] = $fmt;
+                }
+		$timearr['startmin']  = $stmin;
+		$timearr['endmin']    = $edmin;
+		return $timearr;
+	}
+	if($format == '24')
+	{
+		if($edhr <= 9 && strlen(trim($edhr)) < 2)
+			$edhr = '0'.$edhr;
+		if($sthr <= 9 && strlen(trim($sthr)) < 2)
+			$sthr = '0'.$sthr;
+		$timearr['starthour'] = $sthr;
+		$timearr['startmin']  = $stmin;
+		$timearr['startfmt']  = '';
+		$timearr['endhour']   = $edhr;
+                $timearr['endmin']    = $edmin;
+		$timearr['endfmt']    = '';
+		return $timearr;
+	}
+}
+
+/**
+ *To construct time select combo box
+ *@param $format -- the format :: Type string
+ *@param $bimode -- The mode :: Type string
+ *constructs html select combo box for time selection
+ *and returns it in string format.
+ */
+function getTimeCombo($format,$bimode,$hour='',$min='',$fmt='')
+{
+	$combo = '';
+	if($format == 'am/pm')
+	{
+		$combo .= '<select class=small name="'.$bimode.'hr" id="'.$bimode.'hr">';
+		for($i=0;$i<12;$i++)
+		{
+			if($i == 0)
+			{
+				$hrtext= 12;
+				$hrvalue = 12;
+			}
+			else
+			{	
+				if($i <= 9 && strlen(trim($i)) < 2)
+				{
+					$hrtext= '0'.$i;
+				}
+				else $hrtext= $i;
+				$hrvalue =  $hrtext;
+			}
+			if($hour == $hrvalue)
+				$hrsel = 'selected';
+			else
+				$hrsel = '';
+			$combo .= '<option value="'.$hrvalue.'" "'.$hrsel.'">'.$hrtext.'</option>';
+		}
+		$combo .= '</select>&nbsp;';
+		$combo .= '<select name="'.$bimode.'min" id="'.$bimode.'min" class=small>';
+		for($i=0;$i<12;$i++)
+		{
+			$minvalue = 5;
+			$value = $i*5;
+			if($value <= 9 && strlen(trim($value)) < 2)
+			{
+				$value= '0'.$value;
+			}
+			else $value = $value;
+			if($min == $value)
+				$minsel = 'selected';
+			else
+				$minsel = '';
+				$combo .= '<option value="'.$value.'" "'.$minsel.'">'.$value.'</option>';
+		}
+		$combo .= '</select>&nbsp;';
+		$combo .= '<select name="'.$bimode.'fmt" id="'.$bimode.'fmt" class=small>';
+		if($fmt == 'am')
+		{
+			$amselected = 'selected';
+			$pmselected = '';
+		}
+		elseif($fmt == 'pm')
+		{
+			$amselected = '';
+			$pmselected = 'selected';
+		}
+		$combo .= '<option value="am" '.$amselected.'>AM</option>';
+		$combo .= '<option value="pm" '.$pmselected.'>PM</option>';
+		$combo .= '</select>';
+		}
+		else
+		{
+			$combo .= '<select name="'.$bimode.'hr" id="'.$bimode.'hr" class=small>';
+			for($i=0;$i<=23;$i++)
+			{
+				if($i <= 9 && strlen(trim($i)) < 2)
+				{
+					$hrvalue= '0'.$i;
+				}
+				else $hrvalue = $i;
+				if($hour == $hrvalue)
+					$hrsel = 'selected';
+				else
+					$hrsel = '';
+				$combo .= '<option value="'.$hrvalue.'" "'.$hrsel.'">'.$hrvalue.'</option>';
+			}
+			$combo .= '</select>Hr&nbsp;';
+			$combo .= '<select name="'.$bimode.'min" id="'.$bimode.'min" class=small>';
+			for($i=0;$i<12;$i++)
+			{
+				$minvalue = 5;
+				$value = $i*5;
+				if($value <= 9 && strlen(trim($value)) < 2)
+				{
+					$value= '0'.$value;
+				}
+				else $value=$value;
+				if($min == $value)
+					$minsel = 'selected';
+				else
+					$minsel = '';
+				$combo .= '<option value="'.$value.'" "'.$minsel.'">'.$value.'</option>';
+			}
+			$combo .= '</select>&nbsp;min<input type="hidden" name="'.$bimode.'fmt" id="'.$bimode.'fmt">';
+		}
+		return $combo;
+}
+
+/**
+ *Function to construct HTML select combo box
+ *@param $fieldname -- the field name :: Type string
+ *@param $tablename -- The table name :: Type string
+ *constructs html select combo box for combo field
+ *and returns it in string format.
+ */
+
+function getActFieldCombo($fieldname,$tablename)
+{
+	global $adb, $mod_strings;
+	$combo = '';
+	$combo .= '<select name="'.$fieldname.'" id="'.$fieldname.'" class=small>';
+	$q = "select * from ".$tablename;
+	$Res = $adb->query($q);
+	$noofrows = $adb->num_rows($Res);
+
+	for($i = 0; $i < $noofrows; $i++)
+	{
+		$value = $adb->query_result($Res,$i,$fieldname);
+		$combo .= '<option value="'.$value.'">'.$mod_strings[$value].'</option>';
+	}
+
+	$combo .= '</select>';
+	return $combo;
+}
+
+/*Fuction to get value for Assigned To field
+ *returns values of Assigned To field in array format
+*/
+function getAssignedTo($tabid)
+{
+	global $current_user,$noof_group_rows,$adb;
+	$assigned_user_id = $current_user->id;
+	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
+	require('user_privileges/user_privileges_'.$current_user->id.'.php');
+	if($is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[$tabid] == 3 or $defaultOrgSharingPermission[$tabid] == 0))
+	{
+		$result=get_current_user_access_groups('Calendar');
+	}
+	else
+	{
+		$result = get_group_options();
+	}
+	$nameArray = $adb->fetch_array($result);
+	
+	if($is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[$tabid] == 3 or $defaultOrgSharingPermission[$tabid] == 0))
+	{
+		$users_combo = get_select_options_array(get_user_array(FALSE, "Active", $assigned_user_id,'private'), $assigned_user_id);
+	}
+	else
+	{
+		$users_combo = get_select_options_array(get_user_array(FALSE, "Active", $assigned_user_id), $assigned_user_id);
+	}
+	if($noof_group_rows!=0)
+	{
+		do
+		{
+			$groupname=$nameArray["groupname"];
+			$group_option[] = array($groupname=>$selected);
+
+		}while($nameArray = $adb->fetch_array($result));
+	}
+	$fieldvalue[]=$users_combo;
+	$fieldvalue[] = $group_option;
+	return $fieldvalue;
 }
 
 //Code Added by Minnie -Ends

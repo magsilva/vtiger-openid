@@ -45,8 +45,20 @@ function set_return(product_id, product_name) {
 }
 function set_return_specific(product_id, product_name) {
         //getOpenerObj used for DetailView 
-        var fldName = getOpenerObj("product_name");
-        var fldId = getOpenerObj("product_id");
+
+	if(document.getElementById('from_link').value != '')
+	{
+		var fldName = window.opener.document.QcEditView.product_name;
+		var fldId = window.opener.document.QcEditView.product_id;
+	}else if(typeof(window.opener.document.DetailView) != 'undefined')
+	{
+	   var fldName = window.opener.document.DetailView.product_name;
+	   var fldId = window.opener.document.DetailView.product_id;
+	}else
+	{
+	   var fldName = window.opener.document.EditView.product_name;
+	   var fldId = window.opener.document.EditView.product_id;
+	}
         fldName.value = product_name;
         fldId.value = product_id;
 }
@@ -60,21 +72,41 @@ function add_data_to_relatedlist(entity_id,recordid) {
         opener.document.location.href="index.php?module={RETURN_MODULE}&action=updateRelations&smodule={SMODULE}&destination_module=Products&entityid="+entity_id+"&parid="+recordid;
 }
 
-function set_return_inventory(product_id,product_name,unitprice,qtyinstock,curr_row) {
-        window.opener.document.EditView.elements["txtProduct"+curr_row].value = product_name;
+function set_return_inventory(product_id,product_name,unitprice,qtyinstock,taxstr,row_id) {
+	curr_row = row_id;
+
+        window.opener.document.EditView.elements["productName"+curr_row].value = product_name;
         window.opener.document.EditView.elements["hdnProductId"+curr_row].value = product_id;
-	window.opener.document.EditView.elements["txtListPrice"+curr_row].value = unitprice;
-	getOpenerObj("unitPrice"+curr_row).innerHTML = unitprice;
+	window.opener.document.EditView.elements["listPrice"+curr_row].value = unitprice;
+	//getOpenerObj("unitPrice"+curr_row).innerHTML = unitprice;
 	getOpenerObj("qtyInStock"+curr_row).innerHTML = qtyinstock;
-	window.opener.document.EditView.elements["txtQty"+curr_row].focus()
+
+	var tax_array = new Array();
+	var tax_details = new Array();
+	tax_array = taxstr.split(',');
+	for(var i=0;i<tax_array.length;i++)
+	{
+		tax_details = tax_array[i].split('=');
+	}
+	
+	window.opener.document.EditView.elements["qty"+curr_row].focus()
 }
 
-function set_return_inventory_po(product_id,product_name,unitprice,curr_row) {
-        window.opener.document.EditView.elements["txtProduct"+curr_row].value = product_name;
+function set_return_inventory_po(product_id,product_name,unitprice,taxstr,curr_row) {
+        window.opener.document.EditView.elements["productName"+curr_row].value = product_name;
         window.opener.document.EditView.elements["hdnProductId"+curr_row].value = product_id;
-	window.opener.document.EditView.elements["txtListPrice"+curr_row].value = unitprice;
-	getOpenerObj("unitPrice"+curr_row).innerHTML = unitprice;
-	window.opener.document.EditView.elements["txtQty"+curr_row].focus()
+	window.opener.document.EditView.elements["listPrice"+curr_row].value = unitprice;
+	//getOpenerObj("unitPrice"+curr_row).innerHTML = unitprice;
+
+	var tax_array = new Array();
+	var tax_details = new Array();
+	tax_array = taxstr.split(',');
+	for(var i=0;i<tax_array.length;i++)
+	{
+		tax_details = tax_array[i].split('=');
+	}
+	
+	window.opener.document.EditView.elements["qty"+curr_row].focus()
 }
 
 function set_return_product(product_id, product_name) {

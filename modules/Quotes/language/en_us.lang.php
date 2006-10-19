@@ -79,10 +79,10 @@ $mod_strings = Array(
 'NTC_COPY_SHIPPING_ADDRESS'=>'Copy shipping address to billing address',
 'NTC_REMOVE_MEMBER_ORG_CONFIRMATION'=>'Are you sure you want to remove this record as a member organization?',
 'LBL_DUPLICATE'=>'Potential Duplicate Accounts',
-'MSG_DUPLICATE' => 'Creating this account may potentialy create a duplicate account. You may either select an account from the list below or you may click on Create New Account to continue creating a new account with the previously entered data.',
+'MSG_DUPLICATE' => 'Creating this vtiger_account may vtiger_potentialy create a duplicate vtiger_account. You may either select an vtiger_account from the list below or you may click on Create New Account to continue creating a new vtiger_account with the previously entered data.',
 
 'LBL_INVITEE'=>'Contacts',
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
 
 'LBL_SELECT_ACCOUNT'=>'Select Account',
 'LBL_GENERAL_INFORMATION'=>'General Information',
@@ -102,7 +102,7 @@ $mod_strings = Array(
 'LBL_NEW_CONTACT'=>'New Contact',
 'LBL_CONTACT_TITLE'=>'Contacts',
 
-//Added fields after RC1 - Release
+//Added vtiger_fields after RC1 - Release
 'LBL_ALL'=>'All',
 'LBL_PROSPECT'=>'Prospect',
 'LBL_INVESTOR'=>'Investor',
@@ -132,13 +132,13 @@ $mod_strings = Array(
 'Shipping Address'=>'Shipping Address',
 'Billing City'=>'Billing City',
 'Billing State'=>'Billing State',
-'Billing Code'=>'Billing Code',
+'Billing Code'=>'Billing Postal Code',
 'Billing Country'=>'Billing Country',
 'Billing Po Box'=>'Billing Po Box',
 'Shipping Po Box'=>'Shipping Po Box',
 'Shipping City'=>'Shipping City',
 'Shipping State'=>'Shipping State',
-'Shipping Code'=>'Shipping Code',
+'Shipping Code'=>'Shipping Postal Code',
 'Shipping Country'=>'Shipping Country',
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
@@ -156,7 +156,24 @@ $mod_strings = Array(
 'LBL_ACCOUNT_NAME'=>'Account Name:',
 'LBL_QUOTE_STAGE'=>'Quote Stage:',
 'LBL_MY_TOP_QUOTE'=>'My Top Open Quotes',
-'Quote Id'=>'Quote Id',
+'Quote ID'=>'Quote Id',
+'Quote'=>'Quote',
+
+//Added for existing Picklist Entries
+
+'Created'=>'Created',
+'Delivered'=>'Delivered',
+'Reviewed'=>'Reviewed',
+'Accepted'=>'Accepted',
+'Rejected'=>'Rejected',
+
+'FedEx'=>'FedEx',
+'UPS'=>'UPS',
+'USPS'=>'USPS',
+'DHL'=>'DHL',
+'BlueDart'=>'BlueDart',
+                       
+
 
 );
 

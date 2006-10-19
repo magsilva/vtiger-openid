@@ -46,13 +46,15 @@ $app_strings = Array(
 
 'LBL_CHARSET'=>'ISO-8859-1',
 
-'LBL_BROWSER_TITLE'=>'vtiger CRM - Commercial Open Source CRM',
+'LBL_BROWSER_TITLE'=>'vtiger CRM 5 - Commercial Open Source CRM',
 
 'LBL_MY_ACCOUNT'=>'My Account',
 
+'LBL_MY_PREFERENCES'=>'My Preferences',
+
 'LBL_ADMIN'=>'Admin',
 
-'LBL_LOGOUT'=>'Logout',
+'LBL_LOGOUT'=>'Sign out',
 
 'LBL_SEARCH'=>'Search',
 
@@ -65,6 +67,8 @@ $app_strings = Array(
 'NTC_WELCOME'=>'Welcome',
 
 'NTC_NO_ITEMS_DISPLAY'=>'none',
+
+'LBL_OR'=>'or',
 
 'LBL_ALT_HOT_KEY'=>'Alt+',
 //added for 4.2
@@ -102,6 +106,8 @@ $app_strings = Array(
 
 'LBL_DELETE_BUTTON'=>'Delete',
 
+'LBL_FIND_BUTTON'=>'Find',
+
 'LBL_CONVERT_BUTTON_TITLE'=>'Convert [Alt+C]',
 
 'LBL_CONVERT_BUTTON_KEY'=>'C',
@@ -133,6 +139,8 @@ $app_strings = Array(
 'LBL_SELECT_BUTTON_TITLE'=>'Select [Alt+T]',
 
 'LBL_CREATE_BUTTON_LABEL' =>'Create',
+
+'LBL_GENERATE'=>'Generate',
 
 'LBL_SAVE_BUTTON_KEY'=>'S',
 
@@ -184,6 +192,8 @@ $app_strings = Array(
 
 'LBL_SELECT_CONTACT_BUTTON_LABEL'=>'Select Contact',
 
+'LBL_SELECT_CAMPAIGN_BUTTON_LABEL'=>'Select Campaign',
+
 'LBL_SELECT_USER_BUTTON_TITLE'=>'Select User [Alt+U]',
 
 'LBL_SELECT_USER_BUTTON_KEY'=>'U',
@@ -194,9 +204,9 @@ $app_strings = Array(
 
 'LBL_LIST_USERIP'=>'User IP',
 
-'LBL_LIST_SIGNIN'=>'Signin Time',
+'LBL_LIST_SIGNIN'=>'Sign in Time',
 
-'LBL_LIST_SIGNOUT'=>'Signout Time',
+'LBL_LIST_SIGNOUT'=>'Sign out Time',
 
 'LBL_LIST_STATUS'=>'Status',
 
@@ -222,11 +232,19 @@ $app_strings = Array(
 
 'LNK_IMPORT_LEADS'=>'Import Leads',
 
+'LBL_LOCATE_MAP'=>'Locate Map',
 
+'LBL_ADDRESS'=>'Address',
 
-'LNK_ADVANCED_SEARCH'=>'Advanced',
+'LBL_ADD_TAG'=>'Add Tag',
 
-'LNK_BASIC_SEARCH'=>'Basic',
+'LBL_TAG_IT'=>'Tag it',
+
+'LBL_CLOSE'=>'Close',
+
+'LNK_ADVANCED_SEARCH'=>'Advanced Search',
+
+'LNK_BASIC_SEARCH'=>'Basic Search',
 
 'LNK_EDIT'=>'edit',
 
@@ -260,6 +278,8 @@ $app_strings = Array(
 
 'LNK_NEW_CONTACT'=>'New Contact',
 
+'LNK_NEW_CAMPAIGN'=>'New Campaign',
+
 'LNK_NEW_LEAD'=>'New Lead',
 
 'LNK_NEW_ACCOUNT'=>'New Account',
@@ -279,7 +299,6 @@ $app_strings = Array(
 'LNK_NEW_INVOICE'=>'New Invoice',
 'LNK_NEW_VENDOR'=>'New Vendor',
 'LNK_NEW_PRICEBOOK'=>'New PriceBook',
-
 
 
 'NTC_REQUIRED'=>'Indicates required field',
@@ -345,6 +364,21 @@ $app_strings = Array(
 'LBL_EXPORT'=>'Export',
 
 'LBL_EXPORT_ALL'=>'Export All',
+
+'LBL_QUICK_CREATE'=>'Quick Create',
+
+'Export'=>'Export',
+'Import'=>'Import',
+'Merge'=>'Merge',
+'ConvertLead'=>'ConvertLead',
+
+
+'LBL_SHOW_RESULTS'=>'Show Results in',
+'LBL_TOTAL_RECORDS_FOUND'=>'Total Records found :',
+'LBL_SEARCH_RESULTS_FOR'=>' -- Search results for ',
+'LBL_TAG_SEARCH'=>' -- Tag search for ',
+'LBL_NO_DATA'=>'No Data Found',
+
 
 //3.2 release
 
@@ -417,10 +451,41 @@ $app_strings = Array(
 
 'LBL_ADD_ITEM'=>'Add',
 
+'LBL_ADD_NEW'=>'Add',
 
+'LBL_DEDUCT'=>'Deduct',
+//Added for version 5
 
+'LBL_CALENDAR_TITLE'=>'Open Calendar...',
+'LBL_CALENDAR_ALT'=>'Open Calendar...',
 
+'LBL_CALCULATOR_TITLE'=>'Open Calculator...',
+'LBL_CALCULATOR_ALT'=>'Open Calculator...',
 
+'LBL_CLOCK_TITLE'=>'Show World Clock...',
+'LBL_CLOCK_ALT'=>'Show World Clock...',
+
+'LBL_ALL_MENU_TITLE'=>'Open All Menu...',
+'LBL_ALL_MENU_ALT'=>'Open All Menu...',
+
+'LBL_CHAT_TITLE'=>'Chat...',
+'LBL_CHAT_ALT'=>'Chat...',
+
+'LBL_SEARCH_TITLE'=>'Search in ',
+'LBL_SEARCH_ALT'=>'Search in ',
+
+'LBL_SEARCH_STRING'=>'Search...',
+
+'LBL_SEARCH_FOR'=>'Search for',
+'LBL_SEARCH_NOW_BUTTON'=>'Search Now',
+'LBL_GO_TO'=>'Go to',
+'LBL_FEWER_BUTTON'=>'Fewer',
+'LBL_IN'=>'In',
+
+'LBL_ADV_SEARCH_MSG_ANY'=>'Match Any of the Following',
+'LBL_ADV_SEARCH_MSG_ALL'=>'Match All of the Following',
+
+'COMBO_ALL'=>'All',
 
 // Added fields for Related Field Display Informations in Detail View of All Modules
 
@@ -428,7 +493,11 @@ $app_strings = Array(
 
 'LBL_HISTORY'=>'History',
 
+'LBL_ACTIVITY_HISTORY'=>'Activity History',
+
 'LBL_ATTACHMENTS'=>'Attachments',
+
+'LBL_ATTACHMENT'=>'Attachment',
 
 'LBL_TYPE'=>'Type',
 
@@ -580,8 +649,11 @@ $app_strings = Array(
 
 'COMBO_PRODUCTS'=>'Products',
 
-'COMBO_HELPDESK'=>'HelpDesk',
+'COMBO_HELPDESK'=>'Trouble Tickets',
 
+'COMBO_USERS'=>'Users',
+
+'COMBO_CAMPAIGNS'=>'Campaigns',
 
 
 'LBL_SELECT'=>'Select',
@@ -646,7 +718,7 @@ $app_strings = Array(
 
 'Product Name'=>'Product Name',
 
-'Product Code'=>'Product Code',
+'Product Code'=>'Part Number',
 
 'Commission Rate'=>'Commission Rate',
 
@@ -659,6 +731,7 @@ $app_strings = Array(
 'Category'=>'Category',
 
 'Price Book Name'=>'Price Book Name',
+'LBL_EVENT_ENDDATE'=>'End Date & Time',
 
 //Added after 4 GA
 'LBL_CUSTOM_INFORMATION'=>'Custom Information',
@@ -668,17 +741,92 @@ $app_strings = Array(
 
 'Leads'=>'Leads',
 'Accounts'=>'Accounts',
+'Accounts & Contacts'=>'Accounts & Contacts',
 'Contacts'=>'Contacts',
 'Potentials'=>'Potentials',
 'Products'=>'Products',
 'Emails'=>'Emails',
-'HelpDesk'=>'HelpDesk',
+'HelpDesk'=>'Trouble Tickets',
 'Activities'=>'Activities',
+'Events'=>'Events',
+'Tasks'=>'Tasks',
+'Todo'=>'To Do',
+'Call'=>'Call',
+'Meeting'=>'Meeting',
 'Quotes'=>'Quotes',
 'PriceBook'=>'Price Books',
-'PurchaseOrder'=>'Purchase Orders',
-'SalesOrder'=> 'Sales Orders',
-'Invoice'=>'Invoice',
+'PurchaseOrder'=>'Purchase Order',
+'SalesOrder'=>'Sales Order',
+'Invoice'=>'Invoices',
+'Calendar'=>'Calendar',
+'Home'=>'Home',
+'Campaigns'=>'Campaigns',
+'PriceBooks'=>'Price Books',
+'Notes'=>'Notes',
+'Faq'=>'FAQ',
+'Dashboards'=>'Dashboard',
+'Reports'=>'Reports',
+'Vendors'=>'Vendors',
+'Rss'=>'RSS',
+'Portal'=>'My Sites',
+'Webmails'=>'Webmails',
+'Attachments'=>'Attachments',
+'Activity History'=>'Activity History',
+'Ticket History'=>'Ticket History',
+'Purchase Order'=>'Purchase Order',
+'Sales Stage History'=>'Sales Stage History',
+'Users'=>'Users',
+'Admin'=>'Admin',
+'PurchaseOrder Status History'=>'PurchaseOrder Status History',
+'SalesOrder Status History'=>'SalesOrder Status History',
+'Quote Stage History'=>'Quote Stage History',
+'Invoice Status History'=>'Invoice Status History',
+'LBL_TROUBLE_TICKET'=>'Trouble Ticket',
+
+//Added language for Parent Tab
+
+'My Home Page'=>'My Home Page',
+'Marketing'=>'Marketing',
+'Sales'=>'Sales',
+'Support'=>'Support',
+'Analytics'=>'Analytics',
+'Inventory'=>'Inventory',
+'Tools'=>'Tools',
+'Settings'=>'Settings',
+
+'LBL_INFORMATION'=>'Information',
+'LBL_MORE'=>'More',
+'LBL_BASIC'=>'Basic',
+'LBL_CREATING'=>'Creating',
+'LBL_EDITING'=>'Editing',
+'LBL_NEW'=>'New',
+
+//Added for Detail/Edit/Related List of all modules
+
+'Lead'=>'Lead',
+'Account'=>'Account',
+'Contact'=>'Contact',
+'Potential'=>'Potential',
+'Opportunity'=>'Potential',
+'Product'=>'Product',
+'Email'=>'Email',
+'Activity'=>'Activity',
+'Event'=>'Event',
+'Task'=>'Task',
+'Quote'=>'Quote',
+'PriceBook'=>'PriceBook',
+'PurchaseOrder'=>'Purchase Order',
+'Ticket'=>'Ticket',
+'SalesOrder'=>'Sales Orders',
+'Campaign'=>'Campaign',
+'Note'=>'Note',
+'Dashboard'=>'Dashboards',
+'Report'=>'Report',
+'Vendor'=>'Vendor',
+'Webmail'=>'Webmail',
+
+'LBL_NONE_INCLUDED'=>'None Included',
+'LBL_ADD_TO'=>'Add to',
 
 'LBL_SELECT_TEMPLATE_TO_MAIL_MERGE'=>'Select template to Mail Merge:',
 'LBL_TITLE_OR_DESCRIPTION'=>'Title / Description',
@@ -691,7 +839,7 @@ $app_strings = Array(
 'COMBO_ACCOUNTS'=>'Accounts',
 'LNK_NEW_FAQ'=>'New FAQ',
 'Vendor Name'=>'Vendor Name',
-'LNK_WEARE'=>'We are?',
+'LNK_WEARE'=>'About us',
 'LBL_ABOUTUS_TITLE'=>'vtiger CRM - About Us',
 'LBL_DISCUSS'=>'Discuss with other users',
 'Quote Stage'=>'Quote Stage',
@@ -699,6 +847,7 @@ $app_strings = Array(
 'Total'=>'Total Amount',
 'First Name'=>'First Name',
 'Last Name'=>'Last Name',
+'User Name'=>'User Name',
   /* For purchase order related list in vendor */
 'LBL_PORDER_BUTTON_TITLE'=>'New Purchase Order [Alt+O]',
 'LBL_PORDER_BUTTON'=>'New Purchase Order',
@@ -715,7 +864,7 @@ $app_strings = Array(
 'Start Date'=>'Start Date',
 'Related to'=>'Related To',
 'Recurring Type'=> 'Recurring Type',
-'SalesOrder'=> 'Sales Orders',
+'SalesOrders'=> 'Sales Order',
 'PurchaseOrder'=> 'Purchase Orders',
 'LBL_QUOTE_NAME'=>'Quote Name',
  //Added Orders in activity parent type selection / Related list
@@ -729,6 +878,8 @@ $app_strings = Array(
  // Added Invoice in activity parent type selection / Related list
 'COMBO_INVOICES'=>'Invoice',
 'LBL_INVOICE_NAME'=>'Invoice',
+'LBL_HELPDESK_NAME'=>'Trouble Ticket',
+'LBL_CAMPAIGN_NAME'=>'Campaign Name',
 
 'LBL_NEW_INVOICE_BUTTON_TITLE'=>'New Invoice [Alt+I]',
 'LBL_NEW_INVOICE_BUTTON_KEY'=>'I',
@@ -772,6 +923,110 @@ $app_strings = Array(
 'LBL_DAY_AGO'=>'day ago',
 'LBL_DAYS_AGO'=>'days ago',
 
+//Added to convert Month string in update info - ahmed
+
+'Jan'=>'Jan',
+'Feb'=>'Feb',
+'Mar'=>'Mar',
+'Apr'=>'Apr',
+'May'=>'May',
+'Jun'=>'Jun',
+'Jul'=>'Jul',
+'Aug'=>'Aug',
+'Sep'=>'Sep',
+'Oct'=>'Oct',
+'Nov'=>'Nov',
+'Dec'=>'Dec',
+
+//Added after 5.0 Alpha5
+'Campaign Name'=>'Campaign Name',
+'Campaign Type'=>'Campaign Type',
+'Campaign Status'=>'Campaign Status',
+'Expected Revenue'=>'Expected Revenue',
+'Expected Close Date'=>'Expected Close Date',
+'LBL_ACTIONS'=>'Actions',
+'LBL_SEND'=>'Send',
+'LBL_VAT'=>'VAT',
+'LBL_SALES'=>'Sales',
+'LBL_SERVICE'=>'Service',
+'LBL_TAX_DETAILS'=>'Tax Details',
+'LBL_TAX_CALCULATION'=>'Tax Calculation',
+'COVERED_PERCENTAGE'=>'(%)',
+
+'LBL_TAG_CLOUD'=>'Tag Cloud',
+'LBL_FOR'=>'for',
+'LBL_PO_STATUS'=>'PurchaseOrder Status',
+'LBL_SO_STATUS'=>'SalesOrder Status',
+'LBL_INVOICE_STATUS'=>'Invoice Status',
+'LBL_NOTE'=>'Note',
+'LBL_MODULE'=>'Module',
+'Active'=>'Active',
+'Inactive'=>'Inactive',
+'Today'=>'Today',
+'Last 2 Days'=>'Last 2 Days',
+'Last Week'=>'Last Week',
+'This Week'=>'This Week',
+'This Month'=>'This Month',
+'This Year'=>'This Year',
+'LBL_PLEASE_CLICK'=>'Please Click',
+'LBL_TO_CONFIGURE'=>'to Configure',
+'LBL_HERE'=>'here',
+'LBL_RECORDS'=>'Records',
+'LBL_SCROLL'=>'[Scroll to Top]',
+'LBL_EXPAND_COLLAPSE'=>'Expand/Collapse',
+'LBL_RCPY_ADDRESS'=>'Copy Shipping address',
+'LBL_LCPY_ADDRESS'=>'Copy Billing address',
+'LBL_RECORD_ID'=>'Record ID',
+'LBL_ACTION_DATE'=>'Action Date',
+'LBL_HOMEPAGE_DASHBOARD'=>'HomePage Dashboard',
+'LBL_NO'=>'No',
+'LBL_FOUND'=>'Found',
+'LBL_YOU_CAN_CREATE'=>'You can Create',
+'LBL_NOW'=>'now',
+'LBL_CLICK_THE_LINK'=>'Click the link below',
+'LBL_CREATE'=>'Create',
+'LBL_A'=>'a',
+'LBL_AN'=>'an',
+'LBL_YOU_ARE_NOT_ALLOWED_TO_CREATE'=>'You are not allowed to create',
+'LBL_TRANSFER_OWNERSHIP'=>'Transfer Ownership to',
+'LBL_SELECT_STATUS'=>'Select New Status',
+'LBL_UPDATE_OWNER'=>'Update Owner',
+'LBL_UPDATE_STATUS'=>'Update Status',
+
+//added for tax calculations - after 5beta2
+'LBL_NET_PRICE'=>'Net Price',
+'LBL_TOOLS'=>'Tools',
+'LBL_DISCOUNT'=>'Discount',
+'LBL_TOTAL_AFTER_DISCOUNT'=>'Total After Discount',
+'LBL_NET_TOTAL'=>'Net Total',
+'LBL_SHIPPING_AND_HANDLING_CHARGES'=>'Shipping & Handling Charges',
+'LBL_TAX_FOR_SHIPPING_AND_HANDLING'=>'Taxes For Shipping and Handling',
+'LBL_FINISH'=>'Finish',
+'LBL_IMAGE_DELETED'=>'Image Deleted',
+'LBL_TAX_MODE'=>'Tax Mode',
+'LBL_CLEAR_COMMENT'=>'Clear Comment',
+'LBL_ZERO_DISCOUNT'=>'Zero Discount',
+'LBL_OF_PRICE'=>'of Price',
+'LBL_DIRECT_PRICE_REDUCTION'=>'Direct Price Reduction',
+'LBL_INDIVIDUAL'=>'Individual',
+
+//Added the address strings for Contacts Module
+'LBL_CPY_MAILING_ADDRESS'=>'Copy Mailing Address',
+'LBL_CPY_OTHER_ADDRESS'=>'Copy Other Address',
+
+'LBL_PERMISSION'=>'You are not permitted to execute this Operation',
+'VTIGER'=>'vtiger',
+
+//Added for Inventory Tax details
+'LBL_DIRECT_AMOUNT_DISCOUNT'=>'Direct Amount Discount',
+'LBL_NO_DISCOUNT_FOR_THIS_PRODUCT'=>'No Discount for this Product',
+'LBL_TOTAL_TAX_AMOUNT'=>'Total Tax Amount',
+'LBL_FINAL_DISCOUNT_AMOUNT'=>'Final Discount Amount',
+'LBL_SHIPPING_AND_HANDLING_CHARGE'=>'Shipping & Handling Charge',
+'LBL_GO_BACK'=>'Go Back',
+
+//Record deleted message
+'LBL_RECORD_DELETE'=>'The record you are trying to view has been deleted.',
 );
 
 
@@ -806,9 +1061,9 @@ $app_list_strings = Array(
 
 				, 'Products'=>'Products'
 
-				, 'HelpDesk'=>'HelpDesk'
+				, 'HelpDesk'=>'Trouble Tickets'
 
-				, 'Faq'=>'Faq'
+				, 'Faq'=>'FAQ'
 
 				, 'Calendar'=>'Calendar'
 
@@ -818,7 +1073,7 @@ $app_list_strings = Array(
 
 				, 'Invoice'=>'Invoice'
 
-				, 'Rss'=>'Rss'
+				, 'Rss'=>'RSS'
 				
 				, 'Reports'=>'Reports'
 				
@@ -828,7 +1083,7 @@ $app_list_strings = Array(
 
 				, 'SalesOrder'=>'SalesOrder'
 
-				, 'Portal'=>'Portal'
+				, 'Portal'=>'My Sites'
 				
 				),
 
@@ -888,13 +1143,9 @@ $app_list_strings = Array(
 
 
 
-'task_status_dom' => Array('Not Started'=>'Not Started'
-
-		, 'In Progress'=>'In Progress'
+'task_status_dom' => Array('Planned'=>'Planned'
 
 		, 'Completed'=>'Completed'
-
-		, 'Pending Input'=>'Pending Input'
 
 		, 'Deferred'=>'Deferred'
 
