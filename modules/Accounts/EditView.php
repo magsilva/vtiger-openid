@@ -22,7 +22,7 @@
 
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
-require_once('modules/Accounts/Account.php');
+require_once('modules/Accounts/Accounts.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
@@ -31,7 +31,7 @@ require_once('include/FormValidationUtil.php');
 global $app_strings,$mod_strings,$currentModule,$theme;
 $smarty=new vtigerCRM_Smarty;
 
-$focus = new Account();
+$focus = new Accounts();
 
 if(isset($_REQUEST['record'])) 
 {
@@ -95,7 +95,7 @@ $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $smarty->assign("ID", $focus->id);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD",$app_strings['Account']);
+$smarty->assign("SINGLE_MOD",'Account');
 
 $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));

@@ -42,7 +42,8 @@
                     							   <select id="txtbox_{$label}" name="{$keyfldname}">
                     								{foreach item=arr from=$keyoptions}
                     									{foreach key=sel_value item=value from=$arr}
-                    										<option value="{$sel_value}" {$value}>{$sel_value}</option>
+                    										<option value="{$sel_value}" {$value}>{if $APP.$sel_value}{$APP.$sel_value}{else}{$sel_value}{/if}</option>
+                    									
                     									{/foreach}
                     								{/foreach}
                     							   </select>
@@ -117,15 +118,23 @@
                                               		  <a href="javascript:;" onclick="hndCancel('dtlview_{$label}','editarea_{$label}','{$label}')" class="link">{$APP.LBL_CANCEL_BUTTON_LABEL}</a>
                                                        </div>
                                                   </td>
+					     {elseif $keyid eq '85'}<!--Skype-->
+                                                <td width=25% class="dvtCellInfo" align="left" id="mouseArea_{$label}" onmouseover="hndMouseOver({$keyid},'{$label}');" onmouseout="fnhide('crmspanid');">&nbsp;<img src="{$IMAGE_PATH}skype.gif" alt="Skype" title="Skype" LANGUAGE=javascript align="absmiddle"></img><span id="dtlview_{$label}"><a href="skype:{$keyval}?call">{$keyval}</a></span>
+                                                        <div id="editarea_{$label}" style="display:none;">
+                                                          <input class="detailedViewTextBox" onFocus="this.className='detailedViewTextBoxOn'" onBlur="this.className='detailedViewTextBox'" type="text" id="txtbox_{$label}" name="{$keyfldname}" maxlength='100' value="{$keyval}"></input>
+                                                          <br><input name="button_{$label}" type="button" class="crmbutton small save" value="{$APP.LBL_SAVE_LABEL}" onclick="dtlViewAjaxSave('{$label}','{$MODULE}',{$keyid},'{$keytblname}','{$keyfldname}','{$ID}');fnhide('crmspanid');"/> {$APP.LBL_OR}
+                                                          <a href="javascript:;" onclick="hndCancel('dtlview_{$label}','editarea_{$label}','{$label}')" class="link">{$APP.LBL_CANCEL_BUTTON_LABEL}</a>
+                                                       </div>
+                                                  </td>	
                                              {elseif $keyid eq '19' || $keyid eq '20'} <!--TextArea/Description-->
 						<!-- we will empty the value of ticket and faq comment -->
 						{if $label eq $MOD.LBL_ADD_COMMENT}
 							{assign var=keyval value=''}
 						{/if}
-							{assign var="DESCRIPTION_SEPARATOR_STRING" value=" "}  {* Separates Description *}
-							{assign var="DESCRIPTION_WORDWRAP_WIDTH" value="70"} {* No. of chars for word wrapping long lines of Description *}
+							<!--{assign var="DESCRIPTION_SEPARATOR_STRING" value=" "}  {* Separates Description *}-->
+							<!--{assign var="DESCRIPTION_WORDWRAP_WIDTH" value="70"} {* No. of chars for word wrapping long lines of Description *}-->
                                                   <td width=25% class="dvtCellInfo" align="left" id="mouseArea_{$label}" onmouseover="hndMouseOver({$keyid},'{$label}');" onmouseout="fnhide('crmspanid');">&nbsp;<span id="dtlview_{$label}">
-							{$keyval|replace:$DESCRIPTION_SEPARATOR_STRING:"\x1"|replace:" ":"\x0"|replace:"\x1":$DESCRIPTION_SEPARATOR_STRING|wordwrap:$DESCRIPTION_WORDWRAP_WIDTH:"<br>&nbsp;"|replace:"\x0":"&nbsp;"}
+							{$keyval}<!--|replace:$DESCRIPTION_SEPARATOR_STRING:"\x1"|replace:" ":"\x0"|replace:"\x1":$DESCRIPTION_SEPARATOR_STRING|wordwrap:$DESCRIPTION_WORDWRAP_WIDTH:"<br>&nbsp;"|replace:"\x0":"&nbsp;"}-->
 							</span>
                                               		<div id="editarea_{$label}" style="display:none;">
                                               		  <textarea id="txtbox_{$label}" name="{$keyfldname}"  class=detailedViewTextBox onFocus="this.className='detailedViewTextBoxOn'"onBlur="this.className='detailedViewTextBox'" cols="90" rows="8">{$keyval}</textarea>                                            		  

@@ -1,4 +1,5 @@
-<?/*********************************************************************************
+<?php
+/*********************************************************************************
  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
   * ("License"); You may not use this file except in compliance with the License
   * The Original Code is:  vtiger CRM Open Source
@@ -9,7 +10,7 @@
   ********************************************************************************/
 	      
 require_once('include/logging.php');
-require_once('modules/Users/User.php');
+require_once('modules/Users/Users.php');
 require_once('include/database/PearDatabase.php');
 global $adb;
 
@@ -20,10 +21,10 @@ if($ajaxaction == "DETAILVIEW")
 	$crmid = $_REQUEST["recordid"];
 	$tablename = $_REQUEST["tableName"];
 	$fieldname = $_REQUEST["fldName"];
-	$fieldvalue = $_REQUEST["fieldValue"];
+	$fieldvalue = utf8RawUrlDecode($_REQUEST["fieldValue"]); 
 	if($crmid != "")
 	{
-		$userObj = new User();
+		$userObj = new Users();
 		$userObj->retrieve_entity_info($crmid,"Users");
 		$userObj->column_fields[$fieldname] = $fieldvalue;
 		$userObj->id = $crmid;

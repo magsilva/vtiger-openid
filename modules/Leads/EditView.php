@@ -14,7 +14,7 @@
  ********************************************************************************/
 require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
-require_once('modules/Leads/Lead.php');
+require_once('modules/Leads/Leads.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
@@ -23,7 +23,7 @@ require_once('include/FormValidationUtil.php');
 
 global $mod_strings,$app_strings,$theme,$currentModule;
 
-$focus = new Lead();
+$focus = new Leads();
 $smarty = new vtigerCRM_Smarty;
 
 if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) {
@@ -89,7 +89,7 @@ $smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id());
 $smarty->assign("ID", $focus->id);
 $smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD",$app_strings['Lead']);
+$smarty->assign("SINGLE_MOD",'Lead');
 
 
 $smarty->assign("HEADER", get_module_title("Leads", "{MOD.LBL_LEAD}  ".$focus->firstname." ".$focus->lastname, true));
