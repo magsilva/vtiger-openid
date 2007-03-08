@@ -2,7 +2,7 @@
 /*********************************************************************************
  * The contents of this file are subject to the SugarCRM Public License Version 1.1.2
  * ("License"); You may not use this file except in compliance with the 
- * License. You may obtain a copy of the License at http://www.sugarcrm.com/SPL
+ * License. You may obtain a copy of the License at http://www.mozilla.org/MPL
  * Software distributed under the License is distributed on an  "AS IS"  basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
  * the specific language governing rights and limitations under the License.
@@ -13,23 +13,22 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Calendar/Delete.php,v 1.3 2005/01/17 05:11:26 saraj Exp $
- * Description:  Deletes an Account record and then redirects the browser to the 
- * defined return URL.
+ * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/modules/Activities/Delete.php,v 1.11 2005/04/18 10:37:49 samk Exp $
+ * Description:  TODO: To be written.
  ********************************************************************************/
 
-require_once('modules/Calendar/UserCalendar.php');
-global $mod_strings;
+require_once('modules/Calendar/Activity.php');
 
 require_once('include/logging.php');
-$log = LoggerManager::getLogger('calendar_delete');
+$log = LoggerManager::getLogger('task_delete');
 
-$focus = new UserCalendar();
+$focus = new Activity();
 
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-$focus->appointment_delete($_REQUEST['record']);
+DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
 
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
+if($_REQUEST['parenttab'] != '')$parenttab=$_REQUEST['parenttab'];
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&parenttab=".$parenttab."&relmodule=".$_REQUEST['module']);
 ?>

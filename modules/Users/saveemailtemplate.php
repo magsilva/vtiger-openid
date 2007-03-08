@@ -9,42 +9,43 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-require_once('include/utils.php');
+require_once('include/utils/utils.php');
 
-global $vtlog;
+global $log;
 $db = new PearDatabase();
+	$log->debug("the foldername is ".$folderName);
 $folderName = $_REQUEST["foldername"];
-	  $vtlog->logthis("the foldername is ".$folderName,'debug');  
 $templateName = $_REQUEST["templatename"];
-	  $vtlog->logthis("the templatename is ".$templateName,'debug');  
+	  $log->debug("the templatename is ".$templateName);
 $templateid = $_REQUEST["templateid"];
-	  $vtlog->logthis("the templateid is ".$templateid,'debug');  
+	  $log->debug("the templateid is ".$templateid);
 $description = $_REQUEST["description"];
-	  $vtlog->logthis("the description is ".$description,'debug');  
+	  $log->debug("the description is ".$description);
 $subject = $_REQUEST["subject"];
-	  $vtlog->logthis("the subject is ".$subject,'debug');  
+	  $log->debug("the subject is ".$subject);  
 $body = $_REQUEST["body"];
-	  $vtlog->logthis("the body is ".$body,'debug');  
+	  $log->debug("the body is ".$body);  
 if ($body !='')
 {
 	$body = to_html($body);
-	  $vtlog->logthis("the body value is set ",'info');  
+	  $log->info("the body value is set ");  
 }
 if(isset($templateid) && $templateid !='')
 {
-	$vtlog->logthis("the templateid is set",'info');  
-	$sql = "update emailtemplates set foldername = '".$folderName."', templatename ='".$templateName."', subject ='".$subject."', description ='".$description."', body ='".$body."' where templateid =".$templateid;
+	$log->info("the templateid is set");  
+	$sql = "update vtiger_emailtemplates set foldername = '".$folderName."', templatename ='".$templateName."', subject ='".$subject."', description ='".$description."', body ='".$body."' where templateid =".$templateid;
 	$adb->query($sql);
  
-	$vtlog->logthis("about to invoke the detailviewemailtemplate file",'info');  
-	header("Location:index.php?module=Users&action=detailviewemailtemplate&templateid=".$templateid);
+	$log->info("about to invoke the detailviewemailtemplate file");  
+	header("Location:index.php?module=Users&action=detailviewemailtemplate&parenttab=Settings&templateid=".$templateid);
 }
 else
 {
-	$sql = "insert into emailtemplates values ('". $folderName. "','".$templateName."','".$subject."','".$description."','".$body."',0,".$db->getUniqueID('emailtemplates').")";
+	$templateid = $db->getUniqueID('vtiger_emailtemplates');
+	$sql = "insert into vtiger_emailtemplates values ('". $folderName. "','".$templateName."','".$subject."','".$description."','".$body."',0,".$templateid.")";
 	$adb->query($sql);
 
-	$vtlog->logthis("added to the db the emailtemplate",'info');  
-	header("Location:index.php?module=Users&action=listemailtemplates");
+	 $log->info("added to the db the emailtemplate");
+	header("Location:index.php?module=Users&action=detailviewemailtemplate&parenttab=Settings&templateid=".$templateid);
 }
 ?>

@@ -13,7 +13,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // WINNT implementation written by Carl C. Longnecker, longneck@iname.com
-// $Id: class.WINNT.inc.bak.php,v 1.1 2005/05/27 14:46:02 venkatraj Exp $
+// $Id: class.WINNT.inc.bak.php 5728 2006-05-03 21:19:46Z allanbush $
 class sysinfo {
   // winnt needs some special prep
   // $wmi holds the COM object that we pull all the WMI data from

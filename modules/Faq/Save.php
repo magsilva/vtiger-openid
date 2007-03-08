@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Faq/Save.php,v 1.4 2005/05/03 13:18:54 saraj Exp $
+ * $Header$
  * Description:  Saves an Account record and then redirects the browser to the 
  * defined return URL.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -23,38 +23,14 @@
 
 require_once('modules/Faq/Faq.php');
 require_once('include/logging.php');
-//require_once('database/DatabaseConnection.php');
 require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
 
 $focus = new Faq();
-if(isset($_REQUEST['record']))
-{
-	$focus->id = $_REQUEST['record'];
-}
-if(isset($_REQUEST['mode']))
-{
-	$focus->mode = $_REQUEST['mode'];
-}
 
-//$focus->retrieve($_REQUEST['record']);
+setObjectValuesFromRequest(&$focus);
 
-foreach($focus->column_fields as $fieldname => $val)
-{
-	if(isset($_REQUEST[$fieldname]))
-	{
-		$value = $_REQUEST[$fieldname];
-		//echo '<BR>';
-		//echo $fieldname."         ".$value;
-		//echo '<BR>';
-		$focus->column_fields[$fieldname] = $value;
-	}
-		
-}
-
-
-//$focus->saveentity("Faq");
 $focus->save("Faq");
 $return_id = $focus->id;
 

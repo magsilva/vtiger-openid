@@ -17,29 +17,19 @@
  * Description:  TODO: To be written.
  ********************************************************************************/
 
-require_once('modules/Notes/Note.php');
+require_once('modules/Notes/Notes.php');
 
 require_once('include/logging.php');
 $log = LoggerManager::getLogger('note_delete');
 
-$focus = new Note();
+$focus = new Notes();
 
 if(!isset($_REQUEST['record']))
 	die("A record number must be specified to delete the note.");
 
-if($_REQUEST['return_module']== 'Contacts')
-{
-	$sql = 'update notes set contact_id = 0 where notesid = '.$_REQUEST['record'];
-	$adb->query($sql);
-}
-$sql = 'delete from senotesrel where notesid = '.$_REQUEST['record']. ' and crmid = '.$_REQUEST['return_id'];
-$adb->query($sql);
+DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
 
-$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
-$adb->query($sql_recentviewed);
-if($_REQUEST['return_module'] == $_REQUEST['module'])
-        $focus->mark_deleted($_REQUEST['record']);
+if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
 
-
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&parenttab=$parenttab"."&relmodule=".$_REQUEST['module']);
 ?>

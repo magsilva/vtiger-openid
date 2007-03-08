@@ -241,7 +241,6 @@ function CloseTag($tag)
         $this->Ln();
     }
     if($tag=='TABLE') { // TABLE-END
-        //$this->Ln();
         $this->tableborder=0;
     }
 
@@ -289,8 +288,12 @@ function PutLink($URL,$txt)
 
 $reportid = $_REQUEST["record"];
 $oReport = new Reports($reportid);
-
+//Code given by C‚sar Rodr¡guez for Rwport Filter
+$filtercolumn = $_REQUEST["stdDateFilterField"];
+$filter = $_REQUEST["stdDateFilter"];
 $oReportRun = new ReportRun($reportid);
+$filterlist = $oReportRun->RunTimeFilter($filtercolumn,$filter,$_REQUEST["startdate"],$_REQUEST["enddate"]);
+
 $arr_val = $oReportRun->GenerateReport("PDF",$filterlist);
 
 if(isset($arr_val))
@@ -312,7 +315,6 @@ if($columnlength > 0 && $columnlength <= 4)
         $pdf = new Html2PDF('L','mm','A3');
 }
 
-//$pdf=new Html2PDF('L','mm','A3');
 $pdf->AddPage();
 
 $pdf->SetFillColor(224,235,255);
@@ -368,7 +370,7 @@ if(isset($arr_val))
 	$count = 0;
 	foreach($arr_val[0] as $key=>$value)
 	{
-		$headerHTML .= '<td width="'.$col_width[$count].'" bgcolor="#a2c8f3">'.$key.'</td>';
+		$headerHTML .= '<td width="'.$col_width[$count].'" bgcolor="#DDDDDD">'.$oReportRun->getLstringforReportHeaders($key).'</td>';
 		$count = $count + 1;
 	}
 	
@@ -396,5 +398,5 @@ $html='<table border="1">
 
 $pdf->WriteHTML($html);
 $pdf->Output('Reports.pdf','D');
-
+exit();
 ?>

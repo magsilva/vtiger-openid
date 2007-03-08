@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportProduct.php,v 1.1 2005/09/02 11:11:26 saraj Exp $
+ * $Header$
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -26,17 +26,17 @@ include_once('config.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
-require_once('modules/Contacts/Contact.php');
-require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Notes/Note.php');
-require_once('modules/Emails/Email.php');
-require_once('modules/Accounts/Account.php');
-require_once('modules/Products/Product.php');
+require_once('modules/Contacts/Contacts.php');
+require_once('modules/Potentials/Potentials.php');
+require_once('modules/Notes/Notes.php');
+require_once('modules/Emails/Emails.php');
+require_once('modules/Accounts/Accounts.php');
+require_once('modules/Products/Products.php');
 require_once('include/ComboUtil.php');
-require_once('modules/Leads/Lead.php');
+require_once('modules/Leads/Leads.php');
 
 
-class ImportProduct extends Product {
+class ImportProduct extends Products {
 	 var $db;
 
 	// This is the list of the functions to run when importing
@@ -44,6 +44,8 @@ class ImportProduct extends Product {
 
 	var $importable_fields = Array();
 
+	/**   function used to set the assigned_user_id value in the column_fields when we map the username during import
+         */
 	function assign_user()
 	{
 		global $current_user;
@@ -54,7 +56,8 @@ class ImportProduct extends Product {
 		{
 			$this->db->println("searching and assigning ".$ass_user);
 
-			$result = $this->db->query("select id from users where user_name = '".$ass_user."'");
+			//$result = $this->db->query("select id from vtiger_users where user_name = '".$ass_user."'");
+			$result = $this->db->query("select id from vtiger_users where id = '".$ass_user."'");
 			if($this->db->num_rows($result)!=1)
 			{
 				$this->db->println("not exact records setting current userid");
@@ -78,6 +81,8 @@ class ImportProduct extends Product {
 		}
 	}
 
+	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
+	 */
 	function ImportProduct() {
 		
 		$this->log = LoggerManager::getLogger('import_product');

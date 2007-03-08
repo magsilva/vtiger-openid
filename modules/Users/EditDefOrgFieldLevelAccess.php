@@ -12,19 +12,13 @@
 
 
 require_once('include/database/PearDatabase.php');
-require_once('XTemplate/xtpl.php');
 require_once('themes/'.$theme.'/layout_utils.php');
-require_once('modules/Users/UserInfoUtil.php');
-require_once('include/utils.php');
+require_once('include/utils/UserInfoUtil.php');
+require_once('include/utils/utils.php');
 
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
-
-echo '<form action="index.php" method="post" name="new" id="form">';
-echo get_module_title("Users", $_REQUEST['fld_module'].': '.$mod_strings['LBL_FIELD_LEVEL_ACCESS'], true);
-echo '<BR>';
-//echo get_form_header("Standard Fields", "", false );
 
 global $adb;
 global $theme;
@@ -32,59 +26,49 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$fld_module = $_REQUEST["fld_module"];
-//Retreiving the fields array
 
-$xtpl=new XTemplate ('modules/Users/EditDefOrgFieldLevelAccess.html');
+$field_module = Array('Leads','Accounts','Contacts','Potentials','HelpDesk','Products','Notes','Emails','Calendar','Events','Vendors','PriceBooks','Quotes','PurchaseOrder','SalesOrder','Invoice','Campaigns','Faq');
+$allfields=Array();
+foreach($field_module as $fld_module)
+{
+	$fieldListResult = getDefOrgFieldList($fld_module);
+	$noofrows = $adb->num_rows($fieldListResult);
+	$language_strings = return_module_language($current_language,$fld_module);
+	$allfields[$fld_module] = getStdOutput($fieldListResult, $noofrows, $language_strings,$profileid);
+}
 
+if($_REQUEST['fld_module'] != '')
+	$smarty->assign("DEF_MODULE",$_REQUEST['fld_module']);
+else
+	$smarty->assign("DEF_MODULE",'Leads');
 
-$fieldListResult = getDefOrgFieldList($fld_module);
-$noofrows = $adb->num_rows($fieldListResult);
-$standCustFld = getStdOutput($fieldListResult, $noofrows, $mod_strings,$profileid);
-
-//Standard PickList Fields
-function getStdOutput($fieldListResult, $noofrows, $mod_strings,$profileid)
+/** Function to get the field label/permission array to construct the default orgnization field UI for the specified profile 
+  * @param $fieldListResult -- mysql query result that contains the field label and uitype:: Type array
+  * @param $mod_strings -- i18n language mod strings array:: Type array
+  * @param $profileid -- profile id:: Type integer
+  * @returns $standCustFld -- field label/permission array :: Type varchar
+  *
+ */	
+function getStdOutput($fieldListResult, $noofrows, $lang_strings,$profileid)
 {
 	global $adb;
-	$standCustFld= '';
-	$standCustFld .= '<input type="hidden" name="fld_module" value="'.$_REQUEST['fld_module'].'">';
-	$standCustFld .= '<input type="hidden" name="module" value="Users">';
-	//$standCustFld .= '<input type="hidden" name="profileid" value="'.$profileid.'">';
-	$standCustFld .= '<input type="hidden" name="action" value="UpdateDefaultFieldLevelAccess">';
-	$standCustFld .= '<BR>';
-	$standCustFld .= '<table border="0" cellpadding="0" cellspacing="0" width="40%"><tr><td>';
-	$standCustFld .= get_form_header($mod_strings['LBL_FIELD_PERMISSIOM_TABLE_HEADER'], "", false );
-	$standCustFld .= '</td></tr></table>';
-	$standCustFld .= '<table border="0" cellpadding="5" cellspacing="1" class="FormBorder" width="40%">';
-	$standCustFld .=  '<tr class="ModuleListTitle" height=20>';
-	$standCustFld .=  '<td width="50%" nowrap class="moduleListTitle" height="21" style="padding:0px 3px 0px 3px;"><b>'.$mod_strings['LBL_FIELD_PERMISSION_FIELD_NAME'].'</b></td>';
-	$standCustFld .=  '<td class="moduleListTitle" style="padding:0px 3px 0px 3px;"><div align="center"><b>'.$mod_strings['LBL_FIELD_PERMISSION_VISIBLE'].'</b></div></td>';
-	$standCustFld .=  '</tr>';
-	
-	$row=1;
+	$standCustFld = Array();
 	for($i=0; $i<$noofrows; $i++,$row++)
 	{
-		if ($row%2==0)
-		{
-			$trowclass = 'evenListRow';
-		}
-		else
-		{	
-			$trowclass = 'oddListRow';
-		}
-
-		$standCustFld .= '<tr class="'.$trowclass.'">';
-		
 		$uitype = $adb->query_result($fieldListResult,$i,"uitype");
                 $mandatory = '';
 		$readonly = '';
-                if($uitype == 2 || $uitype == 51 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16)
+                if($uitype == 2 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16 || $uitype == 20)
                 {
                         $mandatory = '<font color="red">*</font>';
-			$readonly = 'disabled';
+						$readonly = 'disabled';
                 }
 
-		$standCustFld .= '<td height="21" style="padding:0px 3px 0px 3px;">'.$mandatory.' '.$adb->query_result($fieldListResult,$i,"fieldlabel").'</td>';
+		$fieldlabel = $adb->query_result($fieldListResult,$i,"fieldlabel");
+		if($lang_strings[$fieldlabel] !='')
+			$standCustFld []= $mandatory.' '.$lang_strings[$fieldlabel];
+		else
+			$standCustFld []= $mandatory.' '.$fieldlabel;
 		if($adb->query_result($fieldListResult,$i,"visible") == 0)
 		{
 			$visible = "checked";
@@ -93,19 +77,21 @@ function getStdOutput($fieldListResult, $noofrows, $mod_strings,$profileid)
 		{
 			$visible = "";
 		}	
-		$standCustFld .= '<td height="21" style="padding:0px 3px 0px 3px;"><div align="center"><input type="checkbox" name="'.$adb->query_result($fieldListResult,$i,"fieldid").'" '.$visible.' '.$readonly.'></div></td></tr>';
+		$standCustFld []= '<input type="checkbox" name="'.$adb->query_result($fieldListResult,$i,"fieldid").'" '.$visible.' '.$readonly.'>';
 		
 	}
-	$standCustFld .= '</table>';
-	$standCustFld .= '<br><div align="center" style="width:40%"><input title="Update" accessKey="C" class="button" type="submit" name="Update" value="'.$mod_strings['LBL_BUTTON_UPDATE'].'"></div>';
-	$standCustFld .= '</form>';
-	//echo $standCustFld;
+	$standCustFld=array_chunk($standCustFld,2);	
+	$standCustFld=array_chunk($standCustFld,4);	
 	return $standCustFld;
 }
-$xtpl->assign("MOD", $mod_strings);
-$xtpl->assign("STANDARDFIELDS", $standCustFld);
-$xtpl->parse("main");
-$xtpl->out("main");
 
+$smarty->assign("FIELD_INFO",$field_module);
+$smarty->assign("FIELD_LISTS",$allfields);
+$smarty->assign("MOD", return_module_language($current_language,'Settings'));
+$smarty->assign("IMAGE_PATH",$image_path);
+$smarty->assign("APP", $app_strings);
+$smarty->assign("CMOD", $mod_strings);
+$smarty->assign("MODE",'edit');                    
+$smarty->display("FieldAccess.tpl");
 
 ?>

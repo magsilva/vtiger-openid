@@ -8,22 +8,21 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('XTemplate/xtpl.php');
+require_once('Smarty_setup.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
-
-echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_TITLE'], true);
-echo '<br>';
 
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$xtpl=new XTemplate ('modules/Settings/index.html');
-$xtpl->assign("MOD", $mod_strings);
-$xtpl->assign("IMAGE_PATH", $image_path);
-$xtpl->parse("main");
-$xtpl->out("main");
+$smarty = new vtigerCRM_Smarty;
+$smarty->assign("APP", $app_strings);
+$smarty->assign("MODULE", 'Settings');
+$smarty->assign("CATEGORY", 'Settings');
+$smarty->assign("MOD", $mod_strings);
+$smarty->assign("IMAGE_PATH", $image_path);
+$smarty->display("Settings.tpl");
 ?>

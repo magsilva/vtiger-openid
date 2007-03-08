@@ -13,29 +13,24 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Leads/Delete.php,v 1.19 2005/05/03 13:18:56 saraj Exp $
+ * $Header$
  * Description:  Deletes an Account record and then redirects the browser to the 
  * defined return URL.
  ********************************************************************************/
 
-require_once('modules/Leads/Lead.php');
+require_once('modules/Leads/Leads.php');
 global $mod_strings;
 
 require_once('include/logging.php');
 $log = LoggerManager::getLogger('lead_delete');
 
-$focus = new Lead();
+$focus = new Leads();
 
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-$sql = 'delete from seactivityrel where crmid = '.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
-$adb->query($sql);
+DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
 
-$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
-$adb->query($sql_recentviewed);
-if($_REQUEST['module'] == $_REQUEST['return_module'])
-	$focus->mark_deleted($_REQUEST['record']);
-
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
+ if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&parenttab=".$parenttab."&relmodule=".$_REQUEST['module']);
 ?>

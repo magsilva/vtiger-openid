@@ -31,9 +31,11 @@ $data_print['start_tag'] = "<!-- startscrmprint -->";
 $data_print['stop_tag'] = "<!-- stopscrmprint -->";
 $data_print['default_charset'] = "utf-8";
 
-require_once("config.php");
-require_once("include/utils.php");
+require_once("config.inc.php");
+require_once("include/utils/utils.php");
 
+/** Function to set, character set in the header, as given in include/language/*_lang.php
+ */
   function insert_charset_header()
  	{
  	global $app_strings, $default_charset;
@@ -96,13 +98,15 @@ else {
 ?>
 <style type="text/css" media="all">
 IMG { display: none; }
+.bodySmall{display: none;}
+input{ display:none; }
 </style>
 </head>
 <body>
-<a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a><br><br>
+<!--a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a><br><br-->
 <?php
 echo $page_str;
 ?>
-<br><br><a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a>
+<br><br><!--a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a-->
 </body>
 </html>

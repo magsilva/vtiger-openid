@@ -9,22 +9,20 @@
  * All Rights Reserved.
  ********************************************************************************/
 
-require_once('XTemplate/xtpl.php');
+require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Users/LoginHistory.php');
-require_once('modules/Users/User.php');
+require_once('modules/Users/Users.php');
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
-#require_once('modules/Users/User.php');
-require_once('include/utils.php');
+#require_once('modules/Users/Users.php');
+require_once('include/utils/utils.php');
 
 global $app_strings;
 global $mod_strings;
 global $app_list_strings;
-global $current_language;
-$current_module_strings = return_module_language($current_language, 'Users');
+global $current_language, $current_user, $adb;
 
 global $list_max_entries_per_page;
 global $urlPrefix;
@@ -34,43 +32,48 @@ $log = LoggerManager::getLogger('login_list');
 global $currentModule;
 
 global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
 
-$focus = new User();
+$focus = new LoginHistory();
 
-if(isset($_REQUEST['record'])) {
-	$focus->retrieve($_REQUEST['record']);
+$smarty = new vtigerCRM_Smarty;
+
+$category = getParenttab();
+
+$userid = $_REQUEST['record'];
+$username = getUserName($userid);
+$qry = "Select * from vtiger_loginhistory where user_name= '$username'";
+$qry_result = $adb->query($qry);
+$no_of_rows = $adb->num_rows($qry_result);
+
+//Retreiving the start value from request
+if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
+{
+        $start = $_REQUEST['start'];
 }
-if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
-	$focus->id = "";
-}
+else
+	$start=1;
 
-echo get_module_title($mod_strings['LBL_MODULE_NAME'], $current_module_strings['LBL_LOGIN_HISTORY_TITLE'], true); 
-echo "\n<BR>\n";
+//Retreive the Navigation array
+$navigation_array = getNavigationValues($start, $no_of_rows, '10');
 
-// focus_list is the means of passing data to a ListView.
-global $focus_list;
 
-if (!isset($where)) $where = "";
+$start_rec = $navigation_array['start'];
+$end_rec = $navigation_array['end_val'];
+$record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$no_of_rows;
 
-$seedLogin = new LoginHistory();
+$navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Users","ShowHistory",'');
 
-$button  = "<table cellspacing='0' cellpadding='1' border='0'><form border='0' method='post' name='DetailView' action='index.php'>\n";
+$smarty->assign("CMOD", $mod_strings);
+$smarty->assign("MOD", return_module_language($current_language, "Settings"));
+$smarty->assign("APP", $app_strings);
+$smarty->assign("IMAGE_PATH",$image_path);
+$smarty->assign("LIST_HEADER",$focus->getHistoryListViewHeader());
+$smarty->assign("LIST_ENTRIES",$focus->getHistoryListViewEntries($username, $navigation_array, $sorder, $sortby));
+$smarty->assign("RECORD_COUNTS", $record_string);
+$smarty->assign("NAVIGATION", $navigationOutput);
+$smarty->assign("CATEGORY",$category);
 
-$button .= "<tr><td>\n";
-$button .= "<input type='hidden' name='module' value='Users'>\n";
-$button .= "<input type='hidden' name='return_module' value='".$currentModule."'>\n";
-$button .= "<input type='hidden' name='return_action' value='".$action."'>\n";
-$button .= "<input type='hidden' name='record' value='".$focus->id."'>\n";
-$button .= "<input type='hidden' name='action'>\n";
-$button .= "<input title='".$app_strings['LBL_CANCEL_BUTTON_TITLE']."' accessKey='".$app_strings['LBL_CANCEL_BUTTON_KEY']."' class='button' onclick=\"this.form.action.value='DetailView'; this.form.module.value='Users'; this.form.record.value='$focus->id'\" type='submit' name='button' value='".$app_strings['LBL_CANCEL_BUTTON_LABEL']."'></td></tr>";
-
-$button .= "</form></table>";
-
-$ListView = new ListView();
-$ListView->initNewXTemplate('modules/Users/ShowHistory.html',$current_module_strings);
-$ListView->setHeaderTitle($current_module_strings['LBL_LOGIN_HISTORY_BUTTON_LABEL']);
-$ListView->setHeaderText($button);
-$ListView->setQuery($where, "", "login_id", "LOGIN");
-$ListView->processListView($seedLogin, "main", "LOGIN");
-
+$smarty->display("ShowHistoryContents.tpl");
 ?>

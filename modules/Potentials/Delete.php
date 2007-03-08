@@ -17,28 +17,17 @@
  * Description:  TODO: To be written.
  ********************************************************************************/
 
-require_once('modules/Potentials/Opportunity.php');
+require_once('modules/Potentials/Potentials.php');
 
 require_once('include/logging.php');
 $log = LoggerManager::getLogger('contact_delete');
 
-$focus = new Potential();
+$focus = new Potentials();
 
 if(!isset($_REQUEST['record']))
 	die("A record number must be specified to delete the opportunity.");
 
-if($_REQUEST['return_module'] == 'Accounts')
-{
-	$sql = 'update crmentity set deleted = 1 where crmid = '.$_REQUEST['record'];
-	$adb->query($sql);
-}
-$sql ='delete from seactivityrel where crmid = '.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
-$adb->query($sql);
+DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
 
-$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
-$adb->query($sql_recentviewed);
-if($_REQUEST['return_module'] == $_REQUEST['module'])
-        $focus->mark_deleted($_REQUEST['record']);
-
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&relmodule=".$_REQUEST['module']);
 ?>

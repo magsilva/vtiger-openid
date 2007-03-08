@@ -42,7 +42,7 @@ $mod_strings = Array(
 'LBL_EMAIL_ADDRESS'=>'Email Address:',
 'LBL_COLON'=>':',
 
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
 'LBL_LIST_FILENAME'=>"File",
 
 // Added for Note(3.2-patch 3) 
@@ -54,7 +54,7 @@ $mod_strings = Array(
 'LBL_TOOL_FORM_TITLE'=>'Note Tools',
 // Added for 4GA
 'Contact Name'=>'Contact Name',
-'Related To'=>'Related To',
+'Related To'=>'Related to',
 'Subject'=>'Subject',
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
@@ -65,6 +65,7 @@ $mod_strings = Array(
 'Last Modified'=>'Last Modified',
 'File'=>'File',
 'LBL_ALL'=>'All',
+'Title'=>'Title',
 
 );
 

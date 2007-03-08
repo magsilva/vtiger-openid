@@ -6,406 +6,228 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
-*
+ *
  ********************************************************************************/
-require('include/fpdf/fpdf.php');
-require_once('modules/Quotes/Quote.php');
 
-$id = $_REQUEST['record'];
-global $adb;
-//retreiving the invoice info
-$focus = new Quote();
+
+require_once('include/fpdf/pdf.php');
+require_once('modules/Quotes/Quotes.php');
+require_once('include/database/PearDatabase.php');
+
+global $adb,$app_strings;
+
+$sql="select currency_symbol from vtiger_currency_info";
+$result = $adb->query($sql);
+$currency_symbol = $adb->query_result($result,0,'currency_symbol');
+
+// would you like and end page?  1 for yes 0 for no
+$endpage="1";
+global $products_per_page;
+$products_per_page="6";
+
+$focus = new Quotes();
 $focus->retrieve_entity_info($_REQUEST['record'],"Quotes");
 $account_name = getAccountName($focus->column_fields[account_id]);
-$iData[] = $account_name;
-$iData[] = $id;
-$iData[] = date('Y-m-d');
 
-//setting the Customer Data
-$iCustData[] = $account_name;
-
-if($focus->column_fields["validtill"] != '')
-{
-	$due_date = $focus->column_fields["validtill"];
-}
-else
-{
-	$due_date = ' ';
-}
-$iCustData[] = $due_date;
-
-//setting the billing address
-$bdata[] = $account_name;
-if($focus->column_fields["bill_street"] != '')
-{
-        $bill_street = $focus->column_fields["bill_street"];
-	$bdata[] = $bill_street;
-	
+if($focus->column_fields["hdnTaxType"] == "individual") {
+        $product_taxes = 'true';
+} else {
+        $product_taxes = 'false';
 }
 
-if($focus->column_fields["bill_city"] != '')
-{
-        $bill_city = $focus->column_fields["bill_city"];
-	$bdata[] = $bill_city;
-}
+// **************** BEGIN POPULATE DATA ********************
+$account_id = $focus->column_fields[account_id];
+$quote_id=$_REQUEST['record'];
 
+// Quote Information
+$valid_till = $focus->column_fields["validtill"];
+$valid_till = getDisplayDate($valid_till); 
+$bill_street = $focus->column_fields["bill_street"];
+$bill_city = $focus->column_fields["bill_city"];
+$bill_state = $focus->column_fields["bill_state"];
+$bill_code = $focus->column_fields["bill_code"];
+$bill_country = $focus->column_fields["bill_country"];
 
-if($focus->column_fields["bill_state"] != '')
-{
-        $bill_state = $focus->column_fields["bill_state"];
-	$bdata[] = $bill_state;
-}
+$ship_street = $focus->column_fields["ship_street"];
+$ship_city = $focus->column_fields["ship_city"];
+$ship_state = $focus->column_fields["ship_state"];
+$ship_code = $focus->column_fields["ship_code"];
+$ship_country = $focus->column_fields["ship_country"];
 
+$conditions = $focus->column_fields["terms_conditions"];
+$description = $focus->column_fields["description"];
+$status = $focus->column_fields["quotestage"];
 
-if($focus->column_fields["bill_code"] != '')
-{
-        $bill_code = $focus->column_fields["bill_code"];
-	$bdata[] = $bill_code;
-}
-
-
-if($focus->column_fields["bill_country"] != '')
-{
-        $bill_country = $focus->column_fields["bill_country"];
-	$bdata[] = $bill_country;
-}
-
-for($i =0; $i <5; $i++)
-{
-	if(sizeof($bdata) < 6)
-	{
-		$bdata[] = ' '; 
-	}
-}
-
-//setting the shipping address
-$sdata[] = $account_name;
-if($focus->column_fields["ship_street"] != '')
-{
-        $ship_street = $focus->column_fields["ship_street"];
-	$sdata[] = $ship_street;
-}
-
-if($focus->column_fields["ship_city"] != '')
-{
-        $ship_city = $focus->column_fields["ship_city"];
-	$sdata[] = $ship_city;
-}
-
-
-if($focus->column_fields["ship_state"] != '')
-{
-        $ship_state = $focus->column_fields["ship_state"];
-	$sdata[] = $ship_state;
-}
-
-
-if($focus->column_fields["ship_code"] != '')
-{
-        $ship_code = $focus->column_fields["ship_code"];
-	$sdata[] = $ship_code;
-}
-
-
-if($focus->column_fields["ship_country"] != '')
-{
-        $ship_country = $focus->column_fields["ship_country"];
-	$sdata[] = $ship_country;
-}
-
-for($i =0; $i <5; $i++)
-{
-	if(sizeof($sdata) < 6)
-	{
-		$sdata[] = ' '; 
-	}
-}
-
-//Getting the terms_conditions
-
-if($focus->column_fields["terms_conditions"] != '')
-{
-        $conditions = $focus->column_fields["terms_conditions"];
-}
-else
-{
-        $conditions = ' ';
-}
-
-//Getting the Company Address
-$add_query = "select * from organizationdetails";
+// Company information
+$add_query = "select * from vtiger_organizationdetails";
 $result = $adb->query($add_query);
 $num_rows = $adb->num_rows($result);
-$org_field_array = Array('organizationame','address','city','state','country','code','phone','fax','website');
 
-$companyaddress = Array();
-$logo_name = '';
-	
 if($num_rows == 1)
 {
-	$org_name = $adb->query_result($result,0,"organizationame");
-	$org_address = $adb->query_result($result,0,"address");
-	$org_city = $adb->query_result($result,0,"city");
-	$org_state = $adb->query_result($result,0,"state");
-	$org_country = $adb->query_result($result,0,"country");
-	$org_code = $adb->query_result($result,0,"code");
-	$org_phone = $adb->query_result($result,0,"phone");
-	$org_fax = $adb->query_result($result,0,"fax");
-	$org_website = $adb->query_result($result,0,"website");
+		$org_name = $adb->query_result($result,0,"organizationname");
+		$org_address = $adb->query_result($result,0,"address");
+		$org_city = $adb->query_result($result,0,"city");
+		$org_state = $adb->query_result($result,0,"state");
+		$org_country = $adb->query_result($result,0,"country");
+		$org_code = $adb->query_result($result,0,"code");
+		$org_phone = $adb->query_result($result,0,"phone");
+		$org_fax = $adb->query_result($result,0,"fax");
+		$org_website = $adb->query_result($result,0,"website");
 
-	if($org_name != '')
+		$logo_name = $adb->query_result($result,0,"logoname");
+}
+
+
+//Population of Product Details - Starts
+
+//we can cut and paste the following lines in a file and include that file here is enough. For that we have to put a new common file. we will do this later
+//NOTE : Removed currency symbols and added with Grand Total text. it is enough to show the currency symbol in one place
+
+//we can also get the NetTotal, Final Discount Amount/Percent, Adjustment and GrandTotal from the array $associated_products[1]['final_details']
+
+//getting the Net Total
+$price_subtotal = number_format($focus->column_fields["hdnSubTotal"],2,'.',',');
+
+//Final discount amount/percentage
+$discount_amount = $focus->column_fields["hdnDiscountAmount"];
+$discount_percent = $focus->column_fields["hdnDiscountPercent"];
+
+if($discount_amount != "")
+	$price_discount = number_format($discount_amount,2,'.',',');
+else if($discount_percent != "")
+	$price_discount = $discount_percent."%";
+else
+	$price_discount = "0.00";
+
+//Adjustment
+$price_adjustment = number_format($focus->column_fields["txtAdjustment"],2,'.',',');
+//Grand Total
+$price_total = number_format($focus->column_fields["hdnGrandTotal"],2,'.',',');
+
+
+//get the Associated Products for this Invoice
+$focus->id = $focus->column_fields["record_id"];
+$associated_products = getAssociatedProducts("Quotes",$focus);
+$num_products = count($associated_products);
+
+//This $final_details array will contain the final total, discount, Group Tax, S&H charge, S&H taxes and adjustment
+$final_details = $associated_products[1]['final_details'];
+
+//To calculate the group tax amount
+if($final_details['taxtype'] == 'group')
+{
+	$group_tax_total = $final_details['tax_totalamount'];
+	$price_salestax = number_format($group_tax_total,2,'.',',');
+
+	$group_total_tax_percent = '0.00';
+	$group_tax_details = $final_details['taxes'];
+	for($i=0;$i<count($group_tax_details);$i++)
 	{
-		$companyaddress[] =  $org_name;
+		$group_total_tax_percent = $group_total_tax_percent+$group_tax_details[$i]['percentage'];
 	}
-	if($org_address != '' || $org_city != '' || $org_state != '')
-	{
-		$companyaddress[] = $org_address.' '.$org_city.' '.$org_state;
-	}
-	if($org_country != '' || $org_code!= '')
-	{
-		$companyaddress[] = $org_country.' '.$org_code;
-	}
-	if($org_phone != '' || $org_fax != '')
-	{
-		$companyaddress[] = $org_phone.' '.$org_fax;
-	}
-	if($org_website != '')
-	{
-		$companyaddress[] = $org_website;
-	}
+}
+
+//S&H amount
+$sh_amount = $final_details['shipping_handling_charge'];
+$price_shipping = number_format($sh_amount,2,'.',',');
+
+//S&H taxes
+$sh_tax_details = $final_details['sh_taxes'];
+$sh_tax_percent = '0.00';
+for($i=0;$i<count($sh_tax_details);$i++)
+{
+	$sh_tax_percent = $sh_tax_percent + $sh_tax_details[$i]['percentage'];
+}
+$sh_tax_amount = $final_details['shtax_totalamount'];
+$price_shipping_tax = number_format($sh_tax_amount,2,'.',',');
+
+
+//This is to get all prodcut details as row basis
+for($i=1,$j=$i-1;$i<=$num_products;$i++,$j++)
+{
+	$product_name[$i] = $associated_products[$i]['productName'.$i];
+	$prod_description[$i] = $associated_products[$i]['productDescription'.$i];
+	$product_id[$i] = $associated_products[$i]['hdnProductId'.$i];
+	$qty[$i] = $associated_products[$i]['qty'.$i];
+	$unit_price[$i] = number_format($associated_products[$i]['unitPrice'.$i],2,'.',',');
+	$list_price[$i] = number_format($associated_products[$i]['listPrice'.$i],2,'.',',');
+	$list_pricet[$i] = $associated_products[$i]['listPrice'.$i];
+	$discount_total[$i] = $associated_products[$i]['discountTotal'.$i];
 	
-	for($i =0; $i < 4; $i++)
+	$taxable_total = $qty[$i]*$list_pricet[$i]-$discount_total[$i];
+
+	$producttotal = $taxable_total;
+	$total_taxes = '0.00';
+	if($focus->column_fields["hdnTaxType"] == "individual")
 	{
-		if(sizeof($companyaddress) < 5)
+		$total_tax_percent = '0.00';
+		//This loop is to get all tax percentage and then calculate the total of all taxes
+		for($tax_count=0;$tax_count<count($associated_products[$i]['taxes']);$tax_count++)
 		{
-			$companyaddress[] = ' '; 
+			$tax_percent = $associated_products[$i]['taxes'][$tax_count]['percentage'];
+			$total_tax_percent = $total_tax_percent+$tax_percent;
+			$tax_amount = (($taxable_total*$tax_percent)/100);
+			$total_taxes = $total_taxes+$tax_amount;
 		}
-	}	
-
-	$logo_name = $adb->query_result($result,0,"logoname");
-}
-//Getting the logo
-
-//getting the Product Data
-$query="select products.productname,products.unit_price,quotesproductrel.* from quotesproductrel inner join products on products.productid=quotesproductrel.productid where quoteid=".$id;
-
-$result = $adb->query($query);
-$num_rows=$adb->num_rows($result);
-for($i=1;$i<=$num_rows;$i++)
-{
-	$temp_data = Array();
-        $productname=$adb->query_result($result,$i-1,'productname');
-        $unitprice=$adb->query_result($result,$i-1,'unit_price');
-        $productid=$adb->query_result($result,$i-1,'productid');
-        $qty=$adb->query_result($result,$i-1,'quantity');
-        $listprice=$adb->query_result($result,$i-1,'listprice');
-        $total = $qty*$listprice;
-
-	$temp_data['productname'] = $productname;
-	$temp_data['qty'] = $qty;
-	$temp_data['unitprice'] = $unitprice;
-	$temp_data['listprice'] = $listprice;
-	$temp_data['total'] = $total;
-	$iDataDtls[] = $temp_data;
-
-}
-//getting the Total Array
-$price_total[] = $focus->column_fields["hdnSubTotal"];
-$price_total[] = $focus->column_fields["txtTax"];
-$price_total[] = $focus->column_fields["txtAdjustment"];
-$price_total[] = $focus->column_fields["hdnGrandTotal"];
-
-class PDF extends FPDF
-{
-
-// Invoice Title
-function setInvoiceTitle($title,$logo_name,$caddress)
-{
-	if($title != "")
-	{
-		if(isset($logo_name) && $logo_name != '')
-		{
-			$this->Image('test/logo/'.$logo_name,10,10,0,0);
-		}
-		else
-		{
-			//$this->Image('themes/Aqua/images/blank.jpg',10,10,0,0);
-		}
-		for($i=0;$i<count($caddress);$i++)
-		{
-
-			$this->Ln();
-			$this->Cell(40);
-			$this->SetFont('','',10);
-			$this->Cell(0,5,$caddress[$i],0,0,'L',0);
-		}
-		$this->Ln();
-		$this->SetFillColor(224,235,255);
-    		$this->SetTextColor(0);
-    		$this->SetFont('','B',18);
-    		$this->Cell(0,10,$title,0,0,'C',0);
-
+		$producttotal = $taxable_total+$total_taxes;
+		$product_line[$j]["Tax"] = number_format($total_taxes,2,'.',',')."\n ($total_tax_percent %) ";
 	}
+	$prod_total[$i] = number_format($producttotal,2,'.',',');
+
+	$product_line[$j]["Product Name"] = $product_name[$i];
+	$product_line[$j]["Description"] = $prod_description[$i];
+	$product_line[$j]["Qty"] = $qty[$i];
+	$product_line[$j]["Price"] = $list_price[$i];
+	$product_line[$j]["Discount"] = $discount_total[$i];
+	$product_line[$j]["Total"] = $prod_total[$i];
 }
-//Invoice Address
-function setAddress($billing="",$shipping="")
+//echo '<pre>Product Details ==>';print_r($product_line);echo '</pre>';
+//echo '<pre>';print_r($associated_products);echo '</pre>';
+
+
+//Population of Product Details - Ends
+
+
+// ************************ END POPULATE DATA ***************************8
+
+$page_num='1';
+$pdf = new PDF( 'P', 'mm', 'A4' );
+$pdf->Open();
+
+$num_pages=ceil(($num_products/$products_per_page));
+
+
+$current_product=0;
+for($l=0;$l<$num_pages;$l++)
 {
-	
-	$this->Ln();
-	$this->SetFillColor(224,235,255);
- 	$this->SetTextColor(0);
-    	$this->SetFont('','B',10);
-	$this->Cell(130,10,"Bill To:",0,0,'L',0);
- 	$this->Cell(0,10,"Ship To:",0,0,'L',0);
-	for($i=0;$i<count($billing);$i++)
+	$line=array();
+	if($num_pages == $page_num)
+		$lastpage=1;
+
+	while($current_product != $page_num*$products_per_page)
 	{
-		$this->Cell(17);
-		$this->SetFont('','',10);
-		$this->Cell(130,5,$billing[$i],0,0,'L',0);
-		$this->Cell(0,5,$shipping[$i],0,0,'L',0);
-		$this->Ln();
+		$line[]=$product_line[$current_product];
+		$current_product++;
 	}
 
-}
-//Invoice from
-function setInvoiceDetails($iHeader,$iData)
-{
-    $this->Ln();
-    $this->SetFillColor(162,200,243);
-    $this->SetTextColor(0);
-    $this->SetDrawColor(61,121,206);
-    //$this->SetLineWidth(.3);
-    $this->SetFont('Arial','B',10);
-    //Header
-    $this->Cell(15);
-    foreach($iHeader as $value)
-    {
-        $this->Cell(40,7,$value,1,0,'L',1);
-    }
-    $this->Ln();
-    $this->SetFillColor(233,241,253);
-    $this->SetTextColor(0);
-    $this->SetFont('');
-    //Data
-    $this->Cell(15);
-    $fill=0;
-    foreach($iData as $value)
-    {
-		$this->Cell(40,6,$value,1,0,'L',0);
-    }
-    $this->Ln();
-}
+	$pdf->AddPage();
+	include("pdf_templates/header.php");
+	include("include/fpdf/templates/body.php");
+	include("pdf_templates/footer.php");
 
-//customer Details
-function setCustomerDetails($iCHeader,$iCData)
-{
-    $this->Ln();
-    //$this->Cell(0);
-    $this->SetFillColor(162,200,243);
-    $this->SetTextColor(0);
-    $this->SetDrawColor(61,121,206);
-    //$this->SetLineWidth(.3);
-    $this->SetFont('Arial','B',10);
-    //Header
-    //$this->Cell(15);
-    foreach($iCHeader as $value)
-    {
-        $this->Cell(63,7,$value,1,0,'L',1);
-    }
-    $this->Ln();
-    $this->SetFillColor(233,241,253);
-    $this->SetTextColor(0);
-    $this->SetFont('');
-    //Data
-    //$this->Cell(15);
-    $fill=0;
-    foreach($iCData as $value)
-    {
-		$this->Cell(63,6,$value,1,0,'L',0);
-    }
-    $this->Ln();
-}
+	$page_num++;
 
-//Product Details
-function setProductDetails($ivHeader,$ivData)
-{
-    $this->Ln();
-    $this->Ln();
-    $this->SetFillColor(162,200,243);
-    $this->SetTextColor(0);
-    $this->SetDrawColor(61,121,206);
-    $this->SetLineWidth(.3);
-    $this->SetFont('Arial','B',10);
-    //Header
-    foreach($ivHeader as $value)
-    {
-        $this->Cell(38,7,$value,0,0,'L',0);
-    }
-    $this->Ln();
-    $this->SetDrawColor(0,0,0);
-    $this->SetLineWidth(.5);
-    $this->line(10,140,200,140);
-    $this->SetFillColor(233,241,253);
-    $this->SetTextColor(0);
-    $this->SetFont('');
-    //Data
-    $fill=0;
-    	foreach($ivData as $key=>$value)
+	if (($endpage) && ($lastpage))
 	{
-    		$this->Cell(38,6,$value['productname'],0,0,'L',0);
-		$this->Cell(38,6,$value['qty'],0,0,'L',0);
-		$this->Cell(38,6,$value['unitprice'],0,0,'L',0);
-		$this->Cell(38,6,$value['listprice'],0,0,'L',0);
-		$this->Cell(38,6,$value['total'],0,0,'R',0);
-		$this->Ln();
+		$pdf->AddPage();
+		include("pdf_templates/header.php");
+		include("pdf_templates/lastpage/body.php");
+		include("pdf_templates/lastpage/footer.php");
 	}
-    $this->Ln();
 }
 
-function setTotal($price_total="",$conditions="")
-{
-	$this->Ln();
-	$this->SetDrawColor(0,0,0);
-	$this->SetLineWidth(.3);
-//	$this->line(10,200,200,200);
-	$this->SetFillColor(224,235,255);
- 	$this->SetTextColor(0);
-    	$this->SetFont('','B',10);
-	$this->Cell(140,6,"Sub Total: ",0,0,'R',0);
- 	$this->Cell(0,6,$price_total[0],1,0,'R',0);
-    	$this->Ln(4);
-	$this->Ln(4);
-	$this->Cell(140,6,"Tax: ",0,0,'R',0);
- 	$this->Cell(0,6,$price_total[1],1,0,'R',0);
-	$this->Ln(4);
-	$this->Ln(4);
-	$this->Cell(140,6,"Adjustment: ",0,0,'R',0);
- 	$this->Cell(0,6,$price_total[2],1,0,'R',0);
-    	$this->Ln(4);
-	$this->Ln(4);
-	$this->Cell(140,6,"Grand total: ",0,0,'R',0);
- 	$this->Cell(0,6,$price_total[3],1,0,'R',0);
-	$this->Ln();
-	$this->Ln();
-	$this->Cell(0,8,"Terms & Conditions: ",0,0,'L',0);
-	$this->Ln();
-	$this->Cell(0,8,$conditions,0,0,'L',0);
-}
-}
-$iHead = array("Company","Quote No.","Date");
-$iCustHeadDtls = array("Customer Name","Valid Till");
-$iHeadDtls = array("Product Name","Quantity","List Price","Unit Price","Total");
 
-$pdf = new PDF('P','mm','A4');
-$pdf->SetFont('Arial','',10);
-$pdf->AddPage();
-$pdf->setInvoiceTitle("Quotes",$logo_name,$companyaddress);
-$pdf->Ln();
-$pdf->setInvoiceDetails($iHead,$iData);
-$pdf->setAddress($bdata,$sdata);
-$pdf->setCustomerDetails($iCustHeadDtls,$iCustData);
-$pdf->setProductDetails($iHeadDtls,$iDataDtls);
-$pdf->setTotal($price_total,$conditions);
-$pdf->Output('Quotes.pdf','D');
-exit;
+$pdf->Output('Quotes.pdf','D'); //added file name to make it work in IE, also forces the download giving the user the option to save
+exit();
 ?>

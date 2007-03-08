@@ -28,7 +28,7 @@
 
 /*********************************************************************************
 
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Accounts/Import.php,v 1.16 2005/05/03 13:18:42 saraj Exp $
+ * $Header$
 
  * Description:  TODO: To be written.
 

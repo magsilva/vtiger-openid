@@ -20,60 +20,51 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('modules/Users/User.php');
+require_once('modules/Users/Users.php');
+require_once('modules/Users/CreateUserPrivilegeFile.php');
 require_once('include/logging.php');
-//require_once('modules/Users/AccessControl.php');
+require_once('user_privileges/audit_trail.php');
 
 global $mod_strings;
 
-$local_log =& LoggerManager::getLogger('authenticate');
-
-$focus = new User();
+$focus = new Users();
 
 // Add in defensive code here.
-$focus->user_name = to_html($_REQUEST['user_name']);
+$focus->column_fields["user_name"] = to_html($_REQUEST['user_name']);
 $user_password = $_REQUEST['user_password'];
 
 $focus->load_user($user_password);
 
 if($focus->is_authenticated())
 {
+
+	//Inserting entries for audit trail during login
+	
+	if($audit_trail == 'true')
+	{
+		if($record == '')
+			$auditrecord = '';						
+		else
+			$auditrecord = $record;	
+
+		$date_var = $adb->formatDate(date('YmdHis'));
+ 	    $query = "insert into vtiger_audit_trial values(".$adb->getUniqueID('vtiger_audit_trial').",".$focus->id.",'Users','Authenticate','',$date_var)";	
+			
+		$adb->query($query);
+	}
+
+	
 	// Recording the login info
         $usip=$_SERVER['REMOTE_ADDR'];
         $intime=date("Y/m/d H:i:s");
         require_once('modules/Users/LoginHistory.php');
         $loghistory=new LoginHistory();
-        $Signin = $loghistory->user_login($focus->user_name,$usip,$intime);
+        $Signin = $loghistory->user_login($focus->column_fields["user_name"],$usip,$intime);
 
-	//Authentication for tutos
-        //include('modules/Calendar/Authenticate.php');
-
-	// save the user information into the session
-	// go to the home screen
 	//Security related entries start
-	require_once('modules/Users/UserInfoUtil.php');
-	//$rolename = fetchUserRole($focus->id);
-	//$profilename = fetchUserProfile($focus->id);
-	$profileid = fetchUserProfileId($focus->id);	
-	//setting the role into the session
-	//$_SESSION['authenticated_user_roleid'] = $profilename;
+	require_once('include/utils/UserInfoUtil.php');
 
-	//Setting the Object in Session
-	/*
-	$accessObj = new AccessControl();
-	$accessObj->authenticated_user_profileid = $profileid;
-	$accessObj->tab_permission_set = setPermittedTabs2Session($profileid);
-	
-	$accessObj->action_permission_set = setPermittedActions2Session($profileid);
-	$_SESSION['access_privileges'] = $accessObj; 
-	*/
-
-	
-	$_SESSION['authenticated_user_profileid'] = $profileid;
-        setPermittedTabs2Session($profileid);
-	setPermittedActions2Session($profileid);
-	setPermittedDefaultSharingAction2Session($profileid);
-	
+	createUserPrivilegesfile($focus->id);
 	
 	//Security related entries end
 	header("Location: index.php?action=index&module=Home");
@@ -82,6 +73,7 @@ if($focus->is_authenticated())
 	session_unregister('login_user_name');
 
 	$_SESSION['authenticated_user_id'] = $focus->id;
+	$_SESSION['app_unique_key'] = $application_unique_key;
 
 	// store the user's theme in the session
 	if (isset($_REQUEST['login_theme'])) {
@@ -120,6 +112,9 @@ if($focus->is_authenticated())
 	
 	$log->debug("authenticated_user_theme is $authenticated_user_theme");
 	$log->debug("authenticated_user_language is $authenticated_user_language");
+	$log->debug("authenticated_user_id is ". $focus->id);
+        $log->debug("app_unique_key is $application_unique_key");
+
 	
 // Clear all uploaded import files for this user if it exists
 
@@ -134,7 +129,7 @@ if($focus->is_authenticated())
 }
 else
 {
-	$_SESSION['login_user_name'] = $focus->user_name;
+	$_SESSION['login_user_name'] = $focus->column_fields["user_name"];
 	$_SESSION['login_password'] = $user_password;
 	$_SESSION['login_error'] = $mod_strings['ERR_INVALID_PASSWORD'];
 	

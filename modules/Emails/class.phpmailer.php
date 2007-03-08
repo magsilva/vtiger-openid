@@ -24,7 +24,7 @@ class PHPMailer
     /////////////////////////////////////////////////
 
     /**
-     * Email priority (1 = High, 3 = Normal, 5 = low).
+     * Email vtiger_priority (1 = High, 3 = Normal, 5 = low).
      * @var int
      */
     var $Priority          = 3;
@@ -125,7 +125,7 @@ class PHPMailer
      *  Holds PHPMailer version.
      *  @var string
      */
-    var $Version           = "1.72";
+    var $Version           = "1.73";
 
     /**
      * Sets the email address that a reading confirmation will be sent.
@@ -134,7 +134,7 @@ class PHPMailer
     var $ConfirmReadingTo  = "";
 
     /**
-     *  Sets the hostname to use in Message-Id and Received headers
+     *  Sets the hostname to use in Message-Id and Received vtiger_headers
      *  and as default HELO string. If empty, the value returned
      *  by SERVER_NAME is used or 'localhost.localdomain'.
      *  @var string
@@ -365,14 +365,14 @@ class PHPMailer
         // Choose the mailer
         switch($this->Mailer)
         {
-            case "sendmail":
-                $result = $this->SendmailSend($header, $body);
+             case "sendmail":
+                $result = $this->SendmailSend($header, html_entity_decode($body));
                 break;
             case "mail":
-                $result = $this->MailSend($header, $body);
+                $result = $this->MailSend($header, html_entity_decode($body));
                 break;
             case "smtp":
-                $result = $this->SmtpSend($header, $body);
+                $result = $this->SmtpSend($header, html_entity_decode($body));
                 break;
             default:
             $this->SetError($this->Mailer . $this->Lang("mailer_not_supported"));
@@ -613,7 +613,7 @@ class PHPMailer
     /////////////////////////////////////////////////
 
     /**
-     * Creates recipient headers.  
+     * Creates recipient vtiger_headers.  
      * @access private
      * @return string
      */
@@ -740,7 +740,7 @@ class PHPMailer
         {
            case "alt":
               // fall through
-           case "alt_attachment":
+           case "alt_attachments":
               $this->AltBody = $this->WrapText($this->AltBody, $this->WordWrap);
               break;
            default:
@@ -805,7 +805,7 @@ class PHPMailer
                        "<" . trim($this->ConfirmReadingTo) . ">");
         }
 
-        // Add custom headers
+        // Add custom vtiger_headers
         for($index = 0; $index < count($this->CustomHeader); $index++)
         {
             $result .= $this->HeaderLine(trim($this->CustomHeader[$index][0]), 
@@ -984,7 +984,7 @@ class PHPMailer
     /////////////////////////////////////////////////
 
     /**
-     * Adds an attachment from a path on the filesystem.
+     * Adds an attachment from a path on the vtiger_filesystem.
      * Returns false if the file could not be found
      * or accessed.
      * @param string $path Path to the attachment.
@@ -1019,7 +1019,7 @@ class PHPMailer
     }
 
     /**
-     * Attaches all fs, string, and binary attachments to the message.
+     * Attaches all fs, string, and binary vtiger_attachments to the message.
      * Returns an empty string on failure.
      * @access private
      * @return string
@@ -1028,7 +1028,7 @@ class PHPMailer
         // Return text of body
         $mime = array();
 
-        // Add all attachments
+        // Add all vtiger_attachments
         for($i = 0; $i < count($this->attachment); $i++)
         {
             // Check for string attachment
@@ -1087,13 +1087,12 @@ class PHPMailer
             $this->SetError($this->Lang("file_open") . $path);
             return "";
         }
-        if(!@$file_buffer = fread($fd, filesize($path)))
-	{
-//            $this->SetError($this->Lang("file_open") . $path);
-//            return "";
-	}
+        $magic_quotes = get_magic_quotes_runtime();
+        set_magic_quotes_runtime(0);
+        $file_buffer = fread($fd, filesize($path));
         $file_buffer = $this->EncodeString($file_buffer, $encoding);
         fclose($fd);
+        set_magic_quotes_runtime($magic_quotes);
 
         return $file_buffer;
     }
@@ -1196,7 +1195,7 @@ class PHPMailer
         // Replace every high ascii, control and = characters
         $encoded = preg_replace('/([\000-\010\013\014\016-\037\075\177-\377])/e',
                   "'='.sprintf('%02X', ord('\\1'))", $encoded);
-        // Replace every spaces and tabs when it's the last character on a line
+        // Replace every spaces and vtiger_tabs when it's the last character on a line
         $encoded = preg_replace("/([\011\040])".$this->LE."/e",
                   "'='.sprintf('%02X', ord('\\1')).'".$this->LE."'", $encoded);
 
@@ -1366,8 +1365,8 @@ class PHPMailer
     }
 
     /**
-     * Clears all previously set filesystem, string, and binary
-     * attachments.  Returns void.
+     * Clears all previously set vtiger_filesystem, string, and binary
+     * vtiger_attachments.  Returns void.
      * @return void
      */
     function ClearAttachments() {
@@ -1375,7 +1374,7 @@ class PHPMailer
     }
 
     /**
-     * Clears all custom headers.  Returns void.
+     * Clears all custom vtiger_headers.  Returns void.
      * @return void
      */
     function ClearCustomHeaders() {

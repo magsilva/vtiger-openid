@@ -12,15 +12,12 @@
 require_once('include/database/PearDatabase.php');
 global $adb;
 
-//if($_REQUEST['module']=='Users')
-//	$sql = "insert into salesmanactivityrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
-//else
+//This if will be true, when we select product from vendor related list
 if($_REQUEST['destination_module']=='Products')
 {
-	if($_REQUEST['smodule']=='VENDOR')
+	if($_REQUEST['parid'] != '' && $_REQUEST['entityid'] != '')
 	{
-		#include('modules/Products/SaveVendor.php');
-		$sql = "update products set vendor_id=".$_REQUEST['parid']." where productid=".$_REQUEST['entityid'];
+		$sql = "update vtiger_products set vendor_id=".$_REQUEST['parid']." where productid=".$_REQUEST['entityid'];
 		$adb->query($sql);
 	}
 }
@@ -28,15 +25,16 @@ if($_REQUEST['destination_module']=='Contacts')
 {
 	if($_REQUEST['smodule']=='VENDOR')
 	{
-		$sql = "insert into vendorcontactrel values (".$_REQUEST['parid'].",".$_REQUEST['entityid'].")";
+		$sql = "insert into vtiger_vendorcontactrel values (".$_REQUEST['parid'].",".$_REQUEST['entityid'].")";
 		$adb->query($sql);
 	}
 }
 
+$return_action = 'DetailView';
+if($_REQUEST['return_action'] != '')
+	$return_action = $_REQUEST['return_action'];
 
-	#$sql = "insert into seproductsrel values (". $_REQUEST["parid"] .",".$_REQUEST["entityid"] .")";
-#$adb->query($sql);
- header("Location:index.php?action=VendorDetailView&module=Products&record=".$_REQUEST["parid"]);
+header("Location:index.php?action=$return_action&module=Vendors&record=".$_REQUEST["parid"]);
 
 
 

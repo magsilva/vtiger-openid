@@ -6,138 +6,166 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
-* 
+*
  ********************************************************************************/
-
+require_once('Smarty_setup.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
-require_once ($theme_path."layout_utils.php");
+
 global $mod_strings;
+global $app_strings;
+$smarty=new vtigerCRM_Smarty;
+$smarty->assign("MOD",$mod_strings);
+$smarty->assign("APP",$app_strings);
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+require_once($theme_path.'layout_utils.php');
+$smarty->assign("IMAGE_PATH", $image_path);
+$module_array=getCustomFieldSupportedModules();
 
-echo get_module_title("Settings", $mod_strings['LBL_MODULE_NAME'].": ".$mod_strings[$_REQUEST['fld_module']].$mod_strings['CustomFields'] , true);
-//or die("Couldn't connect to database $dbDatabase");
+$cfimagecombo = Array($image_path."text.gif",
+$image_path."number.gif",
+$image_path."percent.gif",
+$image_path."currency.gif",
+$image_path."date.gif",
+$image_path."email.gif",
+$image_path."phone.gif",
+$image_path."picklist.gif",
+$image_path."url.gif",
+$image_path."checkbox.gif",
+$image_path."text.gif",
+$image_path."picklist.gif");
 
-echo '<table width="25%" cellpadding="2" cellspacing="0" border="0">';
-echo '<form action="index.php" method="post" name="new" id="form">';
-echo '<input type="hidden" name="fld_module" value="'.$_REQUEST['fld_module'].'">';
-echo '<input type="hidden" name="module" value="Settings">';
-echo '<input type="hidden" name="action" value="CreateCustomField">';
-echo '<tr><br>';
-echo '<td><input title="'.$mod_strings['`'].'" accessKey="C" class="button" type="submit" name="NewCustomField" value="'.$mod_strings['NewCustomField'].'"></td>';
-
-if($_REQUEST['fld_module']=="Leads")
-{
-	echo '<td><input title="'.$mod_strings['CUSTOMFIELDMAPPING'].'"  class="button" onclick="this.form.action.value=\'LeadCustomFieldMapping\'" type="submit" name="LeadCustomFieldMapping" value="'.$mod_strings['CUSTOMFIELDMAPPING'].'"></td>'; //button for custom field mapping
-}
-
-echo '</tr></form></table>';
-echo '<br>';
-//onclick="this.form.return_module.value="Settings"; this.form.action.value="index"
-
-
-function fetchTabIDVal($fldmodule)
-{
-
-  global $adb;
-  $query = "select tabid from tab where tablabel='" .$fldmodule ."'";
-  $tabidresult = $adb->query($query);
-  return $adb->query_result($tabidresult,0,"tabid");
-}
-
-$tabid = fetchTabIDVal($_REQUEST['fld_module']);
-
-$fld_module = $_REQUEST['fld_module'];
-
-echo getCustomFieldList($tabid,$mod_strings,$fld_module);
-
-
-function getCustomFieldList($tabid, $mod_strings, $fld_module)
-{
-  global $adb;
-        //fieldid,fieldlabel,column_name,typdesc
-
-	$dbQuery = "select fieldid,columnname,fieldlabel,uitype,displaytype from field where tabid=".$tabid." and generatedtype=2 order by sequence";
-        
-        $result = $adb->query($dbQuery) or die("Couldn't get file list");
+$cftextcombo = Array($mod_strings['Text'],
+$mod_strings['Number'],
+$mod_strings['Percent'],
+$mod_strings['Currency'],
+$mod_strings['Date'],
+$mod_strings['Email'],
+$mod_strings['Phone'],
+$mod_strings['PickList'],
+$mod_strings['LBL_URL'],
+$mod_strings['LBL_CHECK_BOX'],
+$mod_strings['LBL_TEXT_AREA'],
+$mod_strings['LBL_MULTISELECT_COMBO']
+);
 
 
-$list = '<table border="0" cellpadding="5" cellspacing="1" class="FormBorder" width="60%">';
-
-$list .='<form action="index.php" method="post" name="CustomFieldUpdate" id="form">';
-
-$list .= '<tr height=20>';
-
-$list .= '<td class="ModuleListTitle" width="20%" style="padding:0px 3px 0px 3px;"><div><b>Operation</b></div>';
-
-$list .= '</td>';
-
-$list .= '';
-
-$list .= '<td class="ModuleListTitle" height="21" width="20%" style="padding:0px 3px 0px 3px;"><b>';
-
-$list .= $mod_strings['FieldName'].'</b></td>';
-
-//$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-$list .= '<td class="ModuleListTitle" width="20%" style="padding:0px 3px 0px 3px;"><b>';
-
-$list .= $mod_strings['FieldType'].'</b></td>';
-
-$list .= '</tr>';
-
-//$list .= '<tr><td COLSPAN="7" class="blackLine"><IMG SRC="themes/'.$theme.'/images//blank.gif"></td></tr>';
-
-$i=1;
-while($row = $adb->fetch_array($result))
-{
-
-
-if ($i%2==0)
-$trowclass = 'evenListRow';
+$smarty->assign("MODULES",$module_array);
+$smarty->assign("CFTEXTCOMBO",$cftextcombo);
+$smarty->assign("CFIMAGECOMBO",$cfimagecombo);
+if($_REQUEST['fld_module'] !='')
+	$fld_module = $_REQUEST['fld_module'];
 else
-$trowclass = 'oddListRow';
-	$list .= '<tr class="'. $trowclass.'">';
-	
-	$list .= '<td height="21" style="padding:0px 3px 0px 3px;"><div>';
-
-	 $list .= '<a href="javascript:deleteCustomField('.$row["fieldid"].',\''.$fld_module.'\', \''.$row["columnname"].'\', \''.$row["uitype"].'\')">'.$mod_strings['Delete'].'</a>'; 
-
-	$list .= '</div></td>';
-
-	
-	$list .= '<td height="21" style="padding:0px 3px 0px 3px;">';
-
-	 $list .= $row["fieldlabel"]; 
-
-	$list .= '</td>';
-        
-
-	$list .= '<td height="21" style="padding:0px 3px 0px 3px;">';
-
-	$fld_type_name = getCustomFieldTypeName($row["uitype"]);
-
-	 $list .= $fld_type_name; 
-
-	$list .= '</td>';
-
-	$list .= '</tr>';
-$i++;
+	$fld_module = 'Leads';
+$smarty->assign("MODULE",$fld_module);
+$smarty->assign("CFENTRIES",getCFListEntries($fld_module));
+if(isset($_REQUEST["duplicate"]) && $_REQUEST["duplicate"] == "yes")
+{
+	$error='Custom Field in the Name '.$_REQUEST["fldlabel"].' already exists. Please specify a different Label';
+	$smarty->assign("DUPLICATE_ERROR", $error);
 }
-	$list .= '</form>';
 
-	$list .= '</table>';
+if($_REQUEST['mode'] !='')
+	$mode = $_REQUEST['mode'];
+$smarty->assign("MODE", $mode);
 
-	$list .= '<script type="text/javascript">';
-	$list .= 'function deleteCustomField(id, fld_module, colName, uitype)
-	  	  {
-			if(confirm("Are you sure?"))
+if($_REQUEST['ajax'] != 'true')
+	$smarty->display('CustomFieldList.tpl');	
+else
+	$smarty->display('CustomFieldEntries.tpl');
+
+	/**
+	* Function to get customfield entries
+	* @param string $module - Module name
+	* return array  $cflist - customfield entries
+	*/
+function getCFListEntries($module)
+{
+	$tabid = getTabid($module);
+	global $adb;
+	global $theme;
+	$theme_path="themes/".$theme."/";
+	$image_path=$theme_path."images/";
+	$dbQuery = "select fieldid,columnname,fieldlabel,uitype,displaytype,vtiger_convertleadmapping.cfmid from vtiger_field left join vtiger_convertleadmapping on  vtiger_convertleadmapping.leadfid = vtiger_field.fieldid where tabid=".$tabid." and generatedtype=2 order by sequence";
+	$result = $adb->query($dbQuery);
+	$row = $adb->fetch_array($result);
+	$count=1;
+	$cflist=Array();
+	if($row!='')
+	{
+		do
+		{
+			$cf_element=Array();
+			$cf_element['no']=$count;
+			$cf_element['label']=$row["fieldlabel"];
+			$fld_type_name = getCustomFieldTypeName($row["uitype"]);
+			$cf_element['type']=$fld_type_name;
+			if($module == 'Leads')
 			{
-				document.CustomFieldUpdate.action="index.php?module=Settings&action=DeleteCustomField&fld_module="+fld_module+"&fld_id="+id+"&colName="+colName+"&uitype="+uitype
-				document.CustomFieldUpdate.submit()
-		   	}	
-	  	   }';
-	$list .= '</script>';
-	
+				$mapping_details = getListLeadMapping($row["cfmid"]);
+				$cf_element[]= $mapping_details['accountlabel'];
+				$cf_element[]= $mapping_details['contactlabel'];
+				$cf_element[]= $mapping_details['potentiallabel'];
+			}
+			$cf_element['tool']='<img src="'.$image_path.'editfield.gif" border="0" style="cursor:pointer;" onClick="fnvshobj(this,\'createcf\');getCreateCustomFieldForm(\''.$module.'\',\''.$row["fieldid"].'\',\''.$tabid.'\',\''.$row["uitype"].'\')" alt="Edit" title="Edit"/>&nbsp;|&nbsp;<img style="cursor:pointer;" onClick="deleteCustomField('.$row["fieldid"].',\''.$module.'\', \''.$row["columnname"].'\', \''.$row["uitype"].'\')" src="'.$image_path.'delete.gif" border="0"  alt="Delete" title="Delete"/></a>';
 
-return $list;
+			$cflist[] = $cf_element;
+			$count++;
+		}while($row = $adb->fetch_array($result));
+	}
+	return $cflist;
+}
+
+/**
+* Function to Lead customfield Mapping entries
+* @param integer  $cfid   - Lead customfield id
+* return array    $label  - customfield mapping
+*/
+function getListLeadMapping($cfid)
+{
+	global $adb;
+	$sql="select * from vtiger_convertleadmapping where cfmid =".$cfid;
+	$result = $adb->query($sql);
+	$noofrows = $adb->num_rows($result);
+	for($i =0;$i <$noofrows;$i++)
+	{
+		$leadid = $adb->query_result($result,$i,'leadfid');
+		$accountid = $adb->query_result($result,$i,'accountfid');
+		$contactid = $adb->query_result($result,$i,'contactfid');
+		$potentialid = $adb->query_result($result,$i,'potentialfid');
+		$cfmid = $adb->query_result($result,$i,'cfmid');
+
+		$sql2="select fieldlabel from vtiger_field where fieldid ='".$accountid."'";
+		$result2 = $adb->query($sql2);
+		$accountfield = $adb->query_result($result2,0,'fieldlabel');
+		$label['accountlabel'] = $accountfield;
+		
+		$sql3="select fieldlabel from vtiger_field where fieldid ='".$contactid."'";
+		$result3 = $adb->query($sql3);
+		$contactfield = $adb->query_result($result3,0,'fieldlabel');
+		$label['contactlabel'] = $contactfield;
+		$sql4="select fieldlabel from vtiger_field where fieldid ='".$potentialid."'";
+		$result4 = $adb->query($sql4);
+		$potentialfield = $adb->query_result($result4,0,'fieldlabel');
+		$label['potentiallabel'] = $potentialfield;
+	}
+	return $label;
+}
+
+/* function to get the modules supports Custom Fields
+*/
+
+function getCustomFieldSupportedModules()
+{
+	global $adb;
+	$sql="select distinct vtiger_field.tabid,name from vtiger_field inner join vtiger_tab on vtiger_field.tabid=vtiger_tab.tabid where vtiger_field.tabid not in(9,10,16,15,8,29)";
+	$result = $adb->query($sql);
+	while($moduleinfo=$adb->fetch_array($result))
+	{
+		$modulelist[$moduleinfo['name']] = $moduleinfo['name'];
+	}
+	return $modulelist;
 }
 ?>

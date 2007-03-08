@@ -13,25 +13,12 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportContact.php,v 1.17 2005/07/11 10:18:21 mickie Exp $
+ * $Header$
  * Description:  TODO: To be written.
  ********************************************************************************/
 include_once('config.php');
 require_once('include/logging.php');
-/*
-require_once('database/DatabaseConnection.php');
-require_once('data/SugarBean.php');
-require_once('include/utils.php');
-require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Cases/Case.php');
-require_once('modules/Tasks/Task.php');
-require_once('modules/Notes/Note.php');
-require_once('modules/Meetings/Meeting.php');
-require_once('modules/Calls/Call.php');
-require_once('modules/Emails/Email.php');
-require_once('modules/Accounts/Account.php');
-*/
-require_once('modules/Contacts/Contact.php');
+require_once('modules/Contacts/Contacts.php');
 require_once('modules/Import/UsersLastImport.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
@@ -41,10 +28,10 @@ $comboFieldNames = Array('salutationtype'=>'salutation_dom');
 $comboFieldArray = getComboArray($comboFieldNames);
 
 // Contact is used to store customer information.
-class ImportContact extends Contact {
-	// these are fields that may be set on import
+class ImportContact extends Contacts {
+	// these are vtiger_fields that may be set on import
 	// but are to be processed and incorporated
-	// into fields of the parent class
+	// into vtiger_fields of the parent class
 	var $db;
 	var $full_name;
 	var $primary_address_street_2;
@@ -54,17 +41,17 @@ class ImportContact extends Contact {
 
        // This is the list of the functions to run when importing
         var $special_functions =  array(
-		//"get_names_from_full_name"
-		"add_create_account"
-		//,"add_salutation"
-		//,"add_lead_source"
-		//,"add_birthdate"
-		//,"add_do_not_call"
-		//,"add_email_opt_out"
-		//,"add_primary_address_streets"
-		//,"add_alt_address_streets"
-		);
-
+						//"get_names_from_full_name"
+						"add_create_account"
+						//,"add_salutation"
+						//,"add_lead_source"
+						//,"add_birthdate"
+						//,"add_do_not_call"
+						//,"add_email_opt_out"
+						//,"add_primary_address_streets"
+						//,"add_alt_address_streets"
+					);
+	/*
 	function add_salutation()
 	{
 		if ( isset($this->salutation) &&
@@ -83,7 +70,6 @@ class ImportContact extends Contact {
 		}
 
 	}
-
 
 	function add_birthdate()
 	{
@@ -161,99 +147,10 @@ class ImportContact extends Contact {
                 $this->last_name = join(' ',$name_arr);
 
         }
+	*/
 
-       /* function add_create_account()
-        {
-		global $adb;
-		// global is defined in UsersLastImport.php
-		global $imported_ids;
-                global $current_user;
-
-		if ( (! isset($this->account_name) || $this->account_name == '') &&
-			(! isset($this->account_id) || $this->account_id == '') )
-		{
-			return; 
-		}
-
-                $arr = array();
-
-		// check if it already exists
-                $focus = new Account();
-
-		$query = '';
-
-		// if user is defining the account id to be associated with this contact..
-		if ( isset($this->account_id) && $this->account_id != '')
-		{
-                	$query = "select * from {$focus->table_name} WHERE id='{$this->account_id}'";
-		}	
-		// else user is defining the account name to be associated with this contact..
-		else 
-		{
-                	$query = "select * from {$focus->table_name} WHERE name='{$this->account_name}'";
-		}
-
-                $this->log->info($query);
-
-                $result = $adb->query($query)
-                       or die("Error selecting sugarbean: ".mysql_error());
-
-                $row = $this->db->fetchByAssoc($result, -1, false);
-
-		// we found a row with that id
-                if (isset($row['id']) && $row['id'] != -1)
-                {
-                        // if it exists but was deleted, just remove it entirely
-                        if ( isset($row['deleted']) && $row['deleted'] == 1)
-                        {
-                                $query2 = "delete from {$focus->table_name} WHERE id='". $row['id']."'";
-
-                                $this->log->info($query2);
-
-                                $result2 = $adb->query($query2)
-                                        or die("Error deleting existing sugarbean: ".mysql_error());
-
-                        }
-			// else just use this id to link the contact to the account
-                        else
-                        {
-                                $focus->id = $row['id'];
-                        }
-                }
-
-		// if we didnt find the account, so create it
-                if (! isset($focus->id) || $focus->id == '')
-                {
-                        $focus->name = $this->account_name;
-                        $focus->assigned_user_id = $current_user->id;
-                        $focus->modified_user_id = $current_user->id;
-
-			if ( isset($this->account_id)  &&
-                                $this->account_id != '')
-                        {
-				$focus->new_with_id = true;
-                                $focus->id = $this->account_id;
-                        }
-
-                        $focus->save();
-			// avoid duplicate mappings:
-			if (! isset( $imported_ids[$this->account_id]) )
-			{
-				// save the new account as a users_last_import
-                		$last_import = new UsersLastImport();
-                		$last_import->assigned_user_id = $current_user->id;
-                		$last_import->bean_type = "Accounts";
-                		$last_import->bean_id = $focus->id;
-                		$last_import->save();
-				$imported_ids[$this->account_id] = 1;
-			}
-                }
-
-		// now just link the account
-                $this->account_id = $focus->id;
-
-        }*/
-
+	/**	function used to create or map with existing account if the contact has mapped with an account during import
+	 */
 	function add_create_account()
         {
 		global $adb;
@@ -272,29 +169,19 @@ class ImportContact extends Contact {
                 $arr = array();
 
 		// check if it already exists
-                $focus = new Account();
+                $focus = new Accounts();
 
 		$query = '';
 
-		// if user is defining the account id to be associated with this contact..
-		/*if ( isset($this->account_id) && $this->account_id != '')
-		{
-                	$query = "select * from {$focus->table_name} WHERE id='{$this->account_id}'";
-		}	
-		// else user is defining the account name to be associated with this contact..
-		else 
-		{
-                	$query = "select * from {$focus->table_name} WHERE name='{$this->account_name}'";
-		}*/
-		
-		//$query = "select * from {$focus->table_name} WHERE accountname='{$acc_name}' left join crmentity on crmentity.crmid =account.accountid";
-		$acc_name = addslashes($acc_name);
-		$query = "select crmentity.deleted, account.* from account,crmentity WHERE accountname='{$acc_name}' and crmentity.crmid =account.accountid";
+		// if user is defining the vtiger_account id to be associated with this contact..
 
-                $this->log->info($query);
+		//Modified to remove the spaces at first and last in vtiger_account name -- after 4.2 patch 2
+		$acc_name = trim(addslashes($acc_name));
 
-                $result = $adb->query($query)
-                       or die("Error selecting sugarbean: ".mysql_error());
+		//Modified the query to get the available account only ie., which is not deleted
+		$query = "select vtiger_crmentity.deleted, vtiger_account.* from vtiger_account, vtiger_crmentity WHERE accountname='{$acc_name}' and vtiger_crmentity.crmid =vtiger_account.accountid and vtiger_crmentity.deleted=0";
+
+                $result = $adb->query($query);
 
                 $row = $this->db->fetchByAssoc($result, -1, false);
 
@@ -304,30 +191,14 @@ class ImportContact extends Contact {
 		// we found a row with that id
                 if (isset($row['accountid']) && $row['accountid'] != -1)
                 {
-                        // if it exists but was deleted, just remove it entirely
-                        if ( isset($row['deleted']) && $row['deleted'] == 1)
-                        {
-				$adb->println("row exists - deleting");
-                                $query2 = "delete from crmentity WHERE crmid='". $row['accountid']."'";
-
-                                $this->log->info($query2);
-
-                                $result2 = $adb->query($query2)
-                                        or die("Error deleting existing sugarbean: ".mysql_error());
-
-                        }
-			// else just use this id to link the contact to the account
-                        else
-                        {				
-                                $focus->id = $row['accountid'];
-				$adb->println("row exists - using same id=".$focus->id);
-                        }
+			$focus->id = $row['accountid'];
+			$adb->println("Account row exists - using same id=".$focus->id);
                 }
 
-		// if we didnt find the account, so create it
+		// if we didnt find the vtiger_account, so create it
                 if (! isset($focus->id) || $focus->id == '')
                 {
-			$adb->println("Createing new account");
+			$adb->println("Createing new vtiger_account");
                         $focus->column_fields['accountname'] = $acc_name;
                         $focus->column_fields['assigned_user_id'] = $current_user->id;
                         $focus->column_fields['modified_user_id'] = $current_user->id;
@@ -338,19 +209,11 @@ class ImportContact extends Contact {
 
 			$adb->println("New Account created id=".$focus->id);
 
-			/*if ( isset($this->account_id)  &&
-                                $this->account_id != '')
-                        {
-				$focus->new_with_id = true;
-                                $focus->id = $this->account_id;
-                        }
-
-                        $focus->save();*/
 			// avoid duplicate mappings:
 			if (! isset( $imported_ids[$acc_id]) )
 			{
-				$adb->println("inserting users last import for accounts");
-				// save the new account as a users_last_import
+				$adb->println("inserting vtiger_users last import for vtiger_accounts");
+				// save the new vtiger_account as a vtiger_users_last_import
                 		$last_import = new UsersLastImport();
                 		$last_import->assigned_user_id = $current_user->id;
                 		$last_import->bean_type = "Accounts";
@@ -361,7 +224,7 @@ class ImportContact extends Contact {
                 }
 
 		$adb->println("prev contact accid=".$this->column_fields["account_id"]);
-		// now just link the account
+		// now just link the vtiger_account
                 $this->column_fields["account_id"] = $focus->id;
 		$adb->println("curr contact accid=".$this->column_fields["account_id"]);
 
@@ -369,10 +232,10 @@ class ImportContact extends Contact {
 
 	
 
-	// This is the list of fields that can be imported
+	// This is the list of vtiger_fields that can be imported
 	// some of these don't map directly to columns in the db
 
-//we need to add two or more arrays as the columns are distributed across the tables now
+	//we need to add two or more arrays as the columns are distributed across the vtiger_tables now
 	/*var $importable_fields =  array(
 		"contactid"=>1,
 		"firstname"=>1,
@@ -393,6 +256,8 @@ class ImportContact extends Contact {
 
 	var $importable_fields = Array();
 		
+	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
+	 */
 	function ImportContact() {
 		$this->log = LoggerManager::getLogger('import_contact');
 		$this->db = new PearDatabase();

@@ -12,114 +12,70 @@
 
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils.php');
+require_once('include/utils/utils.php');
 
+global $mod_strings;
+global $app_strings;
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+$delete_prof_id = $_REQUEST['profileid'];
+$delete_prof_name = getProfileName($delete_prof_id);
+
+
+$output='';
+$output ='<div id="DeleteLay" class="layerPopup">
+<form name="newProfileForm" action="index.php">
+<input type="hidden" name="module" value="Users">
+<input type="hidden" name="action" value="DeleteProfile">
+<input type="hidden" name="delete_prof_id" value="'.$delete_prof_id.'">	
+<table border=0 cellspacing=0 cellpadding=5 width=100% class=layerHeadingULine>
+<tr>
+	<td class="layerPopupHeading" align="left">'.$mod_strings["LBL_DELETE_PROFILE"].'</td>
+	<td align="right" class="small"><img src="'.$image_path.'close.gif" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer" onClick="document.getElementById(\'DeleteLay\').style.display=\'none\'";></td>
+</tr>
+</table>
+<table border=0 cellspacing=0 cellpadding=5 width=95% align=center> 
+<tr>
+	<td class="small">
+	<table border=0 celspacing=0 cellpadding=5 width=100% align=center bgcolor=white>
+	<tr>
+		<td width="50%" class="cellLabel small"><b>'.$mod_strings["LBL_TRANSFER_ROLES_TO_PROFILE"].'</b></td>
+		<td width="50%" class="cellText small"><b>'.$delete_prof_name.'</b></td>
+	</tr>
+	<tr>
+		<td align="left" class="cellLabel small" nowrap><b>'.$mod_strings["LBL_PROFILE_TO_BE_DELETED"].'</b></td>
+		<td align="left" class="cellText small">';
+		$output.='<select class="select" name="transfer_prof_id">';
+		global $adb;	
+		$sql = "select * from vtiger_profile";
+		$result = $adb->query($sql);
+		$temprow = $adb->fetch_array($result);
+		do
+		{
+			$prof_name=$temprow["profilename"];
+			$prof_id=$temprow["profileid"];
+			if($delete_prof_id 	!= $prof_id)
+			{	 
+    				$output.='<option value="'.$prof_id.'">'.$prof_name.'</option>';
+			}	
+		}while($temprow = $adb->fetch_array($result));
+		$output.='</select>';
+
+		$output.='</td>
+	</tr>
+	</table>
+	</td>
+</tr>
+</table>
+<table border=0 cellspacing=0 cellpadding=5 width=100% class="layerPopupTransport">
+<tr>
+	<td align=center class="small">
+	<input type="submit" name="Delete" value="'.$app_strings["LBL_SAVE_BUTTON_LABEL"].'" class="crmButton small">
+	</td>
+</tr>
+</table>
+</form></div>';
+
+echo $output;
 ?>
-
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html lang="en">
-<head>
-  <title>Role Details</title>
-<!--meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"-->
-</head>
-<body>
-
-            <script language="javascript">
-    function validate()
-    {
-        if( !emptyCheck( "roleName", "Role Name" ) )
-            return false;    
-            
-        return true;
-    }
-    
-    function cancelNewRoleCreation( roleId )
-    {
-    
-    }
-    
-             </script>
-	<?php
-		$delete_prof_id = $_REQUEST['profileid'];
-		$delete_prof_name = getProfileName($delete_prof_id);
-	?>
-            <div class="bodyText mandatory"> </div>
-            <form name="newProfileForm" action="index.php">
-                    <input type="hidden" name="module" value="Users">
-                    <input type="hidden" name="action" value="DeleteProfile">
-		    <input type="hidden" name="delete_prof_id" value="<?php echo $delete_prof_id;  ?>">	
-              <table width="100%" border="0" cellpadding="0"
- cellspacing="0">
-                <tbody>
-                  <tr>
-                    <td class="moduleTitle hline">Delete Profile:</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p></p>
-              <table width="40%" border="0" cellpadding="0"
- cellspacing="0">
-                <tbody>
-                  <tr>
-                    <td>
-                    <div align="right"><font class="required">*</font><?php echo $mod_strings['LBL_INDICATES_REQUIRED_FIELD']; ?> </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <table width="40%" border="0" cellpadding="0"
- cellspacing="1" class="formOuterBorder">
-                <tbody>
-                  <tr>
-                    <td class="formSecHeader" colspan="2">Delete Profile</td>
-                  </tr>
-                  <tr>
-                    <td class="dataLabel mandatory">* Profile To Be Deleted:</td>
-                    <td class="value"><?php echo $delete_prof_name;  ?></td>
-                  </tr>
-                  <tr>
-                    <td class="dataLabel mandatory">* Transfer Roles to Profile:</td>
-                    <td class="value">
-                    <select class="select" name="transfer_prof_id">
-            <?php
-	     global $adb;	
-             $sql = "select * from profile";
-                  $result = $adb->query($sql);
-                  $temprow = $adb->fetch_array($result);
-                  do
-                  {
-                    $prof_name=$temprow["profilename"];
-		    $prof_id=$temprow["profileid"];
-		    if($delete_prof_id 	!= $prof_id)
-		    {	 
-                    ?>
-                      
-                    <option value="<?php echo $prof_id ?>"><?php echo $prof_name ?></option>
-                       <?php
-		     }	
-                    }while($temprow = $adb->fetch_array($result));
-                     ?>
-                    
-                    </select>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <p></p>
-              <table width="40%" border="0" cellpadding="0"
- cellspacing="0">
-                <tbody>
-                  <tr>
-                    <td>
-                     <div align="center">
-                   
- <input type="submit" class="button" name="save" value="<?php echo $app_strings['LBL_SAVE_BUTTON_LABEL'] ?>" tabindex="2">
-  <input name="cancel" class="button" type="button" value="<?php echo $app_strings['LBL_CANCEL_BUTTON_LABEL'] ?>" onclick="window.history.back()">
-</form> </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-</body>
-</html>

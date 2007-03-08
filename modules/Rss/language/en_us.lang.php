@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Rss/language/en_us.lang.php,v 1.1 2005/05/20 07:12:23 venkatraj Exp $
+ * $Header$
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -30,6 +30,19 @@ $mod_strings = Array(
 
 'LBL_STARRED_RSS'=>'Starred Feeds',
 'LBL_POP_CRM_RSS'=>'Popular CRM Related Feeds',
-'LBL_ALL_RSS_FEEDS'=>'All RSS Feeds'
+'LBL_ALL_RSS_FEEDS'=>'All RSS Feeds',
+
+'LBL_MORE'=>'More...',
+'LBL_SUBJECT'=>'Subject',
+'LBL_SENDER'=>'Sender',
+'LBL_CATEGORY'=>'Category :',
+'LBL_FEED'=>'Feed :',
+'LBL_ADD_RSS_FEED'=>'Add RSS Feed',
+'LBL_DELETE_BUTTON'=>'Delete',
+'LBL_SET_DEFAULT_BUTTON'=>'Set As Default',
+'LBL_FEEDS_LIST'=>'Feeds list from :',
+'LBL_ERROR_MSG'=>'No RSS Feeds are selected or Your Proxy Settings is not Proper',
+'LBL_REGRET_MSG'=>'Sorry: It\'s not possible to reach RSS URL',
+
 );
 ?>

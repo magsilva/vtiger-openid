@@ -13,18 +13,19 @@
 include_once('config.php');
 require_once('include/logging.php');
 require_once('data/SugarBean.php');
-#require_once('data/CRMEntity.php');
-#require_once('include/utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
 
-// Contact is used to store customer information.
-class LoginHistory extends SugarBean {
+/** This class is used to store and display the login history of all the Users.
+  * An Admin User can view his login history details  and of all the other users as well.
+  * StandardUser is allowed to view only his login history details.
+**/
+class LoginHistory {
 	var $log;
 	var $db;
 
-	// Stored fields
+	// Stored vtiger_fields
 	var $login_id;
 	var $user_name;
 	var $user_ip;
@@ -33,7 +34,7 @@ class LoginHistory extends SugarBean {
 	var $status;
 	var $module_name = "Users";
 
-	var $table_name = "loginhistory";
+	var $table_name = "vtiger_loginhistory";
 
 	var $object_name = "LoginHistory";
 	
@@ -47,113 +48,157 @@ class LoginHistory extends SugarBean {
 		,"logout_time"
 		,"status"
 		);
-
+	
 	function LoginHistory() {
 		$this->log = LoggerManager::getLogger('loginhistory');
 		$this->db = new PearDatabase();
 	}
 	
-	// This is the list of fields that are in the lists.
-	var $list_fields = Array('login_id', 'user_name', 'user_ip', 'login_time', 'logout_time', 'status');	
-		
-	var $default_order_by = "login_id";
-
-	function create_tables () {
-		/*$query = 'CREATE TABLE '.$this->table_name.' ( ';
-		$query .='login_id int(11) NOT NULL auto_increment';
-		$query .=', user_name varchar(25) NOT NULL';
-		$query .=', user_ip varchar(25) NOT NULL';
-		$query .=', login_time datetime NOT NULL default 0';
-		$query .=', logout_time datetime NOT NULL default 0';
-		$query .=', status enum(\'Signedin\',\'Signedoff\') default \'Signedin\'';
-		$query .=', PRIMARY KEY ( login_id ) )';
-		
-		$this->log->info($query);
-		
-		mysql_query($query) or die("Error creating table: ".mysql_error());*/
-
-		//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
-		
-	}
-
-	function drop_tables () {
-		/*
-		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
-
-		$this->log->info($query);
-			
-		mysql_query($query);
-
-		//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped. 
-		*/
-
-	}
+	var $sortby_fields = Array('user_name', 'user_ip', 'login_time', 'logout_time', 'status');	 
+       	
+	// This is the list of vtiger_fields that are in the lists.
+	var $list_fields = Array(
+			'User Name'=>Array('vtiger_loginhistory'=>'user_name'), 
+			'User IP'=>Array('vtiger_loginhistory'=>'user_ip'), 
+			'Signin Time'=>Array('vtiger_loginhistory'=>'login_time'),
+		        'Signout Time'=>Array('vtiger_loginhistory'=>'logout_time'), 
+			'Status'=>Array('vtiger_loginhistory'=>'status'),
+		);	
 	
-	function get_summary_text()
+	var $list_fields_name = Array(
+		'User Name'=>'user_name',
+		'User IP'=>'user_ip',
+		'Signin Time'=>'login_time',
+		'Signout Time'=>'logout_time',
+		'Status'=>'status'
+		);	
+	var $default_order_by = "login_time";
+	var $default_sort_order = 'DESC';
+
+/**
+ * Function to get the Header values of Login History.
+ * Returns Header Values like UserName, IP, LoginTime etc in an array format.
+**/
+	function getHistoryListViewHeader()
 	{
-		return "$this->first_name $this->last_name";
+		global $log;
+		$log->debug("Entering getHistoryListViewHeader method ...");
+		global $app_strings;
+		
+		$header_array = array($app_strings['LBL_LIST_USER_NAME'], $app_strings['LBL_LIST_USERIP'], $app_strings['LBL_LIST_SIGNIN'], $app_strings['LBL_LIST_SIGNOUT'], $app_strings['LBL_LIST_STATUS']);
+
+		$log->debug("Exiting getHistoryListViewHeader method ...");
+		return $header_array;
+		
+	}
+
+/**
+  * Function to get the Login History values of the User.
+  * @param $navigation_array - Array values to navigate through the number of entries.
+  * @param $sortorder - DESC
+  * @param $orderby - login_time
+  * Returns the login history entries in an array format.
+**/
+	function getHistoryListViewEntries($username, $navigation_array, $sorder='', $orderby='')
+	{
+		global $log;
+		$log->debug("Entering getHistoryListViewEntries() method ...");
+		global $adb, $current_user;	
+		
+		if($sorder != '' && $order_by != '')
+	       			$list_query = "Select * from vtiger_loginhistory where user_name='".$username."' order by ".$order_by." ".$sorder;
+		else
+				$list_query = "Select * from vtiger_loginhistory where user_name='".$username."' order by ".$this->default_order_by." ".$this->default_sort_order;
+
+
+		$result = $adb->query($list_query);
+		$entries_list = array();
+		
+	if($navigation_array['end_val'] != 0)
+	{
+		for($i = $navigation_array['start']; $i <= $navigation_array['end_val']; $i++)
+		{
+			$entries = array();
+			$loginid = $adb->query_result($result, $i-1, 'login_id');
+
+			$entries[] = $adb->query_result($result, $i-1, 'user_name');
+			$entries[] = $adb->query_result($result, $i-1, 'user_ip');
+			$entries[] = $adb->query_result($result, $i-1, 'login_time');
+			$entries[] = $adb->query_result($result, $i-1, 'logout_time');
+			$entries[] = $adb->query_result($result, $i-1, 'status');
+
+			$entries_list[] = $entries;
+		}	
+		$log->debug("Exiting getHistoryListViewEntries() method ...");
+		return $entries_list;
+	}	
 	}
 	
-	/** Records the Login info */
+	/** Function that Records the Login info of the User 
+	 *  @param ref variable $usname :: Type varchar
+	 *  @param ref variable $usip :: Type varchar
+	 *  @param ref variable $intime :: Type timestamp
+	 *  Returns the query result which contains the details of User Login Info
+	*/
 	function user_login(&$usname,&$usip,&$intime)
 	{
-		//print("GS --> intime=".$intime);
-		$query = "Insert into loginhistory values ('','$usname','$usip','',".$this->db->formatDate($intime).",'Signedin')";
+		$query = "Insert into vtiger_loginhistory (user_name, user_ip, logout_time, login_time, status) values ('$usname','$usip',null,".$this->db->formatDate($intime).",'Signed in')";
 		$result = $this->db->query($query)
                         or die("MySQL error: ".mysql_error());
 		
 		return $result;
 	}
 	
+	/** Function that Records the Logout info of the User 
+	 *  @param ref variable $usname :: Type varchar
+	 *  @param ref variable $usip :: Type varchar
+	 *  @param ref variable $outime :: Type timestamp
+	 *  Returns the query result which contains the details of User Logout Info
+	*/
 	function user_logout(&$usname,&$usip,&$outtime)
 	{
-		$logid_qry = "SELECT max(login_id) login_id from loginhistory where user_name='$usname' and user_ip='$usip'";
+		$logid_qry = "SELECT max(login_id) AS login_id from vtiger_loginhistory where user_name='$usname' and user_ip='$usip'";
 		$result = $this->db->query($logid_qry);
-		//if($this->db->num_rows($result) !=1 ) return;
 		$loginid = $this->db->query_result($result,0,"login_id");
 		if ($loginid == '')
                 {
                         return;
                 }
 		// update the user login info.
-		$query = "Update loginhistory set logout_time =".$this->db->formatDate($outtime).", status='Signedoff' where login_id = $loginid";
+		$query = "Update vtiger_loginhistory set logout_time =".$this->db->formatDate($outtime).", status='Signed off' where login_id = $loginid";
 		$result = $this->db->query($query)
                         or die("MySQL error: ".mysql_error());
 	}
 
+	/** Function to create list query 
+	* @param reference variable - order by is passed when the query is executed
+	* @param reference variable - where condition is passed when the query is executed
+	* Returns Query.
+	*/
   	function create_list_query(&$order_by, &$where)
   	{
-		// Determine if the account name is present in the where clause.
-	//	$query = "SELECT * from loginhistory order by login_time";
+		// Determine if the vtiger_account name is present in the where clause.
 		global $current_user;
-		$query = "SELECT user_name,user_ip,".$this->db->getDBDateString("login_time")." login_time,".$this->db->getDBDateString("logout_time")." logout_time,status FROM $this->table_name ";
+		$query = "SELECT user_name,user_ip, status,
+				".$this->db->getDBDateString("login_time")." AS login_time,
+				".$this->db->getDBDateString("logout_time")." AS logout_time
+			FROM ".$this->table_name;
 		if($where != "")
 		{
 			if(!is_admin($current_user))
-			$where .=" and user_name = '".$current_user->user_name."'";
-			$query .= "where ($where)";
+			$where .=" AND user_name = '".$current_user->user_name."'";
+			$query .= " WHERE ($where)";
 		}
 		else
 		{
 			if(!is_admin($current_user))
-			$query .= "where user_name = '".$current_user->user_name."'";
+			$query .= " WHERE user_name = '".$current_user->user_name."'";
 		}
 		
 		if(!empty($order_by))
 			$query .= " ORDER BY $order_by";
 
                 return $query;
-	}
-
-
-
-	function list_view_pare_additional_sections(&$list_form){
-		if(isset($this->yahoo_id) && $this->yahoo_id != '')
-			$list_form->parse("main.row.yahoo_id");
-		else
-			$list_form->parse("main.row.no_yahoo_id");
-		return $list_form;
-		
 	}
 
 }

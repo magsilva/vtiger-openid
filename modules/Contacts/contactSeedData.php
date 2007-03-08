@@ -21140,7 +21140,10 @@ $company_name_array = Array(
 "t3M Invest A/S",
 "EDFG Group Limited",
 "vtigerCRM Inc",
-"X-CEED INC 99"
+"X-CEED INC 99",
+"demovtiger",
+"usable-vtiger",
+"gooduivtiger"
 );
 
 $street_address_array = Array(
@@ -21154,7 +21157,24 @@ $city_array = Array(
  "San Francisco",
  "Sunnyvale",
  "San Mateo");
- 
+
+$campaign_name_array = Array(
+"User Conference",
+"International Electrical Engineers Association Trade Show",
+"DM Campaign to Top Customers",
+);
+
+$campaign_type_array = Array(
+"Conference",
+"Trade Show",
+"Direct Mail",
+);
+
+$campaign_status_array = Array(
+"Planned",
+"Planned",
+"Completed",
+);
  
 
 $last_name_count = count($last_name_array);

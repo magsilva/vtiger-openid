@@ -26,16 +26,16 @@ include_once('config.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
-require_once('modules/Contacts/Contact.php');
-require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Notes/Note.php');
-require_once('modules/Emails/Email.php');
-require_once('modules/Accounts/Account.php');
+require_once('modules/Contacts/Contacts.php');
+require_once('modules/Potentials/Potentials.php');
+require_once('modules/Notes/Notes.php');
+require_once('modules/Emails/Emails.php');
+require_once('modules/Accounts/Accounts.php');
 require_once('include/ComboUtil.php');
-require_once('modules/Leads/Lead.php');
+require_once('modules/Leads/Leads.php');
 
 
-class ImportLead extends Lead {
+class ImportLead extends Leads {
 	 var $db;
 
 	// This is the list of the functions to run when importing
@@ -43,6 +43,8 @@ class ImportLead extends Lead {
 
 	var $importable_fields = Array();
 
+	/**	function used to set the assigned_user_id value in the column_fields when we map the username during import
+	 */
 	function assign_user()
 	{
 		global $current_user;
@@ -53,7 +55,8 @@ class ImportLead extends Lead {
 		{
 			$this->db->println("searching and assigning ".$ass_user);
 
-			$result = $this->db->query("select id from users where user_name = '".$ass_user."'");
+			//$result = $this->db->query("select id from vtiger_users where user_name = '".$ass_user."'");
+			$result = $this->db->query("select id from vtiger_users where id = '".$ass_user."'");
 			if($this->db->num_rows($result)!=1)
 			{
 				$this->db->println("not exact records setting current userid");
@@ -77,6 +80,8 @@ class ImportLead extends Lead {
 		}
 	}
 
+	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
+	 */
 	function ImportLead() {
 		
 		$this->log = LoggerManager::getLogger('import_lead');

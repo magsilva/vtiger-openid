@@ -15,7 +15,7 @@
 /*********************************************************************************
  * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/modules/Users/Forms.php,v 1.3 2004/11/08 13:48:29 jack Exp $
  * Description:  Contains a variety of utility functions used to display UI
- * components such as form headers and footers.  Intended to be modified on a per
+ * components such as form vtiger_headers and footers.  Intended to be modified on a per
  * theme basis.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -34,6 +34,9 @@ global $app_strings;
 
 $lbl_last_name = $mod_strings['LBL_LIST_LAST_NAME'];
 $lbl_user_name = $mod_strings['LBL_LIST_USER_NAME'];
+$lbl_role_name = $mod_strings['LBL_ROLE_NAME'];
+$lbl_new_password = $mod_strings['LBL_LIST_PASSWORD'];
+$lbl_confirm_new_password = $mod_strings['LBL_LIST_CONFIRM_PASSWORD'];
 $lbl_user_email1 = $mod_strings['LBL_LIST_EMAIL'];
 $err_missing_required_fields = $app_strings['ERR_MISSING_REQUIRED_FIELDS'];
 $err_invalid_email_address = $app_strings['ERR_INVALID_EMAIL_ADDRESS'];
@@ -42,48 +45,78 @@ $the_script  = <<<EOQ
 
 <script type="text/javascript" language="Javascript">
 <!--  to hide script contents from old browsers
-
-function trim(s) {
-	while (s.substring(0,1) == " ") {
-		s = s.substring(1, s.length);
-	}
-	while (s.substring(s.length-1, s.length) == ' ') {
-		s = s.substring(0,s.length-1);
-	}
-
-	return s;
+function set_fieldfocus(errorMessage,oMiss_field){
+		alert("$err_missing_required_fields" + errorMessage);
+		oMiss_field.focus();	
+		exit();
 }
 
 function verify_data(form) {
 	var isError = false;
 	var errorMessage = "";
+	if (trim(form.email1.value) == "") {
+		isError = true;
+		errorMessage += "\\n$lbl_user_email1";
+		oField_miss = form.email1;
+	}
+	if (trim(form.role_name.value) == "") {
+		isError = true;
+		errorMessage += "\\n$lbl_role_name";
+		oField_miss =form.role_name;
+	}
 	if (trim(form.last_name.value) == "") {
 		isError = true;
 		errorMessage += "\\n$lbl_last_name";
+		oField_miss =form.last_name;
+	}
+	if(form.mode.value !='edit')
+	{
+		if (trim(form.user_password.value) == "") {
+			isError = true;
+			errorMessage += "\\n$lbl_new_password";
+			oField_miss =form.user_password;
+		}
+		if (trim(form.confirm_password.value) == "") {
+			isError = true;
+			errorMessage += "\\n$lbl_confirm_new_password";
+			oField_miss =form.confirm_password;
+		}
 	}
 	if (trim(form.user_name.value) == "") {
 		isError = true;
 		errorMessage += "\\n$lbl_user_name";
-	}
-	if (trim(form.email1.value) == "") {
-		isError = true;
-		errorMessage += "\\n$lbl_user_email1";
+		oField_miss =form.user_name;
 	}
 
 	if (isError == true) {
-		alert("$err_missing_required_fields" + errorMessage);
-		return false;
+		set_fieldfocus(errorMessage,oField_miss);
 	}
 	if (trim(form.email1.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.email1.value)) {
-		alert('"' + form.email1.value + '" $err_invalid_email_address');
-		return false;
+		alert("The email id '"+form.email1.value+"' in the email field is $err_invalid_email_address");
+		form.email1.focus();
+		exit();
 	}
 	if (trim(form.email2.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.email2.value)) {
-		alert('"' + form.email2.value + '" $err_invalid_email_address');
-		return false;
+		alert("The email id '"+form.email2.value+"' in other email field is $err_invalid_email_address");
+		form.email2.focus();
+		exit();
 	}
-
-	return true;
+	if (trim(form.yahoo_id.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.yahoo_id.value)) {
+		alert("The email id '"+form.yahoo_id.value+"' in yahoo email field is $err_invalid_email_address");
+		form.yahoo_id.focus();
+		exit();
+	}
+	if(form.mode.value != 'edit')
+	{
+		if(trim(form.user_password.value) != trim(form.confirm_password.value))
+		{
+			set_fieldfocus("The password does't match",form.user_password);
+		}
+		check_duplicate();
+	}else
+	{
+		form.submit();
+	}
 }
 
 // end hiding contents from old browsers  -->

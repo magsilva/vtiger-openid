@@ -17,41 +17,20 @@
  * Description:  TODO: To be written.
  ********************************************************************************/
 
-require_once('modules/Contacts/Contact.php');
+require_once('modules/Contacts/Contacts.php');
 global $mod_strings;
 
 require_once('include/logging.php');
 $log = LoggerManager::getLogger('contact_delete');
 
-$focus = new Contact();
+$focus = new Contacts();
 
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-if($_REQUEST['return_module'] == 'Accounts')
-{
-        $sql = 'update crmentity set deleted = 1 where crmid = '.$_REQUEST['record'];
-        $adb->query($sql);
-}
-if($_REQUEST['return_module'] == 'Potentials' && $_REQUEST['record'] != '' && $_REQUEST['return_id'] != '')
-{
-	$sql = 'delete from contpotentialrel where contactid='.$_REQUEST['record'].' and potentialid='.$_REQUEST['return_id'];
-	$adb->query($sql);
-}
-if($_REQUEST['record'] != '' && $_REQUEST['return_id'] != '')
-{
-	$sql = 'delete from seactivityrel where crmid = '.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
-	$adb->query($sql);
-$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
-$adb->query($sql_recentviewed);
-}
-if($_REQUEST['return_module'] == 'Products')
-{
-	$sql = 'delete from vendorcontactrel where contactid='.$_REQUEST['record'].' and vendorid='.$_REQUEST['return_id'];
-	$adb->query($sql);
-}
-if($_REQUEST['return_module'] == $_REQUEST['module'])
-	$focus->mark_deleted($_REQUEST['record']);
+DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
 
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&activity_mode=".$_REQUEST['activity_mode']."&record=".$_REQUEST['return_id']);
+if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
+
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&parenttab=$parenttab&activity_mode=".$_REQUEST['activity_mode']."&record=".$_REQUEST['return_id']."&relmodule=".$_REQUEST['module']);
 ?>

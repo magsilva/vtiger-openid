@@ -23,6 +23,12 @@ echo '<br>';
 echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_NAME'].' : '.$mod_strings['LBL_ADD_MAIL_ACCOUNT'], true);
 echo '<br><br>';
 
+
+if($_REQUEST['problem'])
+{
+  echo '<font color=red><b>Error in incoming mail server configuration! </b></font>';
+}
+
 ?>
 
             <form action="index.php" name="massdelete">
@@ -61,7 +67,7 @@ echo '<br><br>';
 		<tr><td COLSPAN="12" class="blackLine"><IMG SRC="<?php echo $image_path;?>blank.gif"></td></tr>
 <?php
    global $current_user;
-   require_once('modules/Users/UserInfoUtil.php');
+   require_once('include/utils/UserInfoUtil.php');
 
    $result = getMailServerInfo($current_user);
    $temprow = $adb->fetch_array($result);
@@ -125,7 +131,7 @@ function massDelete()
                 }
                 else
                 {
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 }
         }
@@ -147,7 +153,7 @@ function massDelete()
                 }
                 else
                 {
-                        alert("Please select atleast one entity");
+                        alert("Please select at least one entity");
                         return false;
                 }
         }

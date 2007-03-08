@@ -9,16 +9,27 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-$fld_module=$_REQUEST["field_module"];
-$fldName=$_REQUEST["field_name"];
+$fld_module=$_REQUEST["fld_module"];
 $tableName=$_REQUEST["table_name"];
-$columnName=$_REQUEST["column_name"];
 $fldPickList =  $_REQUEST['listarea'];
+//changed by dingjianting on 2006-10-1 for picklist editor
+$fldPickList = utf8RawUrlDecode($fldPickList); 
+$uitype = $_REQUEST['uitype'];
+
+global $adb;
 
 //Deleting the already existing values
-//$delquery="truncate ".$tableName;
-$delquery="delete from ".$tableName;
-$adb->query($delquery);
+if($uitype == 111)
+{
+	$delquery="delete from vtiger_".$tableName." where presence=0";
+	$adb->query($delquery);
+}
+else
+{
+	$delquery="delete from vtiger_".$tableName;
+	$adb->query($delquery);
+}
+
 $pickArray = explode("\n",$fldPickList);
 $count = count($pickArray);
 
@@ -32,13 +43,13 @@ for($i = 0; $i < $count; $i++)
 	$pickArray[$i] = trim($pickArray[$i]);
 	if($pickArray[$i] != '')
 	{
-		if($custom)
-			$query = "insert into ".$tableName." values('".$pickArray[$i]."')";
+		if($uitype == 111)
+			$query = "insert into vtiger_".$tableName." values('','".$pickArray[$i]."',".$i.",0)";
 		else
-			$query = "insert into ".$tableName." values('','".$pickArray[$i]."',".$i.",1)";
+			$query = "insert into vtiger_".$tableName." values('','".$pickArray[$i]."',".$i.",1)";
 
-                $adb->query($query);
+	        $adb->query($query);
 	}
 }
-header("Location:index.php?module=Settings&action=EditComboField&fld_module=".$fld_module."&fld_name=".$fldName."&table_name=".$tableName."&column_name=".$columnName);
+header("Location:index.php?action=SettingsAjax&module=Settings&directmode=ajax&file=PickList&fld_module=".$fld_module);
 ?>

@@ -11,32 +11,51 @@
 
 require_once('include/database/PearDatabase.php');
 global $adb;
-
 $rolename = $_REQUEST['roleName'];
-$profileId= $_REQUEST['profileId'];
+$mode = $_REQUEST['mode'];
+if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check']!='')
+{
+	if($mode != 'edit')
+	{
+		$query = 'select rolename from vtiger_role where rolename="'.$rolename.'"';
+	}
+	else
+	{
+		$roleid=$_REQUEST['roleid'];
+		$query = 'select rolename from vtiger_role where rolename="'.$rolename.'" and roleid !="'.$roleid.'"';
+
+	}
+	$result = $adb->query($query);
+	if($adb->num_rows($result) > 0)
+	{
+		echo 'Role name already exists';
+		die;
+	}else
+	{
+		echo 'SUCESS';
+		die;
+	}
+
+}
+$parentRoleId=$_REQUEST['parent'];
 //Inserting values into Role Table
 if(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'edit')
 {
-	$roleid = $_REQUEST['roleid'];	
-	$sql1 = "update role set name='".$rolename."' where roleid=".$roleid;
-	$adb->query($sql1);
-	$sql3 = "update role2profile set profileid='".$profileId."' where roleid=".$roleid;
-	$adb->query($sql3);	
+	$roleId = $_REQUEST['roleid'];
+	$selected_col_string = 	$_REQUEST['selectedColumnsString'];
+	$profile_array = explode(';',$selected_col_string);
+	updateRole($roleId,$rolename,$profile_array);
+		
 }
-else
+elseif(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'create')
 {
-	$sql1 = "insert into role values('','".$rolename."','')";
-	$adb->query($sql1);
-
-	//Retreiving the profileid
-	$sql2 = "select max(roleid) as current_id from role";
-	$result2 = $adb->query($sql2);
-	$current_role_id = $adb->query_result($result2,0,'current_id');
-	//Inserting the mapping role2profile table
-	$sql3 = "insert into role2profile values(".$current_role_id." ,".$profileId.")";
-	$adb->query($sql3);
+	$selected_col_string = 	$_REQUEST['selectedColumnsString'];
+	$profile_array = explode(';',$selected_col_string);
+	//Inserting into vtiger_role Table
+	$roleId = createRole($rolename,$parentRoleId,$profile_array);
+	 	
 }
 
-$loc = "Location: index.php?action=listroles&module=Users";
+$loc = "Location: index.php?action=listroles&module=Users&parenttab=Settings";
 header($loc);
 ?>

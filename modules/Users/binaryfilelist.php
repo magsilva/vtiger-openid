@@ -20,9 +20,9 @@ function getAttachmentsList()
 	global $app_strings;
 	global $mod_strings;
 
-	$dbQuery = "SELECT templateid,filename,filesize,filetype,description,module ";
+	$dbQuery = "SELECT templateid, filename,filesize,filetype,description,module ";
 
-	$dbQuery .= "FROM wordtemplates" ;
+	$dbQuery .= "FROM vtiger_wordtemplates" ;
 
 	$dbQuery .= " ORDER BY filename ASC";
 

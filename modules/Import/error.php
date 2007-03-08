@@ -13,15 +13,19 @@
  *Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/error.php,v 1.16 2005/05/03 13:18:55 saraj Exp $
+ * $Header$
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('XTemplate/xtpl.php');
+require_once('Smarty_setup.php');
+require_once('include/utils/utils.php');
 
+/**	function used to show the error message occured during import process
+ *	@param	string	$message - Error message to display in the screen, where the passed error message will be displayed in screen using Importerror.tpl file
+ */
 function show_error_import($message)
 {
 	global $import_mod_strings;
@@ -40,25 +44,27 @@ function show_error_import($message)
 
 	$log->info("Upload Error");
 
-	$xtpl=new XTemplate ('modules/Import/error.html');
-	$xtpl->assign("MOD", $mod_strings);
-	$xtpl->assign("APP", $app_strings);
+	$smarty =  new vtigerCRM_Smarty;
+	$smarty->assign("MOD", $mod_strings);
+	$smarty->assign("APP", $app_strings);
 
 
-	if (isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+	if (isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
 
-	if (isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
+	if (isset($_REQUEST['return_action'])) $smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
 
-	$xtpl->assign("THEME", $theme);
+	$smarty->assign("THEME", $theme);
 
-	$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+	$category = getParenttab();
+	$smarty->assign("CATEGORY", $category); 
 
-	$xtpl->assign("MODULE", $_REQUEST['module']);
-	$xtpl->assign("MESSAGE", $message);
+	$smarty->assign("IMAGE_PATH", $image_path);
+	$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
-	$xtpl->parse("main");
+	$smarty->assign("MODULE", $_REQUEST['module']);
+	$smarty->assign("MESSAGE", $message);
 
-	$xtpl->out("main");
+	$smarty->display('Importerror.tpl');
 }
 
 ?>

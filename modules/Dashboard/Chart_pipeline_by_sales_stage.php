@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_pipeline_by_sales_stage.php,v 1.17.2.1 2005/08/30 14:24:17 cooljaguar Exp $
+ * $Header$
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils.php');
+require_once('include/utils/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');
@@ -55,7 +55,7 @@ elseif (isset($_REQUEST['pbss_date_start']) && $_REQUEST['pbss_date_start'] != '
 	$log->debug($_SESSION['pbss_date_start']);
 }
 else {
-	$date_start = date("Y-m-d", time());
+	$date_start = "2001-01-01";
 }
 
 if (isset($_SESSION['pbss_date_end']) && $_SESSION['pbss_date_end'] != '' && !isset($_REQUEST['pbss_date_end'])) {
@@ -136,12 +136,19 @@ $log->debug($ids);
 $cache_file_name = $id_hash."_pipeline_".$current_language."_".crc32(implode('',$datax)).$date_start.$date_end.".png";
 $log->debug("cache file name is: $cache_file_name");
 
-if (substr(phpversion(), 0, 1) == "5") { // php5 }
-	echo "<em>Charts not supported in PHP 5.</em>";
-}
-else {
+if(isPermitted('Potentials','index')=="yes")
+{
 $draw_this = new jpgraph();
-echo $draw_this->pipeline_by_sales_stage($datax, $date_start, $date_end, $ids, $tmp_dir.$cache_file_name, $refresh);
+$width = 850;
+$height = 500;
+if(isset($_REQUEST['display_view']) && $_REQUEST['display_view'] == 'MATRIX')
+{
+	$width = 350;
+	$height = 250;
+}
+
+
+echo $draw_this->pipeline_by_sales_stage($datax, $date_start, $date_end, $ids, $tmp_dir.$cache_file_name, $refresh,$width,$height);
 echo "<P><font size='1'><em>".$current_module_strings['LBL_SALES_STAGE_FORM_DESC']."</em></font></P>";
 if (isset($_REQUEST['pbss_edit']) && $_REQUEST['pbss_edit'] == 'true') {
 	$cal_lang = "en";
@@ -198,9 +205,14 @@ else {
 ?>
 <div align=right><FONT size='1'>
 <em><?php  echo $current_module_strings['LBL_CREATED_ON'].' '.$file_date; ?> 
-</em>[<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&pbss_refresh=true"><?php echo $current_module_strings['LBL_REFRESH'];?></a>]
-[<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&pbss_edit=true"><?php echo $current_module_strings['LBL_EDIT'];?></a>]
+</em>[<a href="javascript:;" onClick="changeView('DashboardHome','NORMAL');"><?php echo $current_module_strings['LBL_REFRESH'];?></a>]
+[<a href="index.php?module=<?php echo $currentModule;?>&action=index&pbss_edit=true"><?php echo $current_module_strings['LBL_EDIT'];?></a>]
 </FONT></div>
-<?php } 
+<?php }
+}
+else
+{
+	echo $mod_strings['LBL_NO_PERMISSION'];
+} 
 //echo get_validate_chart_js();
-}?>
+?>

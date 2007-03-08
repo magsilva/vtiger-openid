@@ -8,31 +8,6 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('XTemplate/xtpl.php');
-require_once("data/Tracker.php");
-require_once('themes/'.$theme.'/layout_utils.php');
-require_once('include/logging.php');
-require_once('include/utils.php');
-require_once('modules/Reports/Reports.php');
-require_once('include/database/PearDatabase.php');
-
-global $app_strings;
-global $app_list_strings;
-global $mod_strings;
-$current_module_strings = return_module_language($current_language, 'Reports');
-
-global $list_max_entries_per_page;
-global $urlPrefix;
-
-$log = LoggerManager::getLogger('report_type');
-
-global $currentModule;
-global $image_path;
-global $theme;
-$report_std_filter=new XTemplate('modules/Reports/StandardFilter.html');
-$report_std_filter->assign("MOD", $mod_strings);
-$report_std_filter->assign("APP", $app_strings);
-$report_std_filter->assign("IMAGE_PATH",$image_path);
 
 if(isset($_REQUEST["record"]) == false)
 {
@@ -43,11 +18,11 @@ if(isset($_REQUEST["record"]) == false)
 	$BLOCK1 = getPrimaryStdFilterHTML($primarymodule);
 	$BLOCK1 .= getSecondaryStdFilterHTML($secondarymodule);
 
-	$report_std_filter->assign("BLOCK1",$BLOCK1);
+		$report_std_filter->assign("BLOCK1_STD",$BLOCK1);
         $BLOCKJS = $oReport->getCriteriaJS();
-	$report_std_filter->assign("BLOCKJS",$BLOCKJS);
+		$report_std_filter->assign("BLOCKJS_STD",$BLOCKJS);
         $BLOCKCRITERIA = $oReport->getSelectedStdFilterCriteria();
-	$report_std_filter->assign("BLOCKCRITERIA",$BLOCKCRITERIA);
+		$report_std_filter->assign("BLOCKCRITERIA_STD",$BLOCKCRITERIA);
 
 }elseif(isset($_REQUEST["record"]) == true)
 {
@@ -55,24 +30,29 @@ if(isset($_REQUEST["record"]) == false)
         $oReport = new Reports($reportid);
         $oReport->getSelectedStandardCriteria($reportid);
 	
-	$BLOCK1 = getPrimaryStdFilterHTML($primarymodule,$oReport->stdselectedcolumn);
-        $BLOCK1 .= getSecondaryStdFilterHTML($secondarymodule,$oReport->stdselectedcolumn);
-	$report_std_filter->assign("BLOCK1",$BLOCK1);
+		$BLOCK1 = getPrimaryStdFilterHTML($oReport->primodule,$oReport->stdselectedcolumn);
+        $BLOCK1 .= getSecondaryStdFilterHTML($oReport->secmodule,$oReport->stdselectedcolumn);
+		$report_std_filter->assign("BLOCK1_STD",$BLOCK1);
 
         $BLOCKJS = $oReport->getCriteriaJS();
-	$report_std_filter->assign("BLOCKJS",$BLOCKJS);
+		$report_std_filter->assign("BLOCKJS_STD",$BLOCKJS);
 
         $BLOCKCRITERIA = $oReport->getSelectedStdFilterCriteria($oReport->stdselectedfilter);
-	$report_std_filter->assign("BLOCKCRITERIA",$BLOCKCRITERIA);
+		$report_std_filter->assign("BLOCKCRITERIA_STD",$BLOCKCRITERIA);
 
         $startdate = $oReport->startdate;
-	$report_std_filter->assign("STARTDATE",$startdate);	
+		$report_std_filter->assign("STARTDATE_STD",$startdate);	
 
         $enddate = $oReport->enddate;
-	$report_std_filter->assign("ENDDATE",$enddate);
+		$report_std_filter->assign("ENDDATE_STD",$enddate);
 }
 
 
+	/** Function to get the HTML strings for the primarymodule standard filters
+	 * @ param $module : Type String
+	 * @ param $selected : Type String(optional)
+	 *  This Returns a HTML combo srings
+	 */
 function getPrimaryStdFilterHTML($module,$selected="")
 {
 	global $app_list_strings;
@@ -112,12 +92,16 @@ function getPrimaryStdFilterHTML($module,$selected="")
 	return $shtml;
 }
 
+	/** Function to get the HTML strings for the secondary  standard filters
+	 * @ param $module : Type String
+	 * @ param $selected : Type String(optional)
+	 *  This Returns a HTML combo srings for the secondary modules
+	 */
 function getSecondaryStdFilterHTML($module,$selected="")
 {
 	global $app_list_strings;
 	global $ogReport;
 	global $current_language;
-
 	if($module != "")
         {
         	$secmodule = explode(":",$module);
@@ -155,7 +139,5 @@ function getSecondaryStdFilterHTML($module,$selected="")
 	}
 	return $shtml;
 }
-$report_std_filter->parse("main");
-$report_std_filter->out("main");
 ?>
 

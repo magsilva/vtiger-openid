@@ -17,10 +17,16 @@
  * Description:  Starts the installation process.
  ********************************************************************************/
 
+include('adodb/adodb.inc.php');
+
 if (substr(phpversion(), 0, 1) == "5") {
 	ini_set("zend.ze1_compatibility_mode", "1");
 }
 
+/** Function to  return a string with backslashes stripped off
+ * @param $value -- value:: Type string
+ * @returns $value -- value:: Type string array
+ */
  function stripslashes_checkstrings($value){
  	if(is_string($value)){
  		return stripslashes($value);
@@ -34,6 +40,13 @@ if (substr(phpversion(), 0, 1) == "5") {
 	$_GET = array_map("stripslashes_checkstrings", $_GET);
 
 }
+
+//Run command line if no web var detected
+if (!isset($_SERVER['REQUEST_METHOD'])) {
+	require("install/5createTables.inc.php");
+	exit;
+}
+			
 if (isset($_POST['file'])) $the_file = $_POST['file'];
 else $the_file = "0welcome.php";
 

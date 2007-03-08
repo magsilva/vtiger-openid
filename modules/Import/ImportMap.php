@@ -29,7 +29,7 @@ class ImportMap extends SugarBean
 	var $log;
 	var $db;
 
-	// Stored fields
+	// Stored vtiger_fields
 	var $id;
 	var $name;
 	var $module;
@@ -41,7 +41,7 @@ class ImportMap extends SugarBean
 	var $assigned_user_id;
 	var $is_published;
 
-	var $table_name = "import_maps";
+	var $table_name = "vtiger_import_maps";
 	var $object_name = "ImportMap";
 	var $module_id="id";
 	
@@ -60,84 +60,65 @@ class ImportMap extends SugarBean
 		,"is_published"
 		);
 
-
+	/**	Constructor
+	 */
 	function ImportMap() 
 	{
 		$this->log = LoggerManager::getLogger('file');
 		$this->db = new PearDatabase();
 	}
 
+	/**	function used to get the id, name, module and content as string
+	 *	@return string Object:ImportMap id=$this->id name=$this->name module=$this->module content=$this->content
+	 */
 	function toString()
 	{
 		return "Object:ImportMap id=$this->id name=$this->name module=$this->module content=$this->content";
 	}
 
-	function create_tables () 
-	{
-		/*
-		$query = 'CREATE TABLE '.$this->table_name.' ( ';
-		$query .='id char(36) NOT NULL';
-		$query .=', name char(36) NOT NULL';
-		$query .=', module char(36) NOT NULL';
-		$query .=', content blob';
-                $query .=', has_header bool NOT NULL default 1';
-                $query .=', deleted bool NOT NULL default 0';
-                $query .=', date_entered datetime NOT NULL';
-                $query .=', date_modified datetime NOT NULL';
-                $query .=', assigned_user_id char(36)';
-                $query .=', is_published char(3) NOT NULL default \'no\'';
-		$query .=', PRIMARY KEY ( ID ) )';
-
-		
-		
-		
-		$this->db->query($query,true,"Error creating table: ".$this->table_name. ":" );
-
-
-		//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
-	
-		// Create the indexes
-                $this->create_index("create index idx_cont_owner_id_module_and_name on ".$this->table_name." (assigned_user_id, module, name, deleted)");*/
-	}
-
-	function drop_tables () 
-	{
-		/*
-		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
-
-		
-			
-		$this->db->query($query);
-
-		//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
-		*/
-
-	}
-	
+	/**	function used to save the mapping 
+	 *	@param int $owner_id - user id who is the owner for this mapping
+	 *	@param string $name - name of the mapping
+	 *	@param string $module - module name in which we have saved the mapping
+	 *	@param string $has_header - has_header value
+	 *	@param string $content - all fields which are concatenated with & symbol
+	 *	@return int $result - return 1 if the mapping contents updated
+	 */
         function save_map( $owner_id, $name, $module, $has_header,$content )
         {
-		$query_arr = array(
-			'assigned_user_id'=>$owner_id,'name'=>$name);
+		$query_arr = array('assigned_user_id'=>$owner_id,'name'=>$name);
 
-		$this->retrieve_by_string_fields($query_arr, false);
+		//$this->retrieve_by_string_fields($query_arr, false);
 
                 $result = 1;
                 $this->assigned_user_id = $owner_id;
-		//$this->new_with_id=$this->db->getUniqueID("import_maps");
+
                 $this->name = $name;
                 $this->module = $module;
-                //$this->content = $content;
+
 		$this->content = "".$this->db->getEmptyBlob()."";
                 $this->has_header = $has_header;
                 $this->deleted = 0;
+
+		//check whether this map name is already exist, if yes then overwrite the existing one, else create new
+	        $res = $this->db->query("select id from vtiger_import_maps where name='".trim($name)."'");
+		if($this->db->num_rows($res) > 0)
+		{
+			$this->id = $this->db->query_result($res,0,'id');
+		}
+
                 $returnid = $this->save();
-		//$this->db->println("save_map=".$this->new_with_id);
+
 		$this->db->updateBlob($this->table_name,"content","name='".$name."' and module='".$module."'",$content);
-		//$this->db->updateBlob($this->table_name,"content","id=".$this->new_with_id,$content);
-		
+
                 return $result;
         }
 
+	/**	function used to publish or unpublish the mapping
+	 *	@param int $user_id - user id who is publishing the map
+	 *	@param string $flag - yes or no
+	 *	@return value - if flag is yes then update the db and return 1 otherwise return -1
+	 */
         function mark_published($user_id,$flag)
         {
 		$other_map = new ImportMap();
@@ -173,6 +154,10 @@ class ImportMap extends SugarBean
         }
 
 
+	/**	function to retrieve all the column fields and set as properties
+	 *	@param array $fields_array - fields array of the corresponding module
+	 *	@return array $obj_arr - return an array which contains the retrieved column_field values as properties
+	 */
 	function retrieve_all_by_string_fields($fields_array) 
 	{ 
 		$where_clause = $this->get_where($fields_array);
@@ -192,10 +177,46 @@ class ImportMap extends SugarBean
 					$focus->$field = $row[$field];
 				} 
 			} 
-			$focus->fill_in_additional_detail_fields(); 
 			array_push($obj_arr,$focus);
 		}
 		return $obj_arr;
+	}
+
+	/**	function used to get the list of saved mappings
+	 *	@param string $module - module name which we currently importing
+	 *	@return array $map_lists - return the list of mappings in the format of [id]=>name
+	 */
+	function getSavedMappingsList($module)
+	{
+		$query = "SELECT * FROM $this->table_name where module='".$module."' and deleted=0";
+		$result = $this->db->query($query,true," Error: ");
+		$map_lists = array();
+
+		while ($row = $this->db->fetchByAssoc($result,-1,FALSE) )
+		{	
+			$map_lists[$row['id']] = $row['name'];
+		}
+		return $map_lists;
+	}
+
+	/**	function used to retrieve the mapping content for the passed mapid
+	 *	@param int $mapid - mapid for the selected map
+	 *	@return array $mapping_arr - return the array which contains the mapping_arr[name]=value from the content of the map
+	 */
+	function getSavedMappingContent($mapid)
+	{
+		$query = "SELECT * FROM $this->table_name where id='".$mapid."' and deleted=0";
+		$result = $this->db->query($query,true," Error: ");
+		$mapping_arr = array();
+
+		$pairs = split("&",$this->db->query_result($result,0,'content'));
+		foreach ($pairs as $pair)
+		{
+			list($name,$value) = split("=",$pair);
+			$mapping_arr["$name"] = $value;
+		}
+
+		return $mapping_arr;
 	}
 
 }

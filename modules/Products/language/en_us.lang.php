@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Products/language/en_us.lang.php,v 1.21.2.4 2005/09/12 11:37:53 cooljaguar Exp $
+ * $Header$
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -41,8 +41,8 @@ $mod_strings = Array(
 'LBL_LIST_PRICEBOOK_FORM_TITLE'=>'Price Book List',
 'LBL_LIST_CATEGORY'=>'Product Category',
 'LBL_CATEGORY'=>'Product Category:',
-'LBL_PRODUCT_CODE'=>'Product Code',
-'LBL_LIST_PRODUCT_CODE'=>'Product Code:',
+'LBL_PRODUCT_CODE'=>'Part Number',
+'LBL_LIST_PRODUCT_CODE'=>'Part Number:',
 'LBL_PRODUCT_ACTIVE'=>'Product Active',
 'LBL_PRODUCT_COMMISSION_RATE'=>'Commission Rate',
 'LBL_PRODUCT_QTY_PER_UNIT'=>'Qty/Unit',
@@ -85,7 +85,7 @@ $mod_strings = Array(
 'LBL_NEW_ATTACHMENT'=>'New Attachment',
 'LBL_ATTACHMENT_TITLE'=>'Attachments',
 
-//Added fields after RC1 - Release
+//Added vtiger_fields after RC1 - Release
 'LBL_MANUFACTURER'=>'Manufacturer',
 'LBL_PRODUCTCATEGORY'=>'Product Category',
 'LBL_SUPPORT_START_DATE'=>'Support Start Date',
@@ -94,7 +94,7 @@ $mod_strings = Array(
 
 //Added for 4GA
 'Product Name'=>'Product Name',
-'Product Code'=>'Product Code',
+'Product Code'=>'Part Number',
 'Product Active'=>'Product Active',
 'Commission Rate'=>'Commission Rate (%)',
 'Qty/Unit'=>'Qty/Unit',
@@ -117,7 +117,7 @@ $mod_strings = Array(
 'Reorder Level'=>'Reorder Level',
 'Website'=>'Website',
 'Tax Class'=>'Tax Class',
-'Mfr PartNo'=>'Part No',
+'Mfr PartNo'=>'Mfr Part No',
 'Vendor PartNo'=>'Vendor Part No',
 'Serial No'=>'Serial No',
 'Qty In Stock'=>'Qty. in Stock',
@@ -140,6 +140,7 @@ $mod_strings = Array(
 'Postal Code'=>'Postal Code',
 'Country'=>'Country',
 'Description'=>'Description',
+'Po Box'=>'PO Box',
 
 //Mapping for price book
 'Price Book Name'=>'Price Book Name',
@@ -166,10 +167,49 @@ $mod_strings = Array(
 'LBL_ADD_PRODUCTS_PRICEBOOK'=>'Add Products to PriceBook',
 
 //Added for 4.2 patch2 release
-'LBL_MAXIMUM_LIMIT_ERROR'=>'Sorry, the uploaded file exceeds the maximum filesize limit. Please try a file smaller than 800000 bytes',
+'LBL_MAXIMUM_LIMIT_ERROR'=>'Sorry, the uploaded file exceeds the maximum vtiger_filesize limit. Please try a file smaller than 800000 bytes',
 'LBL_UPLOAD_ERROR'=>'Problems in file upload. Please try again!',
 'LBL_IMAGE_ERROR'=>'The given file is not of type image(.gif/.jpg/.png)',
 'LBL_INVALID_IMAGE'=>'Invalid file OR File has no data',
+'LBL_EMAIL'=>'Email',
+'Product'=>'Product',
+'LBL_EDITLISTPRICE'=>'EditListPrice',
+
+//Added for existing picklist entries
+
+'--None--'=>'--None--',
+
+'Hardware'=>'Hardware',
+'Software'=>'Software',
+'CRM Applications'=>'CRM Applications',
+
+'300-Sales-Software'=>'300-Sales-Software',
+'301-Sales-Hardware'=>'301-Sales-Hardware',
+'302-Rental-Income'=>'302-Rental-Income',
+'303-Interest-Income'=>'303-Interest-Income',
+'304-Sales-Software-Support'=>'304-Sales-Software-Support',
+'305-Sales Other'=>'305-Sales Other',
+'306-Internet Sales'=>'306-Internet Sales',
+'307-Service-Hardware Labor'=>'307-Service-Hardware Labor',
+'308-Sales-Books'=>'308-Sales-Books',
+
+'Box'=>'Box',
+'Carton'=>'Carton',
+'Caton'=>'Caton',
+'Dozen'=>'Dazon',
+'Each'=>'Each',
+'Hours'=>'Hours',
+'Impressions'=>'Impressions',
+'Lb'=>'Lb',
+'M'=>'M',
+'Pack'=>'Pack',
+'Pages'=>'Pages',
+'Pieces'=>'Pieces',
+'Quantity'=>'Quantity',
+'Reams'=>'Reams',
+'Sheet'=>'Sheet',
+'Spiral Binder'=>'Spiral Binder',
+'Sq Ft'=>'Sq Ft',
 
 );
 

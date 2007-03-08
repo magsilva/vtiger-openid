@@ -122,11 +122,11 @@ $combo_strings = Array(
                 , 'Not Held'=>'Not Held'
                 ),
 'taskstatus_dom' => Array('Not Started'=>'Not Started'
-                , 'In Progress'=>'In Progress'
-                , 'Completed'=>'Completed'
-                , 'Pending Input'=>'Pending Input'
+		, 'In Progress'=>'In Progress'
+		, 'Completed'=>'Completed'
+		, 'Pending Input'=>'Pending Input'
                 , 'Deferred'=>'Deferred'
-                , 'Planned'=>'Planned'
+		, 'Planned'=>'Planned'
                 ),
 'taskpriority_dom' => Array('High'=>'High'
                 ,'Medium'=>'Medium'
@@ -187,14 +187,13 @@ $combo_strings = Array(
                         'Euro'=>'Euro'
                         ),
 
-'rsscategory_dom' => Array('vtiger Discussions'=>'vtiger Discussions',
-                       'vtiger Wiki'=>'vtiger Wiki'
-                      ),
-
+'visibility_dom' => Array('Private'=>'Private',
+                          'Public'=>'Public'
+			 ),
+				     
 'usageunit_dom' => Array('Box'=>'Box',
                         'Carton'=>'Carton',
-                        'Caton'=>'Caton',
-                        'Dozen'=>'Dazon',
+                        'Dozen'=>'Dozen',
                         'Each'=>'Each',
                         'Hours'=>'Hours',
                         'Impressions'=>'Impressions',
@@ -256,16 +255,60 @@ $combo_strings = Array(
 'postatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled'
+			'Cancelled'=>'Cancelled',
+			'Received Shipment'=>'Received Shipment'
 			),
 
 'sostatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled'
+			'Cancelled'=>'Cancelled'
 			),
+
+'campaignstatus_dom' => Array(''=>'',
+			      'Planning'=>'Planning',						      	      'Active'=>'Active',							      'Inactive'=>'Inactive',
+			      'Complete'=>'Complete',
+			      'Cancelled'=>'Cancelled',							      ),
+			
+
+'campaigntype_dom' => Array(''=>'',
+			    'Conference'=>'Conference',
+			    'Webinar'=>'Webinar',
+			    'Trade Show'=>'Trade Show',				    			    'Public Relations'=>'Public Relations',					    'Partners'=>'Partners',
+			    'Referral Program'=>'Referral Program',
+			    'Advertisement'=>'Advertisement',
+			    'Banner Ads'=>'Banner Ads',
+			    'Direct Mail'=>'Direct Mail',
+			    'Email'=>'Email',
+			    'Telemarketing'=>'Telemarketing',
+			    'Others'=>'Others'
+			    ),
+
+'expectedresponse_dom' => Array(''=>'',
+			      'Excellent'=>'Excellent',
+			      'Good'=>'Good',
+			      'Average'=>'Average',
+                              'Poor'=>'Poor'
+			      ),			      
+'status_dom' => Array('Active'=>'Active',
+			      'Inactive'=>'Inactive'
+			      ),
+'activity_view_dom' => Array('Today'=>'Today',
+			      'This Week'=>'This Week',
+			      'This Month'=>'This Month',
+			      'This Year'=>'This Year'
+		      ),
+'lead_view_dom' => Array('Today'=>'Today',
+			      'Last 2 Days'=>'Last 2 Days',
+                              'Last Week'=>'Last Week'
+		      ),
+'date_format_dom' => Array('dd-mm-yyyy'=>'dd-mm-yyyy',
+			      'mm-dd-yyyy'=>'mm-dd-yyyy',
+                              'yyyy-mm-dd'=>'yyyy-mm-dd'
+			      ),		      
 		
 );
+
 
 ?>
 

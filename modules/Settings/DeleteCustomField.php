@@ -11,67 +11,71 @@
 require_once('include/database/PearDatabase.php');
 
 $fld_module = $_REQUEST["fld_module"];
-//echo $fld_module;
+
 $id = $_REQUEST["fld_id"];
-//echo '<BR>';
-//echo $id;
+
 $colName = $_REQUEST["colName"];
 $uitype = $_REQUEST["uitype"];
 
 //Deleting the CustomField from the Custom Field Table
-$query='delete from field where fieldid="'.$id.'"';
+$query='delete from vtiger_field where fieldid="'.$id.'"';
 $adb->query($query);
 
-//Deleting from profile2field table
-$query='delete from profile2field where fieldid="'.$id.'"';
+//Deleting from vtiger_profile2field table
+$query='delete from vtiger_profile2field where fieldid="'.$id.'"';
 $adb->query($query);
 
-//Deleting from def_org_field table
-$query='delete from def_org_field where fieldid="'.$id.'"';
+//Deleting from vtiger_def_org_field table
+$query='delete from vtiger_def_org_field where fieldid="'.$id.'"';
 $adb->query($query);
 
-//Dropping the column in the module table
-if($fld_module == "Leads")
-{
-	$tableName = "leadscf";
-}
-elseif($fld_module == "Accounts")
-{
-	$tableName = "accountscf";
-}
-elseif($fld_module == "Contacts")
-{
-	$tableName = "contactscf";
-}
-elseif($fld_module == "Potentials")
-{
-	$tableName = "potentialscf";
-}
-elseif($fld_module == "HelpDesk")
-{
-	$tableName = "ticketcf";
-}
-elseif($fld_module == "Products")
-{
-	$tableName = "productcf";
-}
-//echo '<BR>';
-//echo $tableName;
-$dbquery = 'Alter table '.$tableName.' Drop Column '.$colName;
+//Drop the column in the corresponding module table
+$delete_module_tables = Array(
+				"Leads"=>"vtiger_leadscf",
+				"Accounts"=>"vtiger_accountscf",
+				"Contacts"=>"vtiger_contactscf",
+				"Potentials"=>"vtiger_potentialscf",
+				"HelpDesk"=>"vtiger_ticketcf",
+				"Products"=>"vtiger_productcf",
+				"Vendors"=>"vtiger_vendorcf",
+				"PriceBooks"=>"vtiger_pricebookcf",
+				"PurchaseOrder"=>"vtiger_purchaseordercf",
+				"SalesOrder"=>"vtiger_salesordercf",
+				"Quotes"=>"vtiger_quotescf",
+				"Invoice"=>"vtiger_invoicecf",
+				"Campaigns"=>"vtiger_campaignscf",
+			     );
+
+$dbquery = 'alter table '.$delete_module_tables[$fld_module].' drop column '.$colName;
 $adb->query($dbquery);
 
-//Deleting from convert lead mapping table- Jaguar
+
+//we have to remove the entries in customview and report related tables which have this field ($colName)
+$adb->query("delete from vtiger_cvcolumnlist where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_cvstdfilter where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_cvadvfilter where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_selectcolumn where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_relcriteria where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_reportsortcol where columnname like '%".$colName."%'");
+$adb->query("delete from vtiger_reportdatefilter where datecolumnname like '%".$colName."%'");
+$adb->query("delete from vtiger_reportsummary where columnname like '%".$colName."%'");
+
+
+//Deleting from convert lead mapping vtiger_table- Jaguar
 if($fld_module=="Leads")
 {
-	$deletequery = 'delete from convertleadmapping where leadfid='.$id;
+	$deletequery = 'delete from vtiger_convertleadmapping where leadfid='.$id;
 	$adb->query($deletequery);
 }
 
-
+//HANDLE HERE - we have to remove the table for other picklist type values which are text area and multiselect combo box 
 if($uitype == 15)
 {
-$deltablequery = 'drop table '.$colName;
-$adb->query($deltablequery);
+	$deltablequery = 'drop table '.$colName;
+	$adb->query($deltablequery);
 }
-header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fld_module);
+
+
+
+header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fld_module."&parenttab=Settings");
 ?>
