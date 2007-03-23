@@ -428,6 +428,29 @@ $cache_dir = 'cache/';
 
  	$config .= "// Generating Unique Application Key\n";
  	$config .= "\$application_unique_key = '".md5($root_directory)."';\n\n";
+
+
+	$config .= "//AUTHCFG\n";
+	$config .= "\$AUTHCFG['authType'] = 'SQL';  //Can either by LDAP, AD, or SQL\n";
+	$config .= "\n";
+	$config .= "//Config Options for LDAP\n";
+	$config .= "\$AUTHCFG['ldap_host'] = 'localhost';\n";
+	$config .= "\$AUTHCFG['ldap_port'] = NULL;\n";
+	$config .= "\$AUTHCFG['ldap_basedn'] = 'dc=localhost,dc=com';\n";
+	$config .= "\$AUTHCFG['ldap_uid'] = 'uid';  //can be CN or UID depending on ldap install\n";
+	$config .= "\$AUTHCFG['ldap_username'] = NULL;\n";
+	$config .= "\$AUTHCFG['ldap_pass'] = NULL;\n";
+	$config .= "\n";
+	$config .= "//Config Options for Active Directory\n";
+	$config .= "\$AUTHCFG['ad_accountSuffix'] = '@mydomain.local';\n";
+	$config .= "\$AUTHCFG['ad_basedn'] = 'DC=mydamin,DC=local';\n";
+	$config .= "\$AUTHCFG['ad_dc'] = array ( 'dc.mydomain.local' ); //array of domain controllers\n";
+	$config .= "\$AUTHCFG['ad_username'] = NULL; //optional user/pass for searching\n";
+	$config .= "\$AUTHCFG['ad_pass'] = NULL;\n";
+	$config .= "\$AUTHCFG['ad_realgroup'] = true; // AD does not return the primary group. Setting\n";
+	$config .= "                                  // this to false will fudge 'Domain Users' and is much";
+	$config .= "                                  // faster. True will resolve the real primary group,";
+        $config .= "                                  // but may be resource intensive.\n";
  	$config .= "?>";
 		
 			echo "<TEXTAREA class=\"dataInput\" rows=\"15\" cols=\"80\">".$config."</TEXTAREA><br><br>";
