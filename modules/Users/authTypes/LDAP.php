@@ -1,4 +1,50 @@
-<code><span style="color: #000000">
-<span style="color: #0000BB">&lt;?php<br /><br /></span><span style="color: #FF8000">/*********************************************<br />&nbsp;*&nbsp;Library&nbsp;to&nbsp;authenticate&nbsp;to&nbsp;LDAP&nbsp;servers&nbsp;for<br />&nbsp;*&nbsp;vTiger&nbsp;CRM.&nbsp;&nbsp;Written&nbsp;by<br />&nbsp;*<br />&nbsp;*&nbsp;Daniel&nbsp;Jabbour<br />&nbsp;*&nbsp;iWebPress&nbsp;Incorporated,&nbsp;www.iwebpress.com<br />&nbsp;*&nbsp;djabbour&nbsp;-&nbsp;a&nbsp;t&nbsp;-&nbsp;iwebpress&nbsp;-&nbsp;d&nbsp;o&nbsp;t&nbsp;-&nbsp;com<br />&nbsp;*********************************************/<br /><br />/**<br />&nbsp;*&nbsp;Function&nbsp;to&nbsp;authenticate&nbsp;users&nbsp;to&nbsp;LDAP<br />&nbsp;*<br />&nbsp;*&nbsp;@param&nbsp;string&nbsp;$authUser&nbsp;-&nbsp;&nbsp;Username&nbsp;to&nbsp;authenticate<br />&nbsp;*&nbsp;@param&nbsp;string&nbsp;$authPW&nbsp;-&nbsp;Cleartext&nbsp;password<br />&nbsp;*&nbsp;@return&nbsp;NULL&nbsp;on&nbsp;failure,&nbsp;user's&nbsp;info&nbsp;(in&nbsp;an&nbsp;array)&nbsp;on&nbsp;bind<br />&nbsp;*/<br /></span><span style="color: #007700">function&nbsp;</span><span style="color: #0000BB">ldapAuthenticate</span><span style="color: #007700">(</span><span style="color: #0000BB">$authUser</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$authPW</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;global&nbsp;</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">;<br /><br />&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(</span><span style="color: #0000BB">$authUser&nbsp;</span><span style="color: #007700">!=&nbsp;</span><span style="color: #DD0000">""&nbsp;</span><span style="color: #007700">&amp;&amp;&nbsp;</span><span style="color: #0000BB">$authPW&nbsp;</span><span style="color: #007700">!=&nbsp;</span><span style="color: #DD0000">""</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$ds</span><span style="color: #007700">=@</span><span style="color: #0000BB">ldap_connect</span><span style="color: #007700">(</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_host'</span><span style="color: #007700">],</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_port'</span><span style="color: #007700">]);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@</span><span style="color: #0000BB">ldap_set_option</span><span style="color: #007700">(</span><span style="color: #0000BB">$ds</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">LDAP_OPT_PROTOCOL_VERSION</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">3</span><span style="color: #007700">);&nbsp;</span><span style="color: #FF8000">//Try&nbsp;version&nbsp;3.&nbsp;&nbsp;Will&nbsp;fail&nbsp;and&nbsp;default&nbsp;to&nbsp;v2.<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$bind&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">false</span><span style="color: #007700">;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!empty(</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_username'</span><span style="color: #007700">]))&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$bind&nbsp;</span><span style="color: #007700">=&nbsp;@</span><span style="color: #0000BB">ldap_bind</span><span style="color: #007700">(</span><span style="color: #0000BB">$ds</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_username'</span><span style="color: #007700">],&nbsp;</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_pass'</span><span style="color: #007700">]);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$bind&nbsp;</span><span style="color: #007700">=&nbsp;@</span><span style="color: #0000BB">ldap_bind</span><span style="color: #007700">(</span><span style="color: #0000BB">$ds</span><span style="color: #007700">);&nbsp;</span><span style="color: #FF8000">//attempt&nbsp;an&nbsp;anonymous&nbsp;bind&nbsp;if&nbsp;no&nbsp;user/pass&nbsp;specified&nbsp;in&nbsp;config.php<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(!</span><span style="color: #0000BB">$bind</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;</span><span style="color: #0000BB">NULL</span><span style="color: #007700">;&nbsp;</span><span style="color: #FF8000">//bind&nbsp;failed<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #007700">}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$r&nbsp;</span><span style="color: #007700">=&nbsp;@</span><span style="color: #0000BB">ldap_search</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$ds</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_basedn'</span><span style="color: #007700">],&nbsp;</span><span style="color: #0000BB">$AUTHCFG</span><span style="color: #007700">[</span><span style="color: #DD0000">'ldap_uid'</span><span style="color: #007700">]&nbsp;.&nbsp;</span><span style="color: #DD0000">'='&nbsp;</span><span style="color: #007700">.&nbsp;</span><span style="color: #0000BB">$authUser</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(</span><span style="color: #0000BB">$r</span><span style="color: #007700">)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$result&nbsp;</span><span style="color: #007700">=&nbsp;@</span><span style="color: #0000BB">ldap_get_entries</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$ds</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$r</span><span style="color: #007700">);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(</span><span style="color: #0000BB">$result</span><span style="color: #007700">[</span><span style="color: #0000BB">0</span><span style="color: #007700">])&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(@</span><span style="color: #0000BB">ldap_bind</span><span style="color: #007700">(&nbsp;</span><span style="color: #0000BB">$ds</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$result</span><span style="color: #007700">[</span><span style="color: #0000BB">0</span><span style="color: #007700">][</span><span style="color: #DD0000">'dn'</span><span style="color: #007700">],&nbsp;</span><span style="color: #0000BB">$authPW</span><span style="color: #007700">)&nbsp;)&nbsp;{<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;</span><span style="color: #0000BB">$result</span><span style="color: #007700">[</span><span style="color: #0000BB">0</span><span style="color: #007700">];<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;}<br />&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;</span><span style="color: #0000BB">NULL</span><span style="color: #007700">;<br />}<br /></span><span style="color: #0000BB">?&gt;</span>
-</span>
-</code>
+<?php
+
+/*********************************************
+ * Library to authenticate to LDAP servers for
+ * vTiger CRM.  Written by
+ *
+ * Daniel Jabbour
+ * iWebPress Incorporated, www.iwebpress.com
+ * djabbour - a t - iwebpress - d o t - com
+ *********************************************/
+
+/**
+ * Function to authenticate users to LDAP
+ *
+ * @param string $authUser -  Username to authenticate
+ * @param string $authPW - Cleartext password
+ * @return NULL on failure, user's info (in an array) on bind
+ */
+function ldapAuthenticate($authUser, $authPW) {
+	global $AUTHCFG;
+
+	if ($authUser != "" && $authPW != "") {
+		$ds=@ldap_connect($AUTHCFG['ldap_host'],$AUTHCFG['ldap_port']);
+		@ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3); //Try version 3.  Will fail and default to v2.
+		
+		$bind = false;
+		
+		if (!empty($AUTHCFG['ldap_username'])) {
+			$bind = @ldap_bind($ds, $AUTHCFG['ldap_username'], $AUTHCFG['ldap_pass']);
+		} else {
+			$bind = @ldap_bind($ds); //attempt an anonymous bind if no user/pass specified in config.php
+		}
+		
+		if (!$bind) {
+			return NULL; //bind failed
+		}
+		
+		$r = @ldap_search( $ds, $AUTHCFG['ldap_basedn'], $AUTHCFG['ldap_uid'] . '=' . $authUser);
+		if ($r) {
+			$result = @ldap_get_entries( $ds, $r);
+			if ($result[0]) {
+				if (@ldap_bind( $ds, $result[0]['dn'], $authPW) ) {
+					return $result[0];
+				}
+			}
+		}
+	}
+	return NULL;
+}
+?>
