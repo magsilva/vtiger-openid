@@ -485,13 +485,37 @@ class PearDatabase{
 
     function requireSingleResult($sql, $dieOnError=false,$msg='', $encode=true)
     {
-	$result = $this->query($sql, $dieOnError, $msg);
-
-	if($this->getRowCount($result ) == 1)				
-	    return $result;
-	$this->log->error('Rows Returned:'. $this->getRowCount($result) .' More than 1 row returned for '. $sql);
-	return '';
+    	$result = $this->query($sql, $dieOnError, $msg);
+    	if ($this->getRowCount($result) == 1) {				
+			return $result;
+    	}
+    	$this->log->error('Rows Returned:'. $this->getRowCount($result) .' More than 1 row returned for '. $sql);
+    	return '';
     }
+
+    function requireSingleResultPstmt($sql, $data)
+    {
+		$result = $this->queryPstmt($sql, $data);
+    	if ($this->getRowCount($result) == 1) {				
+			return $result;
+    	}
+    	$this->log->error('Rows Returned:'. $this->getRowCount($result) .' More than 1 row returned for '. $sql);
+    	return '';
+    }
+    
+    function queryPstmt($sql, $data)
+    {
+    	global $log;
+    	$log->debug('query being executed : ' . $sql);
+    	$this->checkConnection();
+		$sth = $this->database->prepare($sql);
+		$result = $this->database->execute($sth, $data);
+		$this->lastmysqlrow = -1;
+		if (!$result) {
+			$this->checkError($msg.' Query Failed:' . $sql . '::', $dieOnError);
+		}
+		return $result;
+	}
     
 
 /* ADODB converted	
