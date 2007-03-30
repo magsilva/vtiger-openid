@@ -9,7 +9,7 @@
 *
  ********************************************************************************/
 
-ini_set("memory_limit","32M");
+ini_set("memory_limit","64M");
 set_time_limit(600);
 
 //This file is used to modify the database from 4.2Patch2 to 5.0 Alpha release

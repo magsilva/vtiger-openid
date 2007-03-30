@@ -262,7 +262,7 @@ $cache_dir = 'cache/';
  	$config .= "include('vtigerversion.php');\n\n";
  	$config .= "// more than 8MB memory needed for graphics\n\n";
  	$config .= "// memory limit default value = 16M\n\n";
- 	$config .= "ini_set('memory_limit','16M');\n\n";
+ 	$config .= "ini_set('memory_limit','64M');\n\n";
  	$config .= "// show or hide world clock, calculator and FCKEditor\n\n";
  	$config .= "// world_clock_display default value = true\n";
  	$config .= "// calculator_display default value = true\n";
