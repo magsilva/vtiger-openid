@@ -54,7 +54,11 @@ class Users {
 
 	var $tab_name = Array('vtiger_users','vtiger_attachments','vtiger_user2role');	
 	var $tab_name_index = Array('vtiger_users'=>'id','vtiger_attachments'=>'attachmentsid','vtiger_user2role'=>'userid');
-	var $column_fields = Array('user_name'=>'','is_admin' =>'','user_password'=>'','confirm_password'=>'',
+	var $column_fields = Array(
+	'user_name'=>'',
+	'is_admin' =>'',
+	'user_password'=>'',
+	'confirm_password'=>'',
 	'first_name' =>'',
 	'last_name' =>'',
 	'roleid' =>'',
@@ -225,7 +229,8 @@ class Users {
   	  *
  	*/
 	
-	function savePreferecesToDB(){
+	function savePreferecesToDB()
+	{
 		$data = base64_encode(serialize($this->user_preferences));
 		$query = "UPDATE $this->table_name SET user_preferences='$data' where id='$this->id'";
 		$result =& $this->db->query($query);
@@ -236,18 +241,15 @@ class Users {
 	/** Function to load the user preferences from db
   	  *
  	*/
-	function loadPreferencesFromDB($value){
-
-		if(isset($value) && !empty($value)){
-			$this->log->debug("LOADING :PREFERENCES SIZE ". strlen($value));
+	function loadPreferencesFromDB($value)
+	{
+		if (isset($value) && !empty($value)) {
+			$this->log->debug('LOADING :PREFERENCES SIZE '. strlen($value));
 			$this->user_preferences = unserialize(base64_decode($value));
 			$_SESSION = array_merge($this->user_preferences, $_SESSION);
-			$this->log->debug("Finished Loading");
-			$_SESSION["USER_PREFERENCES"] = $this->user_preferences;
-
-
+			$this->log->debug('Finished Loading');
+			$_SESSION['USER_PREFERENCES'] = $this->user_preferences;
 		}
-
 	}
 
 
@@ -256,6 +258,7 @@ class Users {
 	 * @param string $user_name - Must be non null and at least 2 characters
 	 * @param string $user_password - Must be non null and at least 1 character.
 	 * @desc Take an unencrypted username and password and return the encrypted password
+	 * 
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
@@ -267,7 +270,6 @@ class Users {
 		$encrypted_password = crypt($user_password, $salt);	
 
 		return $encrypted_password;
-
 	}
 
 	
@@ -289,22 +291,22 @@ class Users {
 		return true;
 	}
 
-	/** Function for validation check 
-  	  *
- 	*/
+	/**
+	 * Function for validation check.
+	 * 
+	 * The name of the file to be validated is base64 encoded. It's content
+	 * checksum is calculated and checked againg $md5 and $alt (it must match
+	 * one of those).
+	 */ 
 	function validation_check($validate, $md5, $alt=''){
 		$validate = base64_decode($validate);
-		if(file_exists($validate) && $handle = fopen($validate, 'rb', true)){
+		if (file_exists($validate) && $handle = fopen($validate, 'rb', true)) {
 			$buffer = fread($handle, filesize($validate));
-			if(md5($buffer) == $md5 || (!empty($alt) && md5($buffer) == $alt)){
+			if (md5($buffer) == $md5 || (!empty($alt) && md5($buffer) == $alt)) {
 				return 1;
 			}
-			return -1;
-
-		}else{
-			return -1;
 		}
-
+		return -1;
 	}
 
 	/** Function for authorization check 
@@ -328,18 +330,27 @@ class Users {
 	 * @param string $user_password - The password of the user to authenticate
 	 * @return true if the user is authenticated, false otherwise
 	 */
-	function doLogin($user_password) {
+	function doLogin($user_password)
+	{
 		global $AUTHCFG;
-		$usr_name = $this->column_fields["user_name"];
+		$user_name = $this->column_fields["user_name"];
 
 		switch (strtoupper($AUTHCFG['authType'])) {
+			case 'OPENID':
+				$this->log->debug("Using OpenID authentication");
+				require_once('modules/Users/authTypes/OpenID.php');
+				$result = openidAuthenticate($user_name);
+				if ($result != NULL) {
+					return true;
+				}
+				break;
+			
+			
 			case 'LDAP':
 				$this->log->debug("Using LDAP authentication");
 				require_once('modules/Users/authTypes/LDAP.php');
-				$result = ldapAuthenticate($this->column_fields["user_name"], $user_password);
-				if ($result == NULL) {
-					return false;
-				} else {
+				$result = ldapAuthenticate($user_name, $user_password);
+				if ($result != NULL) {
 					return true;
 				}
 				break;
@@ -348,21 +359,19 @@ class Users {
 				$this->log->debug("Using Active Directory authentication");
 				require_once('modules/Users/authTypes/adLDAP.php');
 				$adldap = new adLDAP();
-				if ($adldap->authenticate($this->column_fields["user_name"],$user_password)) {
+				if ($adldap->authenticate($user_name, $user_password)) {
 					return true;
-				} else {
-					return false;
 				}
 				break;
 
 			default:
 				$this->log->debug("Using integrated/SQL authentication");
-				$encrypted_password = $this->encrypt_password($user_password);
-				$query = "SELECT * from $this->table_name where user_name='$usr_name' AND user_password='$encrypted_password'";
-				$result = $this->db->requireSingleResult($query, false);
-				if (empty($result)) {
-					return false;
-				} else {
+				$sql = "SELECT * from $this->table_name where user_name=? AND user_password=?";
+				$data = array();
+				$data[] = $user_password;
+				$data[] = $this->encrypt_password($user_password);
+				$result = $this->db->requireSingleResultPstmt($sql, $data);
+				if (! empty($result)) {
 					return true;
 				}
 				break;
@@ -380,56 +389,73 @@ class Users {
 	 */
 	function load_user($user_password)
 	{
-		$usr_name = $this->column_fields["user_name"];
-		if(isset($_SESSION['loginattempts'])){
-			$_SESSION['loginattempts'] += 1;
-		}else{
-			$_SESSION['loginattempts'] = 1;	
+		if (! isset($this->column_fields["user_name"]) || empty($this->column_fields["user_name"])) {
+			return null;
 		}
-		if($_SESSION['loginattempts'] > 5){
-			$this->log->warn("SECURITY: " . $usr_name . " has attempted to login ". 	$_SESSION['loginattempts'] . " times.");
+		
+		if (! isset($user_password)) {
+			$user_password = '';
 		}
-		$this->log->debug("Starting user load for $usr_name");
+	
+		/*
+		 * The checks belows are a (legacy) requirement of SugarCRM license...
+		 */
+		// include/images/sugarsales_md.gif
+		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvc3VnYXJzYWxlc19tZC5naWY=','1a44d4ab8f2d6e15e0ff6ac1c2c87e6f', '866bba5ae0a15180e8613d33b0acc6bd') == -1)$validation = -1;
+		// include/images/powered_by_sugarcrm.gifmsilva
+		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvcG93ZXJlZF9ieV9zdWdhcmNybS5naWY=' , '3d49c9768de467925daabf242fe93cce') == -1)$validation = -1;
+		// index.php
+		if($this->authorization_check('aW5kZXgucGhw' , 'PEEgaHJlZj0naHR0cDovL3d3dy5zdWdhcmNybS5jb20nIHRhcmdldD0nX2JsYW5rJz48aW1nIGJvcmRlcj0nMCcgc3JjPSdpbmNsdWRlL2ltYWdlcy9wb3dlcmVkX2J5X3N1Z2FyY3JtLmdpZicgYWx0PSdQb3dlcmVkIEJ5IFN1Z2FyQ1JNJz48L2E+', 1) == -1)$validation = -1;
+
+		/*
+		 * .. that we tear apart right after doing them. What the heck!
+		 */
 		$validation = 0;
 		unset($_SESSION['validation']);
-		if( !isset($this->column_fields["user_name"]) || $this->column_fields["user_name"] == "" || !isset($user_password) || $user_password == "")
-			return null;
 
-		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvc3VnYXJzYWxlc19tZC5naWY=','1a44d4ab8f2d6e15e0ff6ac1c2c87e6f', '866bba5ae0a15180e8613d33b0acc6bd') == -1)$validation = -1;
-		//if($this->validation_check('aW5jbHVkZS9pbWFnZXMvc3VnYXJzYWxlc19tZC5naWY=','1a44d4ab8f2d6e15e0ff6ac1c2c87e6f') == -1)$validation = -1;
-		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvcG93ZXJlZF9ieV9zdWdhcmNybS5naWY=' , '3d49c9768de467925daabf242fe93cce') == -1)$validation = -1;
-		if($this->authorization_check('aW5kZXgucGhw' , 'PEEgaHJlZj0naHR0cDovL3d3dy5zdWdhcmNybS5jb20nIHRhcmdldD0nX2JsYW5rJz48aW1nIGJvcmRlcj0nMCcgc3JjPSdpbmNsdWRlL2ltYWdlcy9wb3dlcmVkX2J5X3N1Z2FyY3JtLmdpZicgYWx0PSdQb3dlcmVkIEJ5IFN1Z2FyQ1JNJz48L2E+', 1) == -1)$validation = -1;
-		$encrypted_password = $this->encrypt_password($user_password);
 
-		$authCheck = false;
-		$authCheck = $this->doLogin($user_password);
-
-		if(!$authCheck)
-		{
+		$user_name = $this->column_fields["user_name"];
+		$user_authenticated = false;
+		
+		if (isset($_SESSION['loginattempts'])) {
+			$_SESSION['loginattempts'] += 1;
+		} else {
+			$_SESSION['loginattempts'] = 1;	
+		}
+		if ($_SESSION['loginattempts'] > 5) {
+			$this->log->warn('SECURITY: ' . $user_name . ' has attempted to login ' . $_SESSION['loginattempts'] . ' times.');
+		}
+		$this->log->debug("Starting user load for $user_name");
+	
+		$user_authenticated = $this->doLogin($user_password);
+		
+		if (! $user_authenticated) {
 			$this->log->warn("User authentication for $usr_name failed");
 			return null;
 		}
 
-		$query = "SELECT * from $this->table_name where user_name='$usr_name'";
-		$result = $this->db->requireSingleResult($query, false);
+		// TODO: create user on the fly, as DotProject does.
+
+		$sql = "SELECT * from $this->table_name where user_name=?";
+		$data = array();
+		$data[] = $user_name;
+		$result = $this->db->requireSingleResultPstmt($sql, $data);
 
 		// Get the fields for the user
 		$row = $this->db->fetchByAssoc($result);
 		$this->id = $row['id'];	
 
-		$user_hash = strtolower(md5($user_password));
-
-
 		// If there is no user_hash is not present or is out of date, then create a new one.
-		if(!isset($row['user_hash']) || $row['user_hash'] != $user_hash)
-		{
+		if (! isset($row['user_hash']) || $row['user_hash'] != strtolower(md5($user_password))) {
 			$query = "UPDATE $this->table_name SET user_hash='$user_hash' where id='{$row['id']}'";
 			$this->db->query($query, true, "Error setting new hash for {$row['user_name']}: ");	
 		}
 		$this->loadPreferencesFromDB($row['user_preferences']);
 
 
-		if ($row['status'] != "Inactive") $this->authenticated = true;
+		if ($row['status'] != "Inactive") {
+			$this->authenticated = true;	
+		}
 
 		unset($_SESSION['loginattempts']);
 		return $this;

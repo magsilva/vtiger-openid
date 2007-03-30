@@ -27,43 +27,39 @@ require_once('user_privileges/audit_trail.php');
 
 global $mod_strings;
 
-$focus = new Users();
-
-// Add in defensive code here.
-$focus->column_fields["user_name"] = to_html($_REQUEST['user_name']);
+$user_name = $_REQUEST['user_name'];
 $user_password = $_REQUEST['user_password'];
 
+$focus = new Users();
+$focus->column_fields["user_name"] = $user_name;
 $focus->load_user($user_password);
 
-if($focus->is_authenticated())
-{
-
+if ($focus->is_authenticated()) {
 	//Inserting entries for audit trail during login
-	
-	if($audit_trail == 'true')
-	{
-		if($record == '')
-			$auditrecord = '';						
-		else
-			$auditrecord = $record;	
-
+	if ($audit_trail == 'true')	{
+		if($record == '') {
+			$auditrecord = '';
+		} else {
+			$auditrecord = $record;
+		}	
 		$date_var = $adb->formatDate(date('YmdHis'));
- 	    $query = "insert into vtiger_audit_trial values(".$adb->getUniqueID('vtiger_audit_trial').",".$focus->id.",'Users','Authenticate','',$date_var)";	
-			
+ 	    $query = 'insert into vtiger_audit_trial values(' .
+ 	    	$adb->getUniqueID('vtiger_audit_trial') . ',' .
+ 	    	$focus->id . ',' .
+ 	    	',"Users", "Authenticate", "",' .
+			$date_var . ')';
 		$adb->query($query);
 	}
-
 	
 	// Recording the login info
-        $usip=$_SERVER['REMOTE_ADDR'];
-        $intime=date("Y/m/d H:i:s");
-        require_once('modules/Users/LoginHistory.php');
-        $loghistory=new LoginHistory();
-        $Signin = $loghistory->user_login($focus->column_fields["user_name"],$usip,$intime);
+	$usip = $_SERVER['REMOTE_ADDR'];
+	$intime=date("Y/m/d H:i:s");
+	require_once('modules/Users/LoginHistory.php');
+	$loghistory = new LoginHistory();
+	$Signin = $loghistory->user_login($focus->column_fields['user_name'], $usip, $intime);
 
 	//Security related entries start
 	require_once('include/utils/UserInfoUtil.php');
-
 	createUserPrivilegesfile($focus->id);
 	
 	//Security related entries end
@@ -78,11 +74,9 @@ if($focus->is_authenticated())
 	// store the user's theme in the session
 	if (isset($_REQUEST['login_theme'])) {
 		$authenticated_user_theme = $_REQUEST['login_theme'];
-	}
-	elseif (isset($_REQUEST['ck_login_theme']))  {
+	} elseif (isset($_REQUEST['ck_login_theme']))  {
 		$authenticated_user_theme = $_REQUEST['ck_login_theme'];
-	}
-	else {
+	} else {
 		$authenticated_user_theme = $default_theme;
 	}
 	
@@ -92,18 +86,15 @@ if($focus->is_authenticated())
 	}
 	elseif (isset($_REQUEST['ck_login_language']))  {
 		$authenticated_user_language = $_REQUEST['ck_login_language'];
-	}
-	else {
+	} else {
 		$authenticated_user_language = $default_language;
 	}
 
 	// If this is the default user and the default user theme is set to reset, reset it to the default theme value on each login
-	if($reset_theme_on_default_user && $focus->user_name == $default_user_name)
-	{
+	if ($reset_theme_on_default_user && $focus->user_name == $default_user_name) {
 		$authenticated_user_theme = $default_theme;
 	}
-	if(isset($reset_language_on_default_user) && $reset_language_on_default_user && $focus->user_name == $default_user_name)
-	{
+	if (isset($reset_language_on_default_user) && $reset_language_on_default_user && $focus->user_name == $default_user_name) {
 		$authenticated_user_language = $default_language;	
 	}
 
@@ -113,22 +104,15 @@ if($focus->is_authenticated())
 	$log->debug("authenticated_user_theme is $authenticated_user_theme");
 	$log->debug("authenticated_user_language is $authenticated_user_language");
 	$log->debug("authenticated_user_id is ". $focus->id);
-        $log->debug("app_unique_key is $application_unique_key");
-
+	$log->debug("app_unique_key is $application_unique_key");
 	
-// Clear all uploaded import files for this user if it exists
-
+	// Clear all uploaded import files for this user if it exists
 	global $import_dir;
-
 	$tmp_file_name = $import_dir. "IMPORT_".$focus->id;
-
-	if (file_exists($tmp_file_name))
-	{
+	if (file_exists($tmp_file_name)) {
 		unlink($tmp_file_name);
 	}
-}
-else
-{
+} else {
 	$_SESSION['login_user_name'] = $focus->column_fields["user_name"];
 	$_SESSION['login_password'] = $user_password;
 	$_SESSION['login_error'] = $mod_strings['ERR_INVALID_PASSWORD'];

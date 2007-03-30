@@ -19,59 +19,52 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
-$theme_path="themes/".$theme."/";
-$image_path="include/images/";
-require_once($theme_path.'layout_utils.php');
+
+$theme_path = 'themes/' . $theme . '/';
+$image_path = 'include/images/';
+require_once($theme_path . 'layout_utils.php');
 
 global $app_language;
 //we don't want the parent module's string file, but rather the string file specifc to this subpanel
 global $current_language;
 $current_module_strings = return_module_language($current_language, 'Users');
 
- define("IN_LOGIN", true);
+define("IN_LOGIN", true);
 
 // Retrieve username and password from the session if possible.
-if(isset($_SESSION["login_user_name"]))
+if (isset($_SESSION["login_user_name"]))
 {
-	if (isset($_REQUEST['default_user_name']))
+	if (isset($_REQUEST['default_user_name'])) {
 		$login_user_name = $_REQUEST['default_user_name'];
-	else
+	} else {
 		$login_user_name = $_SESSION['login_user_name'];
+	}
 }
 else
 {
-	if (isset($_REQUEST['default_user_name']))
-	{
+	if (isset($_REQUEST['default_user_name'])) {
 		$login_user_name = $_REQUEST['default_user_name'];
-	}
-	elseif (isset($_REQUEST['ck_login_id_vtiger'])) {
+	} else if (isset($_REQUEST['ck_login_id_vtiger'])) {
 		$login_user_name = get_assigned_user_name($_REQUEST['ck_login_id_vtiger']);
-	}
-	else
-	{
+	} else {
 		$login_user_name = $default_user_name;
 	}
-	$_session['login_user_name'] = $login_user_name;
+	$_SESSION['login_user_name'] = $login_user_name;
 }
 
 $current_module_strings['VLD_ERROR'] = base64_decode('UGxlYXNlIHJlcGxhY2UgdGhlIFN1Z2FyQ1JNIGxvZ29zLg==');
 
 // Retrieve username and password from the session if possible.
-if(isset($_SESSION["login_password"]))
-{
+if (isset($_SESSION["login_password"])) {
 	$login_password = $_SESSION['login_password'];
-}
-else
-{
+} else {
 	$login_password = $default_password;
-	$_session['login_password'] = $login_password;
+	$_SESSION['login_password'] = $login_password;
 }
 
-if(isset($_SESSION["login_error"]))
-{
+if (isset($_SESSION["login_error"])) {
 	$login_error = $_SESSION['login_error'];
 }
-
 ?>
 <script type="text/javascript" language="JavaScript">
 <!-- Begin

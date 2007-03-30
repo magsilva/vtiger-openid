@@ -24,6 +24,16 @@ global $display;
 global $category;
 require_once('include/utils/utils.php');
 
+$d = dir(dirname(__FILE__) . '/include');
+while (false !== ($entry = $d->read())) {
+	if ($entry != '.' && $entry != '..') {
+		$entry = $d->path . '/' .$entry;
+		if (is_dir($entry)) {
+			set_include_path(realpath($entry) .  PATH_SEPARATOR . get_include_path());
+		}
+	}
+}
+$d->close();
 
 if (version_compare(phpversion(), '5.0') < 0) {
     eval('
