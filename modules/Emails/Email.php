@@ -28,7 +28,7 @@ require_once('data/CRMEntity.php');
 require_once('modules/Contacts/Contact.php');
 require_once('modules/Accounts/Account.php');
 require_once('modules/Potentials/Opportunity.php');
-require_once('modules/Users/User.php');
+require_once('modules/Users/Users.php');
 
 // Email is used to store customer information.
 class Email extends CRMEntity {

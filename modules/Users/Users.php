@@ -430,16 +430,25 @@ class Users {
 		$user_authenticated = $this->doLogin($user_password);
 		
 		if (! $user_authenticated) {
-			$this->log->warn("User authentication for $usr_name failed");
+			$this->log->warn("User authentication for $user_name failed");
 			return null;
 		}
-
-		// TODO: create user on the fly, as DotProject does.
 
 		$sql = "SELECT * from $this->table_name where user_name=?";
 		$data = array();
 		$data[] = $user_name;
 		$result = $this->db->requireSingleResultPstmt($sql, $data);
+
+		// var_dump($sql, $data); exit();
+		if (empty($result)) {
+			// TODO: create user on the fly, as DotProject does.
+			$user = new Users();
+			$user->column_fields['user_name'] = $user_name;
+			$user->column_fields['currency_id'] = 1;
+			$user->save('Users');
+			
+			$result = $this->db->requireSingleResultPstmt($sql, $data);
+		}	
 
 		// Get the fields for the user
 		$row = $this->db->fetchByAssoc($result);
