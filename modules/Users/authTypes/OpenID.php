@@ -127,7 +127,8 @@ class OpenIdAuthenticator
 		} else if ($response->status == Auth_OpenID_SUCCESS) {
 	    	// This means the authentication succeeded.
 	    	$openid = $response->identity_url;
-	    				/*	
+
+	    	/*	
         	$sreg_resp = Auth_OpenID_SRegResponse::fromSuccessResponse($response);
 			$sreg = $sreg_resp->contents();
 			if (@$sreg['email']) {

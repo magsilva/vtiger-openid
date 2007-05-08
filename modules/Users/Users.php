@@ -434,12 +434,15 @@ class Users {
 			return null;
 		}
 
+		// TODO: Map to an existing user or create a brand new one.
+		$user_name = 'admin';
+
 		$sql = "SELECT * from $this->table_name where user_name=?";
 		$data = array();
 		$data[] = $user_name;
 		$result = $this->db->requireSingleResultPstmt($sql, $data);
 
-		// var_dump($sql, $data); exit();
+
 		if (empty($result)) {
 			// TODO: create user on the fly, as DotProject does.
 			$user = new Users();
